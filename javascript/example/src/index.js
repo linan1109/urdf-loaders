@@ -23,9 +23,15 @@ const sliderList = document.querySelector('#controls ul');
 const controlsel = document.getElementById('controls');
 const controlsToggle = document.getElementById('toggle-controls');
 const animToggle = document.getElementById('do-animate');
+
+const inputContainer = document.getElementById('input-container');
+const loadButton = document.getElementById('load-movement');
+
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
+let timer = null;
+let movement = null;
 
 // Global Functions
 const setColor = color => {
@@ -59,6 +65,21 @@ autocenterToggle.addEventListener('click', () => {
     viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
 });
 
+// NEW ADD
+loadButton.addEventListener('change', e => {
+    const fileInput = document.querySelector('input[type="file"]');
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const data = e.target.result;
+        movement = Papa.parse(data, { header: true }).data;
+        console.log("Loaded movement data");
+        console.log("Length:" + movement.length);
+    };
+    reader.readAsText(file);
+}
+);
+
 upSelect.addEventListener('change', () => viewer.up = upSelect.value);
 
 controlsToggle.addEventListener('click', () => controlsel.classList.toggle('hidden'));
@@ -89,14 +110,14 @@ viewer.addEventListener('angle-change', e => {
 
 viewer.addEventListener('joint-mouseover', e => {
 
-    const j = document.querySelector(`li[joint-name="${ e.detail }"]`);
+    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
     if (j) j.setAttribute('robot-hovered', true);
 
 });
 
 viewer.addEventListener('joint-mouseout', e => {
 
-    const j = document.querySelector(`li[joint-name="${ e.detail }"]`);
+    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
     if (j) j.removeAttribute('robot-hovered');
 
 });
@@ -104,7 +125,7 @@ viewer.addEventListener('joint-mouseout', e => {
 let originalNoAutoRecenter;
 viewer.addEventListener('manipulate-start', e => {
 
-    const j = document.querySelector(`li[joint-name="${ e.detail }"]`);
+    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
     if (j) {
         j.scrollIntoView({ block: 'nearest' });
         window.scrollTo(0, 0);
@@ -147,8 +168,8 @@ viewer.addEventListener('urdf-processed', () => {
 
             const li = document.createElement('li');
             li.innerHTML =
-            `
-            <span title="${ joint.name }">${ joint.name }</span>
+                `
+            <span title="${joint.name}">${joint.name}</span>
             <input type="range" value="0" step="0.0001"/>
             <input type="number" step="0.0001" />
             `;
@@ -201,7 +222,7 @@ viewer.addEventListener('urdf-processed', () => {
                 case 'revolute':
                     break;
                 default:
-                    li.update = () => {};
+                    li.update = () => { };
                     input.remove();
                     slider.remove();
 
@@ -306,25 +327,66 @@ const updateAngles = () => {
         const offset = i * Math.PI / 3;
         const ratio = Math.max(0, Math.sin(time + offset));
 
-        viewer.setJointValue(`HP${ i }`, THREE.MathUtils.lerp(30, 0, ratio) * DEG2RAD);
-        viewer.setJointValue(`KP${ i }`, THREE.MathUtils.lerp(90, 150, ratio) * DEG2RAD);
-        viewer.setJointValue(`AP${ i }`, THREE.MathUtils.lerp(-30, -60, ratio) * DEG2RAD);
+        viewer.setJointValue(`HP${i}`, THREE.MathUtils.lerp(30, 0, ratio) * DEG2RAD);
+        viewer.setJointValue(`KP${i}`, THREE.MathUtils.lerp(90, 150, ratio) * DEG2RAD);
+        viewer.setJointValue(`AP${i}`, THREE.MathUtils.lerp(-30, -60, ratio) * DEG2RAD);
 
-        viewer.setJointValue(`TC${ i }A`, THREE.MathUtils.lerp(0, 0.065, ratio));
-        viewer.setJointValue(`TC${ i }B`, THREE.MathUtils.lerp(0, 0.065, ratio));
+        viewer.setJointValue(`TC${i}A`, THREE.MathUtils.lerp(0, 0.065, ratio));
+        viewer.setJointValue(`TC${i}B`, THREE.MathUtils.lerp(0, 0.065, ratio));
 
-        viewer.setJointValue(`W${ i }`, window.performance.now() * 0.001);
+        viewer.setJointValue(`W${i}`, window.performance.now() * 0.001);
 
     }
 
 };
 
-const updateLoop = () => {
+const updateAnglesAnymal = () => {
+    if (!viewer.setJointValue) return;
+    // reset everything to 0 first
+    const resetJointValues = viewer.angles;
+    for (const name in resetJointValues) resetJointValues[name] = 0;
+    viewer.setJointValues(resetJointValues);
 
-    if (animToggle.classList.contains('checked')) {
-        updateAngles();
+    const time = Date.now() - timer;
+    const ignore_first = 400 * 200;
+    // freq = 0.01 sec
+    const freq = 0.1;
+    const current = Math.floor(time / 1000 / freq + ignore_first);
+    // console.log(current)
+    const names = [ 'LF_HAA','LF_HFE', 'LF_KFE', 
+    'RF_HAA', 'RF_HFE', 'RF_KFE',
+    'LH_HAA', 'LH_HFE', 'LH_KFE',
+    'RH_HAA', 'RH_HFE', 'RH_KFE'];
+
+    var mov = movement[current];
+    if (mov === undefined) {
+        timer = null;
+        for (let i = 0; i < names.length; i++) {
+            viewer.setJointValue(names[i], 0);
+        }
+        return;
     }
 
+
+    for (let i = 0; i < names.length; i++) {
+        // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
+        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
+    }
+
+};
+
+
+const updateLoop = () => {
+
+    if (animToggle.classList.contains('checked') && movement !== null) {
+        if (timer === null) {
+            timer = Date.now();
+        }
+        updateAnglesAnymal();
+        // updateAngles();
+    } else {
+        timer = null;
+    }
     requestAnimationFrame(updateLoop);
 
 };
@@ -338,7 +400,7 @@ const updateList = () => {
             const urdf = e.target.getAttribute('urdf');
             const color = e.target.getAttribute('color');
 
-            viewer.up = '-Z';
+            viewer.up = '+Z';
             document.getElementById('up-select').value = viewer.up;
             viewer.urdf = urdf;
             animToggle.classList.add('checked');
@@ -354,12 +416,14 @@ updateList();
 
 document.addEventListener('WebComponentsReady', () => {
 
-    animToggle.addEventListener('click', () => animToggle.classList.toggle('checked'));
+    animToggle.addEventListener('click', () => {
+        animToggle.classList.toggle('checked');
+    });
 
     // stop the animation if user tried to manipulate the model
     viewer.addEventListener('manipulate-start', e => animToggle.classList.remove('checked'));
     viewer.addEventListener('urdf-processed', e => updateAngles());
     updateLoop();
     viewer.camera.position.set(-5.5, 3.5, 5.5);
-
 });
+
