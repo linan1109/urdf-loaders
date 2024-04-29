@@ -1,0 +1,36 @@
+name: Build Examples
+
+on:
+  push:
+    branches: ["master"]
+
+defaults:
+  run:
+    working-directory: ./javascript
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.0.2
+        with:
+          # Used to specify a package manager for caching in the default directory. Supported values: npm, yarn, pnpm.
+          cache: npm
+          # Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.
+          cache-dependency-path: javascript/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+      - name: Build Examples
+        run: npm run build
+        
+      - name: Commit Examples
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: '.'
+          message: 'update builds'
+          push: 'origin HEAD:examples --force'
