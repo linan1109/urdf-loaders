@@ -7,7 +7,7 @@
   "scripts": {
     "start": "concurrently \"parcel watch ./*.html --out-dir ../dev-bundle/ --public-url . --no-cache\" \"cd .. && static-server\"",
     "build": "rollup -c",
-    "build-examples": "parcel build ./*.html --out-dir ./ --public-url . --no-cache --no-source-maps --no-content-hash",
+    "build-examples": "parcel build ./*.html --out-dir ../js/ --public-url . --no-cache --no-source-maps --no-content-hash",
     "test": "jest",
     "lint": "eslint \"./src/*.js\" \"./test/*.js\" && tsc -p tsconfig.json --noEmit",
     "prepublishOnly": "npm run build"

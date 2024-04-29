@@ -1,14 +1,13 @@
-# urdf-loaders
+# urdf-loaders-anymal
 
-URDF loading code in both [C# for Unity](./unity/Assets/URDFLoader/) and [Javascript for THREE.js](./javascript/), as well as example [JPL ATHLETE](https://en.wikipedia.org/wiki/ATHLETE) URDF files
+This project is built based on [urdf-loaders](https://github.com/gkjohnson/urdf-loaders).
 
-[Demo Here!](https://gkjohnson.github.io/urdf-loaders/javascript/example/bundle/)
+[Demo Here!](https://linan1109.github.io/urdf-loaders/js)
 
-![Example](./unity/Assets/docs/asset%20store/all-urdfs.png)
+![Example](./javascript/docs/anymal.png)
 
-### Flipped Models
+And the anymal urdf is from RaiSim's [anymal](https://github.com/raisimTech/raisimLib/tree/master/rsc/anymal).
 
-The `_flipped` variants of the URDF ATHLETE models invert the revolute joint axes to model ATHLETE in a configuration with the legs attached to the bottom of the chassis.
 
 # LICENSE
 
