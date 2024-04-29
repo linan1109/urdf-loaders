@@ -5,7 +5,7 @@
   "main": "src/URDFLoader.js",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"parcel watch ./*.html --out-dir ./dev-bundle/ --public-url . --no-cache\" \"cd .. && static-server\"",
+    "start": "concurrently \"parcel watch ./*.html --out-dir ../dev-bundle/ --public-url . --no-cache\" \"cd .. && static-server\"",
     "build": "rollup -c",
     "build-examples": "parcel build ./*.html --out-dir ./ --public-url . --no-cache --no-source-maps --no-content-hash",
     "test": "jest",
