@@ -64,7 +64,7 @@
         get displayShadow() { return this.hasAttribute('display-shadow') || false; }
         set displayShadow(val) { val ? this.setAttribute('display-shadow', '') : this.removeAttribute('display-shadow'); }
 
-        get ambientColor() { return this.getAttribute('ambient-color') || '#455A64'; }
+        get ambientColor() { return this.getAttribute('ambient-color') || '#8ea0a8'; }
         set ambientColor(val) { val ? this.setAttribute('ambient-color', val) : this.removeAttribute('ambient-color'); }
 
         get autoRedraw() { return this.hasAttribute('auto-redraw') || false; }
@@ -143,7 +143,7 @@
             renderer.setClearAlpha(0);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE__namespace.PCFSoftShadowMap;
-            renderer.outputEncoding = THREE__namespace.sRGBEncoding;
+            renderer.outputColorSpace = THREE__namespace.SRGBColorSpace;
 
             // Camera setup
             const camera = new THREE__namespace.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -478,7 +478,7 @@
 
                                             if (m.map) {
 
-                                                m.map.encoding = THREE__namespace.GammaEncoding;
+                                                m.map.colorSpace = THREE__namespace.SRGBColorSpace;
 
                                             }
 

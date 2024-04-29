@@ -39,3 +39,4 @@ jspm_packages
 
 # dev builds
 example/dev-bundle
+dev-bundle
