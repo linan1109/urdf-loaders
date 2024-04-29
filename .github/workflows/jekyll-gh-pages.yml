@@ -42,6 +42,11 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: ./javascript
+
+      - name: Build Example
+        run: npm run build-examples
+        working-directory: ./javascript
+      
         
       - name: Setup Pages
         uses: actions/configure-pages@v5
