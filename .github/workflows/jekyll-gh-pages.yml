@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: npm install
         working-directory: ./javascript
-      - name: Build
-        run: npm run build
-        working-directory: ./javascript
 
       - name: Build Example
         run: npm run build-examples
