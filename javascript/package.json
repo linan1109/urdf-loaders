@@ -5,7 +5,7 @@
   "main": "src/URDFLoader.js",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"parcel watch ./*.html --out-dir ../dev-bundle/ --public-url . --no-cache\" \"cd .. && static-server\"",
+    "start": "concurrently \"parcel watch ./*.html --out-dir ../dev-bundle/ --public-url . --no-cache\" \"cd ../ && static-server\"",
     "build": "rollup -c",
     "build-examples": "parcel build ./*.html --out-dir ../js/ --public-url . --no-cache --no-source-maps --no-content-hash",
     "test": "jest",
@@ -52,10 +52,12 @@
     "node-fetch": "^3.0.0",
     "nyc": "^15.1.0",
     "parcel-bundler": "^1.12.5",
+    "rollup": "^2.29.0",
     "static-server": "^3.0.0",
     "three": "^0.152.2",
-    "typescript": "^3.9.7",
-    "rollup": "^2.29.0"
+    "typescript": "^3.9.7"
   },
-  "dependencies": {}
+  "dependencies": {
+    "d3": "^7.9.0"
+  }
 }

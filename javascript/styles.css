@@ -1,9 +1,38 @@
-html, body, urdf-viewer {
+html{
     padding: 0;
     margin: 0;
     height: 100%;
     width: 100%;
     overflow: hidden;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+urdf-viewer {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+plots-part {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 30%;
+    overflow: hidden;
+    float: right;
+    position: absolute;
+    top: 20px;
+    right: 0;
+
 }
 
 body {

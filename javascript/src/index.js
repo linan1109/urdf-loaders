@@ -1,5 +1,6 @@
 /* globals */
 import * as THREE from 'three';
+import * as d3 from 'd3';
 import { registerDragEvents } from './dragAndDrop.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -26,6 +27,7 @@ const animToggle = document.getElementById('do-animate');
 
 const inputContainer = document.getElementById('input-container');
 const loadButton = document.getElementById('load-movement');
+const svgContainer = document.getElementById('svg-container');
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
@@ -73,12 +75,142 @@ loadButton.addEventListener('change', e => {
     reader.onload = function (e) {
         const data = e.target.result;
         movement = Papa.parse(data, { header: true }).data;
-        console.log("Loaded movement data");
-        console.log("Length:" + movement.length);
+        console.log('Loaded movement data');
+        console.log('Length:' + movement.length);
+
+        const svg = getSvg();
+        while (svgContainer.firstChild) {
+            svgContainer.removeChild(svgContainer.firstChild);
+        }
+        svgContainer.appendChild(svg);
     };
     reader.readAsText(file);
-}
-);
+});
+
+function getSvg() {
+    const width = 600;
+    const height = 300;
+    const marginTop = 20;
+    const marginRight = 20;
+    const marginBottom = 30;
+    const marginLeft = 30;
+
+    const voronoi = false;
+
+    const svg = d3.create('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', [0, 0, width, height])
+        .attr('style', 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;');
+
+
+    let path = null;
+    let groups = null;
+    let points = null;
+    // Create the SVG container.
+    if (movement !== null && movement !== undefined) {
+        // Create the positional scales.
+        const x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+        const y = movement.map(d => parseFloat(d.obs_4));
+
+        const xScale = d3.scaleLinear()
+            .domain(d3.extent(x))
+            .range([marginLeft, width - marginRight]);
+
+        const yScale = d3.scaleLinear()
+            .domain(d3.extent(y))
+            .range([height - marginBottom, marginTop]);
+        // Add the horizontal axis.
+        svg.append('g')
+            .attr('transform', `translate(0,${height - marginBottom})`)
+            .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
+
+        // Add the vertical axis.
+        svg.append('g')
+            .attr('transform', `translate(${marginLeft},0)`)
+            .call(d3.axisLeft(yScale))
+            .call(g => g.select('.domain').remove())
+            .call(voronoi ? () => { } : g => g.selectAll('.tick line').clone()
+                .attr('x2', width - marginLeft - marginRight)
+                .attr('stroke-opacity', 0.1))
+            .call(g => g.append('text')
+                .attr('x', -marginLeft)
+                .attr('y', 10)
+                .attr('fill', 'currentColor')
+                .attr('text-anchor', 'start')
+                .text('movement'));
+
+        // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+        points = movement.map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
+        // console.log(points);
+        // check if there is non-numerical data
+        if (points.some(d => isNaN(d[0]) || isNaN(d[1]))) {
+            points = points.filter(d => !isNaN(d[0]) && !isNaN(d[1]));
+        }
+        if (points.some(d => isNaN(d[0]) || isNaN(d[1]))) {
+            console.log('Non-numerical data found');
+        }
+        groups = d3.rollup(points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
+
+        // Add the line.
+        const line = d3.line();
+        path = svg.append('g')
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            .attr('stroke-width', 1.5)
+            .attr('stroke-linejoin', 'round')
+            .attr('stroke-linecap', 'round')
+            .selectAll('path')
+            .data(groups.values())
+            .join('path')
+            .style('mix-blend-mode', 'multiply')
+            .attr('d', line);
+    }
+
+    console.log('points', points);
+    // Add an invisible layer for the interactive tip.
+    const dot = svg.append('g')
+        .attr('display', 'none');
+
+    dot.append('circle')
+        .attr('r', 2.5);
+
+    dot.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('y', -8);
+
+    svg
+        .on('pointerenter', pointerentered)
+        .on('pointermove', pointermoved)
+        .on('pointerleave', pointerleft)
+        .on('touchstart', event => event.preventDefault());
+    return svg.node();
+    // When the pointer moves, find the closest point, update the interactive tip, and highlight
+    // the corresponding line. Note: we don't actually use Voronoi here, since an exhaustive search
+    // is fast enough.
+    function pointermoved(event) {
+        const [xm, ym] = d3.pointer(event);
+        const i = d3.leastIndex(points, ([x, y]) => Math.hypot(x - xm, y - ym));
+        const [x, y, k] = points[i];
+        path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
+        dot.attr('transform', `translate(${x},${y})`);
+        dot.select('text').text(k);
+        svg.property('value', movement[i]).dispatch('input', { bubbles: true });
+    }
+
+    function pointerentered() {
+        path.style('mix-blend-mode', null).style('stroke', '#ddd');
+        dot.attr('display', null);
+    }
+
+    function pointerleft() {
+        path.style('mix-blend-mode', 'multiply').style('stroke', null);
+        dot.attr('display', 'none');
+        svg.node().value = null;
+        svg.dispatch('input', { bubbles: true });
+    }
+
+};
 
 upSelect.addEventListener('change', () => viewer.up = upSelect.value);
 
@@ -110,14 +242,14 @@ viewer.addEventListener('angle-change', e => {
 
 viewer.addEventListener('joint-mouseover', e => {
 
-    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
+    const j = document.querySelector(`li[joint-name='${e.detail}']`);
     if (j) j.setAttribute('robot-hovered', true);
 
 });
 
 viewer.addEventListener('joint-mouseout', e => {
 
-    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
+    const j = document.querySelector(`li[joint-name='${e.detail}']`);
     if (j) j.removeAttribute('robot-hovered');
 
 });
@@ -125,7 +257,7 @@ viewer.addEventListener('joint-mouseout', e => {
 let originalNoAutoRecenter;
 viewer.addEventListener('manipulate-start', e => {
 
-    const j = document.querySelector(`li[joint-name="${e.detail}"]`);
+    const j = document.querySelector(`li[joint-name='${e.detail}']`);
     if (j) {
         j.scrollIntoView({ block: 'nearest' });
         window.scrollTo(0, 0);
@@ -169,9 +301,9 @@ viewer.addEventListener('urdf-processed', () => {
             const li = document.createElement('li');
             li.innerHTML =
                 `
-            <span title="${joint.name}">${joint.name}</span>
-            <input type="range" value="0" step="0.0001"/>
-            <input type="number" step="0.0001" />
+            <span title='${joint.name}'>${joint.name}</span>
+            <input type='range' value='0' step='0.0001'/>
+            <input type='number' step='0.0001' />
             `;
             li.setAttribute('joint-type', joint.jointType);
             li.setAttribute('joint-name', joint.name);
@@ -348,15 +480,15 @@ const updateAnglesAnymal = () => {
     viewer.setJointValues(resetJointValues);
 
     const time = Date.now() - timer;
-    const ignore_first = 400 * 200;
+    const ignoreFirst = 400 * 200;
     // freq = 0.01 sec
     const freq = 0.1;
-    const current = Math.floor(time / 1000 / freq + ignore_first);
+    const current = Math.floor(time / 1000 / freq + ignoreFirst);
     // console.log(current)
-    const names = [ 'LF_HAA','LF_HFE', 'LF_KFE', 
-    'RF_HAA', 'RF_HFE', 'RF_KFE',
-    'LH_HAA', 'LH_HFE', 'LH_KFE',
-    'RH_HAA', 'RH_HFE', 'RH_KFE'];
+    const names = ['LF_HAA', 'LF_HFE', 'LF_KFE',
+        'RF_HAA', 'RF_HFE', 'RF_KFE',
+        'LH_HAA', 'LH_HFE', 'LH_KFE',
+        'RH_HAA', 'RH_HFE', 'RH_KFE'];
 
     var mov = movement[current];
     if (mov === undefined) {
@@ -366,15 +498,12 @@ const updateAnglesAnymal = () => {
         }
         return;
     }
-
-
     for (let i = 0; i < names.length; i++) {
         // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
         viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
     }
 
 };
-
 
 const updateLoop = () => {
 
@@ -426,4 +555,3 @@ document.addEventListener('WebComponentsReady', () => {
     updateLoop();
     viewer.camera.position.set(-5.5, 3.5, 5.5);
 });
-

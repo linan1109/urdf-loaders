@@ -1,54 +1,62 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-        <meta charset="utf-8"/>
 
-        <title>URDF Viewer Example</title>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta charset="utf-8" />
 
-        <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.4.3/webcomponents-bundle.js"></script>
-        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300" rel="stylesheet"/>
-        <link href="./styles.css" type="text/css" rel="stylesheet" />
-        <!-- <script src="./src/redirect.js"></script> -->
-    </head>
-    <body tabindex="0">
-        <div id="menu">
-            <ul id="urdf-options">
-                <li urdf="../urdf/anymal/urdf/anymal.urdf" color="#009688">Anymal</li>
-                <!-- <li urdf="../../../urdf/T12/urdf/T12_flipped.URDF" color="#E91E63">ATHLETE</li>
+    <title>URDF Viewer Example</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.4.3/webcomponents-bundle.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300" rel="stylesheet" />
+    <link href="./styles.css" type="text/css" rel="stylesheet" />
+    <!-- <script src="./src/redirect.js"></script> -->
+</head>
+
+<body tabindex="0">
+    <div id="menu">
+        <ul id="urdf-options">
+            <li urdf="../urdf/anymal/urdf/anymal.urdf" color="#009688">Anymal</li>
+            <!-- <li urdf="../../../urdf/T12/urdf/T12_flipped.URDF" color="#E91E63">ATHLETE</li>
                 <li urdf="../../../urdf/TriATHLETE/urdf/TriATHLETE_flipped.URDF" color="#009688">TriATHLETE</li>
                 <li urdf="../../../urdf/TriATHLETE_Climbing/urdf/TriATHLETE_flipped.URDF" color="#FFB300">TriATHLETE Climbing</li> -->
-            </ul>
+        </ul>
 
-            <div id="controls" class="hidden">
-                <div id="toggle-controls"></div>
-                <div>Drag and drop URDF files or folders! <br/> (Chrome Only)</div>
-                <div id="ignore-joint-limits" class="toggle">Ignore Joint Limits</div>
-                <div id="radians-toggle" class="toggle">Use Radians</div>
-                <div id="autocenter-toggle" class="toggle checked">Autocenter</div>
-                <div id="collision-toggle" class="toggle">Show Collision</div>
-                <div id="do-animate" class="toggle checked">Animate Joints</div>
-                <dif id="input-container">
-                    <input type="file" id="load-movement"> Upload</input>
-                </dif>
-                <label>
-                    Up Axis
-                    <select id="up-select">
-                        <option value="+X">+X</option>
-                        <option value="-X">-X</option>
-                        <option value="+Y">+Y</option>
-                        <option value="-Y">-Y</option>
-                        <option value="+Z">+Z</option>
-                        <option value="-Z" selected>-Z</option>
-                    </select>
-                </label>
-                <ul></ul>
+        <div id="controls" class="hidden">
+            <div id="toggle-controls"></div>
+            <div>Drag and drop URDF files or folders! <br /> (Chrome Only)</div>
+            <div id="ignore-joint-limits" class="toggle">Ignore Joint Limits</div>
+            <div id="radians-toggle" class="toggle">Use Radians</div>
+            <div id="autocenter-toggle" class="toggle checked">Autocenter</div>
+            <div id="collision-toggle" class="toggle">Show Collision</div>
+            <div id="do-animate" class="toggle checked">Animate Joints</div>
+            <div id="input-container">
+                <input type="file" id="load-movement"> Upload</input>
             </div>
+            <label>
+                Up Axis
+                <select id="up-select">
+                    <option value="+X">+X</option>
+                    <option value="-X">-X</option>
+                    <option value="+Y">+Y</option>
+                    <option value="-Y">-Y</option>
+                    <option value="+Z" selected>+Z</option>
+                    <option value="-Z" >-Z</option>
+                </select>
+            </label>
+            <ul></ul>
         </div>
-        <urdf-viewer up="-Z" display-shadow tabindex="0"></urdf-viewer>
+    </div>
 
-        <script src="./src/index.js"></script>
-    </body>
+    <plots-part id="svg-container">
+        <svg id="svg"></svg>
+    </plots-part>
+
+    <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>
+
+    <script src="./src/index.js"></script>
+</body>
+
 </html>
