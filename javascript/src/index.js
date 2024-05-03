@@ -179,22 +179,47 @@ function getSvg() {
         .attr('text-anchor', 'middle')
         .attr('y', -8);
 
+    const lineX = svg.append('g').append('line')
+        .attr('y1', height)
+        .attr('y2', 0)
+        .attr('stroke', 'black');
+
+    const timerD3 = d3.interval(() => {
+        if (movement !== null) {
+            const current = getCurrentMovementTime();
+            if (current >= movement.length) {
+                timerD3.stop();
+            }
+            if (current > 0 && current < movement.length) {
+                const [x, y, k] = points[current];
+                path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
+                dot.attr('transform', `translate(${x},${y})`);
+                dot.select('text').text(y);
+                lineX.attr('transform', `translate(${x},0)`);
+            }
+        }
+    }, 10, d3.now());
+
     svg
         .on('pointerenter', pointerentered)
         .on('pointermove', pointermoved)
         .on('pointerleave', pointerleft)
         .on('touchstart', event => event.preventDefault());
     return svg.node();
+
     // When the pointer moves, find the closest point, update the interactive tip, and highlight
     // the corresponding line. Note: we don't actually use Voronoi here, since an exhaustive search
     // is fast enough.
+
     function pointermoved(event) {
         const [xm, ym] = d3.pointer(event);
         const i = d3.leastIndex(points, ([x, y]) => Math.hypot(x - xm, y - ym));
         const [x, y, k] = points[i];
-        path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
+        path.style('stroke', ({ z }) => z === y ? null : '#ddd').filter(({ z }) => z === y).raise();
         dot.attr('transform', `translate(${x},${y})`);
-        dot.select('text').text(k);
+        dot.select('text').text(y);
+        lineX.attr('transform', `translate(${x},0)`);
+
         svg.property('value', movement[i]).dispatch('input', { bubbles: true });
     }
 
@@ -479,11 +504,8 @@ const updateAnglesAnymal = () => {
     for (const name in resetJointValues) resetJointValues[name] = 0;
     viewer.setJointValues(resetJointValues);
 
-    const time = Date.now() - timer;
-    const ignoreFirst = 400 * 200;
-    // freq = 0.01 sec
-    const freq = 0.1;
-    const current = Math.floor(time / 1000 / freq + ignoreFirst);
+    const current = getCurrentMovementTime();
+
     // console.log(current)
     const names = ['LF_HAA', 'LF_HFE', 'LF_KFE',
         'RF_HAA', 'RF_HFE', 'RF_KFE',
@@ -503,6 +525,15 @@ const updateAnglesAnymal = () => {
         viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
     }
 
+};
+
+const getCurrentMovementTime = () => {
+    const time = Date.now() - timer;
+    const ignoreFirst = 400 * 200;
+    // freq = 0.01 sec
+    const freq = 0.1;
+    const current = Math.floor(time / 1000 / freq + ignoreFirst);
+    return current;
 };
 
 const updateLoop = () => {
