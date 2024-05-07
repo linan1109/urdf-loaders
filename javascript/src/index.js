@@ -94,6 +94,7 @@ function getSvg() {
     const marginRight = 20;
     const marginBottom = 30;
     const marginLeft = 30;
+    const windowSize = 400;
 
     const voronoi = false;
 
@@ -104,70 +105,8 @@ function getSvg() {
         .attr('style', 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;');
 
 
-    let path = null;
-    let groups = null;
-    let points = null;
-    // Create the SVG container.
-    if (movement !== null && movement !== undefined) {
-        // Create the positional scales.
-        const x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
-        const y = movement.map(d => parseFloat(d.obs_4));
 
-        const xScale = d3.scaleLinear()
-            .domain(d3.extent(x))
-            .range([marginLeft, width - marginRight]);
 
-        const yScale = d3.scaleLinear()
-            .domain(d3.extent(y))
-            .range([height - marginBottom, marginTop]);
-        // Add the horizontal axis.
-        svg.append('g')
-            .attr('transform', `translate(0,${height - marginBottom})`)
-            .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
-
-        // Add the vertical axis.
-        svg.append('g')
-            .attr('transform', `translate(${marginLeft},0)`)
-            .call(d3.axisLeft(yScale))
-            .call(g => g.select('.domain').remove())
-            .call(voronoi ? () => { } : g => g.selectAll('.tick line').clone()
-                .attr('x2', width - marginLeft - marginRight)
-                .attr('stroke-opacity', 0.1))
-            .call(g => g.append('text')
-                .attr('x', -marginLeft)
-                .attr('y', 10)
-                .attr('fill', 'currentColor')
-                .attr('text-anchor', 'start')
-                .text('movement'));
-
-        // Compute the points in pixel space as [x, y, z], where z is the name of the series.
-        points = movement.map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
-        // console.log(points);
-        // check if there is non-numerical data
-        if (points.some(d => isNaN(d[0]) || isNaN(d[1]))) {
-            points = points.filter(d => !isNaN(d[0]) && !isNaN(d[1]));
-        }
-        if (points.some(d => isNaN(d[0]) || isNaN(d[1]))) {
-            console.log('Non-numerical data found');
-        }
-        groups = d3.rollup(points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
-
-        // Add the line.
-        const line = d3.line();
-        path = svg.append('g')
-            .attr('fill', 'none')
-            .attr('stroke', 'steelblue')
-            .attr('stroke-width', 1.5)
-            .attr('stroke-linejoin', 'round')
-            .attr('stroke-linecap', 'round')
-            .selectAll('path')
-            .data(groups.values())
-            .join('path')
-            .style('mix-blend-mode', 'multiply')
-            .attr('d', line);
-    }
-
-    console.log('points', points);
     // Add an invisible layer for the interactive tip.
     const dot = svg.append('g')
         .attr('display', 'none');
@@ -180,9 +119,16 @@ function getSvg() {
         .attr('y', -8);
 
     const lineX = svg.append('g').append('line')
-        .attr('y1', height)
-        .attr('y2', 0)
+        .attr('y1', height * 0.9)
+        .attr('y2', height * 0.1)
         .attr('stroke', 'black');
+
+    let path = null;
+    let groups = null;
+    let points = null;
+    let all_x = null;
+    let all_y = null;
+    let yScale = null;
 
     const timerD3 = d3.interval(() => {
         if (movement !== null) {
@@ -191,11 +137,72 @@ function getSvg() {
                 timerD3.stop();
             }
             if (current > 0 && current < movement.length) {
-                const [x, y, k] = points[current];
+                svg.selectAll('.plotline').remove();
+                svg.selectAll('.xaxis').remove();
+                if (all_x === null) {
+                    all_x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+                    all_y = movement.map(d => parseFloat(d.obs_4));
+
+                    yScale = d3.scaleLinear()
+                        .domain(d3.extent(all_y))
+                        .range([height - marginBottom, marginTop]);
+                    // Add the vertical axis.
+                    svg.append('g')
+                        .attr('transform', `translate(${marginLeft},0)`)
+                        .attr('class', 'yaxis')
+                        .call(d3.axisLeft(yScale))
+                        .call(g => g.select('.domain').remove())
+                        .call(voronoi ? () => { } : g => g.selectAll('.tick line').clone()
+                            .attr('x2', width - marginLeft - marginRight)
+                            .attr('stroke-opacity', 0.1))
+                        .call(g => g.append('text')
+                            .attr('x', -marginLeft)
+                            .attr('y', 10)
+                            .attr('fill', 'currentColor')
+                            .attr('text-anchor', 'start')
+                            .text('movement'));
+                }
+
+                // slice the window for the current time
+                const x = all_x.slice(Math.max(0, current - windowSize / 2), Math.min(movement.length, current + windowSize / 2));
+                // console.log('window from ' + x[0] + ' to ' + x[x.length - 1])
+                const xScale = d3.scaleLinear()
+                    .domain(d3.extent(x))
+                    .range([marginLeft, width - marginRight]);
+
+                // Add the horizontal axis.
+                svg.append('g')
+                    .attr('transform', `translate(0,${height - marginBottom})`)
+                    .attr('class', 'xaxis')
+                    .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
+
+                // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+                points = movement.map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
+                groups = d3.rollup(points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
+
+                // Add the line.
+                const line = d3.line();
+                path = svg.append('g')
+                    .attr('class', 'plotline')
+                    .attr('fill', 'none')
+                    .attr('stroke', 'steelblue')
+                    .attr('stroke-width', 1.5)
+                    .attr('stroke-linejoin', 'round')
+                    .attr('stroke-linecap', 'round')
+                    .selectAll('path')
+                    .data(groups.values())
+                    .join('path')
+                    .style('mix-blend-mode', 'multiply')
+                    .attr('d', line);
+
+
+                // update the vertical line and the dot
+                const [a, b, k] = points[current];
                 path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
-                dot.attr('transform', `translate(${x},${y})`);
-                dot.select('text').text(y);
-                lineX.attr('transform', `translate(${x},0)`);
+                dot.attr('transform', `translate(${a},${b})`);
+                dot.select('text').text(b);
+                lineX.attr('transform', `translate(${a},0)`);
+
             }
         }
     }, 10, d3.now());
