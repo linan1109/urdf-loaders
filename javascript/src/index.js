@@ -105,8 +105,6 @@ function getSvg() {
         .attr('style', 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;');
 
 
-
-
     // Add an invisible layer for the interactive tip.
     const dot = svg.append('g')
         .attr('display', 'none');
@@ -140,6 +138,8 @@ function getSvg() {
                 svg.selectAll('.plotline').remove();
                 svg.selectAll('.xaxis').remove();
                 if (all_x === null) {
+                    // movement filter NaN
+                    movement = movement.filter(d => !isNaN(parseFloat(d.obs_4)));
                     all_x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
                     all_y = movement.map(d => parseFloat(d.obs_4));
 
@@ -177,31 +177,38 @@ function getSvg() {
                     .call(d3.axisBottom(xScale).ticks(width / 80).tickSizeOuter(0));
 
                 // Compute the points in pixel space as [x, y, z], where z is the name of the series.
-                points = movement.map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
+                points = movement
+                    .slice(Math.max(0, current - windowSize / 2), Math.min(movement.length, current + windowSize / 2))
+                    .map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
+
+
                 groups = d3.rollup(points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
 
-                // Add the line.
-                const line = d3.line();
+                // Add the lines.
                 path = svg.append('g')
                     .attr('class', 'plotline')
                     .attr('fill', 'none')
-                    .attr('stroke', 'steelblue')
                     .attr('stroke-width', 1.5)
-                    .attr('stroke-linejoin', 'round')
-                    .attr('stroke-linecap', 'round')
                     .selectAll('path')
-                    .data(groups.values())
+                    .data(Array.from(groups, ([k, v]) => v))
                     .join('path')
+                    .attr('stroke', '#555')
                     .style('mix-blend-mode', 'multiply')
-                    .attr('d', line);
+                    .attr('d', d3.line()
+                        .x(d => d[0])
+                        .y(d => d[1]));
 
 
                 // update the vertical line and the dot
-                const [a, b, k] = points[current];
-                path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
+                const cur_mov = movement[current];
+                const a = xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
+                const b = yScale(parseFloat(cur_mov.obs_4));
+                const k = 0;
+                // path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
                 dot.attr('transform', `translate(${a},${b})`);
                 dot.select('text').text(b);
-                lineX.attr('transform', `translate(${a},0)`);
+                lineX.attr('transform', `translate(${a},0)`)
+                    .attr('stroke', '#ddd');
 
             }
         }
@@ -529,14 +536,16 @@ const updateAnglesAnymal = () => {
     }
     for (let i = 0; i < names.length; i++) {
         // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
-        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
+        // console.log(parseFloat(mov['obs_' + (i + 4)]));
+        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) / 3.14 );
     }
 
 };
 
 const getCurrentMovementTime = () => {
     const time = Date.now() - timer;
-    const ignoreFirst = 400 * 200;
+    // const ignoreFirst = 400 * 200;
+    const ignoreFirst = 0;
     // freq = 0.01 sec
     const freq = 0.1;
     const current = Math.floor(time / 1000 / freq + ignoreFirst);
