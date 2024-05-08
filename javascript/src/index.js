@@ -28,12 +28,28 @@ const animToggle = document.getElementById('do-animate');
 const inputContainer = document.getElementById('input-container');
 const loadButton = document.getElementById('load-movement');
 const svgContainer = document.getElementById('svg-container');
+const plotsControls = document.getElementById('plots-controls');
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 let timer = null;
 let movement = null;
+
+const nameObsMap = {
+    'LF_HAA': 'obs_4',
+    'LF_HFE': 'obs_5',
+    'LF_KFE': 'obs_6',
+    'RF_HAA': 'obs_7',
+    'RF_HFE': 'obs_8',
+    'RF_KFE': 'obs_9',
+    'LH_HAA': 'obs_10',
+    'LH_HFE': 'obs_11',
+    'LH_KFE': 'obs_12',
+    'RH_HAA': 'obs_13',
+    'RH_HFE': 'obs_14',
+    'RH_KFE': 'obs_15'
+};
 
 // Global Functions
 const setColor = color => {
@@ -78,16 +94,47 @@ loadButton.addEventListener('change', e => {
         console.log('Loaded movement data');
         console.log('Length:' + movement.length);
 
-        const svg = getSvg();
+        // create toggle buttons
+        while (plotsControls.firstChild) {
+            plotsControls.removeChild(plotsControls.firstChild);
+        }
+        const showPlotsControls = document.createElement('div');
+        showPlotsControls.id = 'toggle-plots-controls';
+        showPlotsControls.addEventListener('click', () => plotsControls.classList.toggle('hidden'));
+        plotsControls.appendChild(showPlotsControls);
+
+        for (const key in nameObsMap) {
+            // create toggle button
+            const toggle = document.createElement('div');
+            toggle.className = 'toggle';
+            toggle.innerHTML = key;
+            toggle.textContent = key;
+            toggle.addEventListener('click', () => {
+                if (toggle.classList.contains('checked')) {
+                    toggle.classList.remove('checked');
+                    const svg = document.getElementById('plot-' + key);
+                    svg.remove();
+                } else {
+                    toggle.classList.add('checked');
+                    const svg = getSvg(key);
+                    svg.id = 'plot-' + key;
+                    svgContainer.appendChild(svg);
+                }
+            });
+            plotsControls.appendChild(toggle);
+        }
+        // const svg = getSvg('obs_6');
         while (svgContainer.firstChild) {
             svgContainer.removeChild(svgContainer.firstChild);
         }
-        svgContainer.appendChild(svg);
+        // svgContainer.appendChild(svg);
     };
     reader.readAsText(file);
+    timer = Date.now();
 });
 
-function getSvg() {
+function getSvg(realName) {
+    const obsName = nameObsMap[realName];
     const width = 600;
     const height = 300;
     const marginTop = 20;
@@ -103,7 +150,6 @@ function getSvg() {
         .attr('height', height)
         .attr('viewBox', [0, 0, width, height])
         .attr('style', 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;');
-
 
     // Add an invisible layer for the interactive tip.
     const dot = svg.append('g')
@@ -139,9 +185,9 @@ function getSvg() {
                 svg.selectAll('.xaxis').remove();
                 if (all_x === null) {
                     // movement filter NaN
-                    movement = movement.filter(d => !isNaN(parseFloat(d.obs_4)));
+                    movement = movement.filter(d => !isNaN(parseFloat(d[obsName])));
                     all_x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
-                    all_y = movement.map(d => parseFloat(d.obs_4));
+                    all_y = movement.map(d => parseFloat(d[obsName]));
 
                     yScale = d3.scaleLinear()
                         .domain(d3.extent(all_y))
@@ -160,7 +206,7 @@ function getSvg() {
                             .attr('y', 10)
                             .attr('fill', 'currentColor')
                             .attr('text-anchor', 'start')
-                            .text('movement'));
+                            .text(realName));
                 }
 
                 // slice the window for the current time
@@ -179,7 +225,7 @@ function getSvg() {
                 // Compute the points in pixel space as [x, y, z], where z is the name of the series.
                 points = movement
                     .slice(Math.max(0, current - windowSize / 2), Math.min(movement.length, current + windowSize / 2))
-                    .map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d.obs_4)), 0]);
+                    .map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), yScale(parseFloat(d[[obsName]])), 0]);
 
 
                 groups = d3.rollup(points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
@@ -202,11 +248,12 @@ function getSvg() {
                 // update the vertical line and the dot
                 const cur_mov = movement[current];
                 const a = xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
-                const b = yScale(parseFloat(cur_mov.obs_4));
+                const b = yScale(parseFloat(cur_mov[[obsName]]));
+                const textB = parseFloat(cur_mov[[obsName]]);
                 const k = 0;
                 // path.style('stroke', ({ z }) => z === k ? null : '#ddd').filter(({ z }) => z === k).raise();
                 dot.attr('transform', `translate(${a},${b})`);
-                dot.select('text').text(b);
+                dot.select('text').text(textB);
                 lineX.attr('transform', `translate(${a},0)`)
                     .attr('stroke', '#ddd');
 
@@ -254,6 +301,8 @@ function getSvg() {
 upSelect.addEventListener('change', () => viewer.up = upSelect.value);
 
 controlsToggle.addEventListener('click', () => controlsel.classList.toggle('hidden'));
+
+
 
 // watch for urdf changes
 viewer.addEventListener('urdf-change', () => {
@@ -543,6 +592,7 @@ const updateAnglesAnymal = () => {
 };
 
 const getCurrentMovementTime = () => {
+    if (timer === null) return 0;
     const time = Date.now() - timer;
     // const ignoreFirst = 400 * 200;
     const ignoreFirst = 0;

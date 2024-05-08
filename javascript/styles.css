@@ -177,6 +177,54 @@ input:focus {
     opacity: 0.75;
 }
 
+#plots-controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: right;
+    justify-content: right; 
+    margin: 20px;
+}
+
+#plots-controls > * {
+    width: 20%;
+    margin: 5px;
+}
+
+#plots-controls #toggle-plots-controls {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: right;
+    transition: 0.1s opacity linear;
+    border-top: 1px solid white;
+}
+
+#plots-controls #toggle-plots-controls:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#plots-controls #toggle-plots-controls:before {
+    content: "hide plot options";
+    font-size: 12px;
+    font-weight: normal;
+}
+
+/* hidden state */
+#plots-controls.hidden #toggle-plots-controls:before {
+    content: "show plot options";
+}
+
+
+#plots-controls.hidden > *:not(#toggle-plots-controls) {
+    display: none;
+}
+
+#plots-controls.hidden #toggle-plots-controls {
+    opacity: 0.5;
+}
+
 #controls {
     flex: 1;
     display: flex;
