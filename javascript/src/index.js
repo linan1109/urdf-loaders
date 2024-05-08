@@ -537,7 +537,7 @@ const updateAnglesAnymal = () => {
     for (let i = 0; i < names.length; i++) {
         // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
         // console.log(parseFloat(mov['obs_' + (i + 4)]));
-        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]) / 3.14 );
+        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]));
     }
 
 };
