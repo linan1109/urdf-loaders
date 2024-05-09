@@ -174,7 +174,16 @@ function getSvg(realName) {
     let all_y = null;
     let yScale = null;
 
-    const timerD3 = d3.interval(() => {
+    const timerD3 = d3.interval(updatePlot, 33);
+
+    svg
+        .on('pointerenter', pointerentered)
+        .on('pointermove', pointermoved)
+        .on('pointerleave', pointerleft)
+        .on('touchstart', event => event.preventDefault());
+    return svg.node();
+
+    function updatePlot() {
         if (movement !== null) {
             const current = getCurrentMovementTime();
             if (current >= movement.length) {
@@ -259,14 +268,7 @@ function getSvg(realName) {
 
             }
         }
-    }, 10, d3.now());
-
-    svg
-        .on('pointerenter', pointerentered)
-        .on('pointermove', pointermoved)
-        .on('pointerleave', pointerleft)
-        .on('touchstart', event => event.preventDefault());
-    return svg.node();
+    };
 
     // When the pointer moves, find the closest point, update the interactive tip, and highlight
     // the corresponding line. Note: we don't actually use Voronoi here, since an exhaustive search
@@ -591,30 +593,34 @@ const updateAnglesAnymal = () => {
 
 };
 
+
+let ignoreFirst = 0;
+
 const getCurrentMovementTime = () => {
     if (timer === null) return 0;
     const time = Date.now() - timer;
-    // const ignoreFirst = 400 * 200;
-    const ignoreFirst = 0;
     // freq = 0.01 sec
-    const freq = 0.1;
+    const freq = 0.03;
     const current = Math.floor(time / 1000 / freq + ignoreFirst);
     return current;
 };
 
 const updateLoop = () => {
-
-    if (animToggle.classList.contains('checked') && movement !== null) {
-        if (timer === null) {
-            timer = Date.now();
+    if (movement !== null) {
+        if (animToggle.classList.contains('checked')) {
+            if (timer === null) {
+                timer = Date.now();
+            }
+            updateAnglesAnymal();
+            // updateAngles();
+        } else {
+            if (timer !== null) {
+                ignoreFirst = getCurrentMovementTime();
+                timer = null;
+            }
         }
-        updateAnglesAnymal();
-        // updateAngles();
-    } else {
-        timer = null;
     }
     requestAnimationFrame(updateLoop);
-
 };
 
 const updateList = () => {
