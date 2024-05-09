@@ -122,7 +122,7 @@ loadButton.addEventListener('change', e => {
                     const svgNode = svg.svg.node();
                     svgNode.id = 'plot-' + key;
                     svgContainer.appendChild(svgNode);
-                    svg.updatePlot();
+                    svg.updatePlotOnTime();
                     svgList[key] = svg;
                 }
             });
@@ -158,6 +158,8 @@ class svgPlotter {
         this.all_x = null;
         this.all_y = null;
         this.yScale = null;
+        this.xScale = null;
+        this.current = null;
 
         this.setup();
     }
@@ -188,7 +190,9 @@ class svgPlotter {
         this.svg.on('pointerenter', (event) => this.pointerentered(event))
             // .on('pointermove', (event) => this.pointermoved(event))
             .on('pointerleave', (event) => this.pointerleft(event))
-            .on('touchstart', event => event.preventDefault());
+            .on('touchstart', event => event.preventDefault())
+            .on('dblclick', (event) => this.dblclicked(event))
+            ;
 
     }
 
@@ -216,13 +220,29 @@ class svgPlotter {
         this.svg.dispatch('input', { bubbles: true });
     }
 
-    updatePlot() {
+    dblclicked = () => {
+        if (animToggle.classList.contains('checked')) {
+            animToggle.classList.remove('checked');
+            timer = null;
+            timerD3.stop();
+        } 
+        this.svg.selectAll('.plotline').remove();
+        this.svg.selectAll('.xaxis').remove();
+        this.current = getCurrentMovementTime();
+        this.xScale = d3.scaleLinear()
+            .domain(d3.extent(this.all_x))
+            .range([this.marginLeft, this.width - this.marginRight]);
+        this.points = movement.map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+        this.drawByX();
+    }
+
+    updatePlotOnTime() {
         if (movement !== null) {
-            const current = getCurrentMovementTime();
-            if (current >= movement.length) {
+            this.current = getCurrentMovementTime();
+            if (this.current >= movement.length) {
                 timerD3.stop();
             }
-            if (current >= 0 && current < movement.length) {
+            if (this.current >= 0 && this.current < movement.length) {
                 this.svg.selectAll('.plotline').remove();
                 this.svg.selectAll('.xaxis').remove();
                 if (this.all_x === null) {
@@ -252,53 +272,57 @@ class svgPlotter {
                 }
 
                 // slice the window for the current time
-                const x = this.all_x.slice(Math.max(0, current - this.windowSize / 2), Math.min(movement.length, current + this.windowSize / 2));
-                // console.log('window from ' + x[0] + ' to ' + x[x.length - 1])
-                const xScale = d3.scaleLinear()
+                const x = this.all_x.slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2));
+
+                this.xScale = d3.scaleLinear()
                     .domain(d3.extent(x))
                     .range([this.marginLeft, this.width - this.marginRight]);
 
-                // Add the horizontal axis.
-                this.svg.append('g')
-                    .attr('transform', `translate(0,${this.height - this.marginBottom})`)
-                    .attr('class', 'xaxis')
-                    .call(d3.axisBottom(xScale).ticks(this.width / 80).tickSizeOuter(0));
-
-                // Compute the points in pixel space as [x, y, z], where z is the name of the series.
                 this.points = movement
-                    .slice(Math.max(0, current - this.windowSize / 2), Math.min(movement.length, current + this.windowSize / 2))
-                    .map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
+                    .slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2))
+                    .map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
 
-                this.groups = d3.rollup(this.points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
 
-                // Add the lines.
-                this.path = this.svg.append('g')
-                    .attr('class', 'plotline')
-                    .attr('fill', 'none')
-                    .attr('stroke-width', 1.5)
-                    .selectAll('path')
-                    .data(Array.from(this.groups, ([k, v]) => v))
-                    .join('path')
-                    .attr('stroke', '#555')
-                    .style('mix-blend-mode', 'multiply')
-                    .attr('d', d3.line()
-                        .x(d => d[0])
-                        .y(d => d[1]));
-
-                // update the vertical line and the dot
-                const cur_mov = movement[current];
-                const a = xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
-                const b = this.yScale(parseFloat(cur_mov[[this.obsName]]));
-                const textB = parseFloat(cur_mov[[this.obsName]]);
-                const k = 0;
-
-                this.dot.attr('transform', `translate(${a},${b})`);
-                this.dot.select('text').text(textB);
-                this.lineX.attr('transform', `translate(${a},0)`)
-                    .attr('stroke', '#ddd');
-
+                this.drawByX();
             }
+
         }
+    }
+
+    drawByX() {
+        // Add the horizontal axis.
+        this.svg.append('g')
+            .attr('transform', `translate(0,${this.height - this.marginBottom})`)
+            .attr('class', 'xaxis')
+            .call(d3.axisBottom(this.xScale).ticks(this.width / 80).tickSizeOuter(0));
+
+        this.groups = d3.rollup(this.points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
+
+        // Add the lines.
+        this.path = this.svg.append('g')
+            .attr('class', 'plotline')
+            .attr('fill', 'none')
+            .attr('stroke-width', 1.5)
+            .selectAll('path')
+            .data(Array.from(this.groups, ([k, v]) => v))
+            .join('path')
+            .attr('stroke', '#555')
+            .style('mix-blend-mode', 'multiply')
+            .attr('d', d3.line()
+                .x(d => d[0])
+                .y(d => d[1]));
+
+        // update the vertical line and the dot
+        const cur_mov = movement[this.current];
+        const a = this.xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
+        const b = this.yScale(parseFloat(cur_mov[[this.obsName]]));
+        const textB = parseFloat(cur_mov[[this.obsName]]);
+
+        this.dot.attr('transform', `translate(${a},${b})`);
+        this.dot.select('text').text(textB);
+        this.lineX.attr('transform', `translate(${a},0)`)
+            .attr('stroke', '#ddd');
+
     }
 }
 
@@ -611,7 +635,7 @@ const getCurrentMovementTime = () => {
 function timerD3Update() {
     for (const key in svgList) {
         const svg = svgList[key];
-        svg.updatePlot();
+        svg.updatePlotOnTime();
     }
     updateAnglesAnymal();
 };
