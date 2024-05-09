@@ -188,10 +188,11 @@ class svgPlotter {
             .attr('stroke', 'black');
 
         this.svg.on('pointerenter', (event) => this.pointerentered(event))
-            // .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointermove', (event) => this.pointermoved(event))
             .on('pointerleave', (event) => this.pointerleft(event))
             .on('touchstart', event => event.preventDefault())
             .on('dblclick', (event) => this.dblclicked(event))
+            .on('click', (event) => this.singleclicked(event))
             ;
 
     }
@@ -202,15 +203,17 @@ class svgPlotter {
     }
 
     pointermoved = (event) => {
-        const [xm, ym] = d3.pointer(event);
-        const i = d3.leastIndex(this.points, ([x, y]) => Math.hypot(x - xm, y - ym));
-        const [x, y, k] = this.points[i];
-        this.path.style('stroke', ({ z }) => z === y ? null : '#ddd').filter(({ z }) => z === y).raise();
-        this.dot.attr('transform', `translate(${x},${y})`);
-        this.dot.select('text').text(y);
-        this.lineX.attr('transform', `translate(${x},0)`);
+        if (timer === null) {
+            const [xm, ym] = d3.pointer(event);
+            const i = d3.leastIndex(this.points, ([x, y]) => Math.hypot(x - xm, y - ym));
+            const [x, y, k] = this.points[i];
+            this.path.style('stroke', ({ z }) => z === y ? null : '#ddd').filter(({ z }) => z === y).raise();
+            this.dot.attr('transform', `translate(${x},${y})`);
+            this.dot.select('text').text(y);
+            this.lineX.attr('transform', `translate(${x},0)`);
 
-        this.svg.property('value', movement[i]).dispatch('input', { bubbles: true });
+            this.svg.property('value', movement[i]).dispatch('input', { bubbles: true });
+        }
     }
 
     pointerleft = () => {
@@ -223,9 +226,8 @@ class svgPlotter {
     dblclicked = () => {
         if (animToggle.classList.contains('checked')) {
             animToggle.classList.remove('checked');
-            timer = null;
-            timerD3.stop();
-        } 
+            pauseAnimation();
+        }
         this.svg.selectAll('.plotline').remove();
         this.svg.selectAll('.xaxis').remove();
         this.current = getCurrentMovementTime();
@@ -234,6 +236,13 @@ class svgPlotter {
             .range([this.marginLeft, this.width - this.marginRight]);
         this.points = movement.map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
         this.drawByX();
+    }
+
+    singleclicked = () => {
+        if (animToggle.classList.contains('checked')) {
+            animToggle.classList.remove('checked');
+            pauseAnimation();
+        }
     }
 
     updatePlotOnTime() {
@@ -640,6 +649,12 @@ function timerD3Update() {
     updateAnglesAnymal();
 };
 
+function pauseAnimation() {
+    ignoreFirst = getCurrentMovementTime();
+    timer = null;
+    timerD3.stop();
+};
+
 const updateLoop = () => {
     if (movement !== null) {
         if (animToggle.classList.contains('checked')) {
@@ -649,9 +664,7 @@ const updateLoop = () => {
             }
         } else {
             if (timer !== null) {
-                ignoreFirst = getCurrentMovementTime();
-                timer = null;
-                timerD3.stop();
+                pauseAnimation();
             }
         }
     }
