@@ -29,6 +29,8 @@ const inputContainer = document.getElementById('input-container');
 const loadButton = document.getElementById('load-movement');
 const svgContainer = document.getElementById('svg-container');
 const plotsControls = document.getElementById('plots-controls');
+const togglePlotsControls = document.getElementById('toggle-plots-controls');
+const plotsControlsContainer = document.getElementById('plots-controls-container');
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
@@ -83,6 +85,9 @@ autocenterToggle.addEventListener('click', () => {
     viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
 });
 
+
+togglePlotsControls.addEventListener('click', () => plotsControls.classList.toggle('hidden'));
+
 // NEW ADD
 loadButton.addEventListener('change', e => {
     const fileInput = document.querySelector('input[type="file"]');
@@ -95,13 +100,9 @@ loadButton.addEventListener('change', e => {
         console.log('Length:' + movement.length);
 
         // create toggle buttons
-        while (plotsControls.firstChild) {
-            plotsControls.removeChild(plotsControls.firstChild);
+        while (plotsControlsContainer.firstChild) {
+            plotsControlsContainer.removeChild(plotsControlsContainer.firstChild);
         }
-        const showPlotsControls = document.createElement('div');
-        showPlotsControls.id = 'toggle-plots-controls';
-        showPlotsControls.addEventListener('click', () => plotsControls.classList.toggle('hidden'));
-        plotsControls.appendChild(showPlotsControls);
 
         for (const key in nameObsMap) {
             // create toggle button
@@ -121,13 +122,12 @@ loadButton.addEventListener('change', e => {
                     svgContainer.appendChild(svg);
                 }
             });
-            plotsControls.appendChild(toggle);
+            plotsControlsContainer.appendChild(toggle);
         }
-        // const svg = getSvg('obs_6');
+        
         while (svgContainer.firstChild) {
             svgContainer.removeChild(svgContainer.firstChild);
         }
-        // svgContainer.appendChild(svg);
     };
     reader.readAsText(file);
     timer = Date.now();
