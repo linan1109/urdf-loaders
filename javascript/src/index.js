@@ -36,9 +36,14 @@ const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 let timer = null;
-let movement = null;
 let svgList = {};
 let timerD3 = null;
+
+
+let movement = null;
+let movementIndexStart = 0;
+let movementStepEachUpdate = 400;
+let movementLength = 0;
 
 const nameObsMap = {
     'LF_HAA': 'obs_4',
@@ -96,8 +101,16 @@ loadButton.addEventListener('change', e => {
     reader.onload = function (e) {
         const data = e.target.result;
         movement = Papa.parse(data, { header: true }).data;
+        // max of movement['step']
+        movementStepEachUpdate = d3.max(movement, d => parseInt(d.step)) + 1;
+        movementLength = movement.length;
+        // first update and step
+        movementIndexStart = parseInt(movement[0].update) * movementStepEachUpdate + parseInt(movement[0].step);
+        
         console.log('Loaded movement data');
-        console.log('Length:' + movement.length);
+        console.log('Length:' + movementLength);
+        console.log('Step each update:' + movementStepEachUpdate);
+        console.log('Start index:' + movementIndexStart);
 
         // create toggle buttons
         while (plotsControlsContainer.firstChild) {
@@ -195,13 +208,13 @@ class svgPlotter {
                 if (event.selection) {
                     const [x0, x1] = event.selection.map(this.xScale.invert);
                     if (x1 - x0 > 1) {
-                        const smallMovement = movement.filter(d => parseInt(d.update) * 400 + parseInt(d.step) >= x0 && parseInt(d.update) * 400 + parseInt(d.step) <= x1);
-                        const x = smallMovement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+                        const smallMovement = movement.filter(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) >= x0 && parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) <= x1);
+                        const x = smallMovement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
                         const y = smallMovement.map(d => parseFloat(d[[this.obsName]]));
                         this.xScale = d3.scaleLinear()
                             .domain(d3.extent(x))
                             .range([this.marginLeft, this.width - this.marginRight]);
-                        this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+                        this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
                         this.drawByX();
                     }
                 }
@@ -231,9 +244,10 @@ class svgPlotter {
             const [xm, ym] = d3.pointer(event);
             const i = d3.leastIndex(this.points, ([x, y]) => Math.hypot(x - xm, y - ym));
             const [x, y, k] = this.points[i];
-            this.path.style('stroke', ({ z }) => z === y ? null : '#ddd').filter(({ z }) => z === y).raise();
+            const textY = this.yScale.invert(y);
+            this.path.style('stroke', '#ddd');
             this.dot.attr('transform', `translate(${x},${y})`);
-            this.dot.select('text').text(y);
+            this.dot.select('text').text(textY);
             this.lineX.attr('transform', `translate(${x},0)`);
 
             this.svg.property('value', movement[i]).dispatch('input', { bubbles: true });
@@ -256,14 +270,21 @@ class svgPlotter {
         this.xScale = d3.scaleLinear()
             .domain(d3.extent(this.all_x))
             .range([this.marginLeft, this.width - this.marginRight]);
-        this.points = movement.map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+        this.points = movement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
         this.drawByX();
     }
 
-    singleclicked = () => {
+    singleclicked = (event) => {
         if (animToggle.classList.contains('checked')) {
             animToggle.classList.remove('checked');
             pauseAnimation();
+        } else {
+            animToggle.classList.add('checked');
+            // get the click position
+            const [xm] = d3.pointer(event);
+            console.log(this.xScale.invert(xm));
+            ignoreFirst = Math.floor(this.xScale.invert(xm) - movementIndexStart);
+            startAnimation();
         }
     }
 
@@ -277,7 +298,7 @@ class svgPlotter {
                 if (this.all_x === null) {
                     // movement filter NaN
                     movement = movement.filter(d => !isNaN(parseFloat(d[this.obsName])));
-                    this.all_x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+                    this.all_x = movement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
                     this.all_y = movement.map(d => parseFloat(d[[this.obsName]]));
 
                     this.yScale = d3.scaleLinear()
@@ -309,7 +330,7 @@ class svgPlotter {
 
                 this.points = movement
                     .slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2))
-                    .map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
+                    .map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
 
 
                 this.drawByX();
@@ -347,7 +368,7 @@ class svgPlotter {
 
         // update the vertical line and the dot
         const cur_mov = movement[this.current];
-        const a = this.xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
+        const a = this.xScale(parseInt(cur_mov.update) * movementStepEachUpdate + parseInt(cur_mov.step));
         const b = this.yScale(parseFloat(cur_mov[[this.obsName]]));
         const textB = parseFloat(cur_mov[[this.obsName]]);
 
@@ -681,13 +702,17 @@ function pauseAnimation() {
     timerD3.stop();
 };
 
+function startAnimation() {
+    if (timer === null) {
+        timer = Date.now();
+        timerD3 = d3.interval(timerD3Update, 30);
+    }
+}
+
 const updateLoop = () => {
     if (movement !== null) {
         if (animToggle.classList.contains('checked')) {
-            if (timer === null) {
-                timer = Date.now();
-                timerD3 = d3.interval(timerD3Update, 33);
-            }
+            startAnimation();
         } else {
             if (timer !== null) {
                 pauseAnimation();
