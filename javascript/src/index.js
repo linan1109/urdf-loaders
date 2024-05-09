@@ -222,7 +222,7 @@ class svgPlotter {
             if (current >= movement.length) {
                 timerD3.stop();
             }
-            if (current > 0 && current < movement.length) {
+            if (current >= 0 && current < movement.length) {
                 this.svg.selectAll('.plotline').remove();
                 this.svg.selectAll('.xaxis').remove();
                 if (this.all_x === null) {
@@ -646,7 +646,7 @@ const updateList = () => {
             viewer.up = '+Z';
             document.getElementById('up-select').value = viewer.up;
             viewer.urdf = urdf;
-            animToggle.classList.add('checked');
+            // animToggle.classList.add('checked');
             setColor(color);
 
         });
@@ -661,6 +661,12 @@ document.addEventListener('WebComponentsReady', () => {
 
     animToggle.addEventListener('click', () => {
         animToggle.classList.toggle('checked');
+        // change the text of the button
+        // if (animToggle.classList.contains('checked')) {
+        //     animToggle.textContent = 'Pause Animation';
+        // } else {
+        //     animToggle.textContent = 'Continue Animate Joints';
+        // }
     });
 
     // stop the animation if user tried to manipulate the model
