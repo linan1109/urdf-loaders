@@ -37,6 +37,7 @@ const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 let timer = null;
 let movement = null;
+let svgList = {};
 
 const nameObsMap = {
     'LF_HAA': 'obs_4',
@@ -85,10 +86,15 @@ autocenterToggle.addEventListener('click', () => {
     viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
 });
 
+const timerD3 = d3.interval(() => {
+    for (const key in svgList) {
+        const svg = svgList[key];
+        svg.updatePlot();
+    }
+}, 33);
 
 togglePlotsControls.addEventListener('click', () => plotsControls.classList.toggle('hidden'));
 
-// NEW ADD
 loadButton.addEventListener('change', e => {
     const fileInput = document.querySelector('input[type="file"]');
     const file = fileInput.files[0];
@@ -115,16 +121,20 @@ loadButton.addEventListener('change', e => {
                     toggle.classList.remove('checked');
                     const svg = document.getElementById('plot-' + key);
                     svg.remove();
+                    delete svgList[key];
                 } else {
                     toggle.classList.add('checked');
-                    const svg = getSvg(key);
-                    svg.id = 'plot-' + key;
-                    svgContainer.appendChild(svg);
+                    const svg = new svgPlotter(key);
+                    const svgNode = svg.svg.node();
+                    svgNode.id = 'plot-' + key;
+                    svgContainer.appendChild(svgNode);
+                    svg.updatePlot();
+                    svgList[key] = svg;
                 }
             });
             plotsControlsContainer.appendChild(toggle);
         }
-        
+
         while (svgContainer.firstChild) {
             svgContainer.removeChild(svgContainer.firstChild);
         }
@@ -132,6 +142,172 @@ loadButton.addEventListener('change', e => {
     reader.readAsText(file);
     timer = Date.now();
 });
+
+class svgPlotter {
+    constructor(realName) {
+        this.realName = realName;
+        this.obsName = nameObsMap[realName];
+        this.width = 600;
+        this.height = 300;
+        this.marginTop = 20;
+        this.marginRight = 20;
+        this.marginBottom = 30;
+        this.marginLeft = 30;
+        this.windowSize = 400;
+        this.voronoi = false;
+
+        this.svg = null;
+        this.dot = null;
+        this.lineX = null;
+        this.path = null;
+        this.groups = null;
+        this.points = null;
+        this.all_x = null;
+        this.all_y = null;
+        this.yScale = null;
+
+        this.setup();
+    }
+
+    setup() {
+        this.svg = d3.create('svg')
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .attr('viewBox', [0, 0, this.width, this.height])
+            .attr('style', 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;');
+
+        // Add an invisible layer for the interactive tip.
+        this.dot = this.svg.append('g')
+            .attr('display', 'none');
+
+        this.dot.append('circle')
+            .attr('r', 2.5);
+
+        this.dot.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('y', -8);
+
+        this.lineX = this.svg.append('g').append('line')
+            .attr('y1', this.height * 0.9)
+            .attr('y2', this.height * 0.1)
+            .attr('stroke', 'black');
+
+        this.svg.on('pointerenter', (event) => this.pointerentered(event))
+            // .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointerleave', (event) => this.pointerleft(event))
+            .on('touchstart', event => event.preventDefault());
+
+    }
+
+    pointerentered = () => {
+        // this.path.style('mix-blend-mode', null).style('stroke', '#ddd');
+        this.dot.attr('display', null);
+    }
+
+    pointermoved = (event) => {
+        const [xm, ym] = d3.pointer(event);
+        const i = d3.leastIndex(this.points, ([x, y]) => Math.hypot(x - xm, y - ym));
+        const [x, y, k] = this.points[i];
+        this.path.style('stroke', ({ z }) => z === y ? null : '#ddd').filter(({ z }) => z === y).raise();
+        this.dot.attr('transform', `translate(${x},${y})`);
+        this.dot.select('text').text(y);
+        this.lineX.attr('transform', `translate(${x},0)`);
+
+        this.svg.property('value', movement[i]).dispatch('input', { bubbles: true });
+    }
+
+    pointerleft = () => {
+        // this.path.style('mix-blend-mode', 'multiply').style('stroke', null);
+        this.dot.attr('display', 'none');
+        this.svg.node().value = null;
+        this.svg.dispatch('input', { bubbles: true });
+    }
+
+    updatePlot() {
+        if (movement !== null) {
+            const current = getCurrentMovementTime();
+            if (current >= movement.length) {
+                timerD3.stop();
+            }
+            if (current > 0 && current < movement.length) {
+                this.svg.selectAll('.plotline').remove();
+                this.svg.selectAll('.xaxis').remove();
+                if (this.all_x === null) {
+                    // movement filter NaN
+                    movement = movement.filter(d => !isNaN(parseFloat(d[this.obsName])));
+                    this.all_x = movement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+                    this.all_y = movement.map(d => parseFloat(d[[this.obsName]]));
+
+                    this.yScale = d3.scaleLinear()
+                        .domain(d3.extent(this.all_y))
+                        .range([this.height - this.marginBottom, this.marginTop]);
+                    // Add the vertical axis.
+                    this.svg.append('g')
+                        .attr('transform', `translate(${this.marginLeft},0)`)
+                        .attr('class', 'yaxis')
+                        .call(d3.axisLeft(this.yScale))
+                        .call(g => g.select('.domain').remove())
+                        .call(this.voronoi ? () => { } : g => g.selectAll('.tick line').clone()
+                            .attr('x2', this.width - this.marginLeft - this.marginRight)
+                            .attr('stroke-opacity', 0.1))
+                        .call(g => g.append('text')
+                            .attr('x', -this.marginLeft)
+                            .attr('y', 10)
+                            .attr('fill', 'currentColor')
+                            .attr('text-anchor', 'start')
+                            .text(this.realName));
+                }
+
+                // slice the window for the current time
+                const x = this.all_x.slice(Math.max(0, current - this.windowSize / 2), Math.min(movement.length, current + this.windowSize / 2));
+                // console.log('window from ' + x[0] + ' to ' + x[x.length - 1])
+                const xScale = d3.scaleLinear()
+                    .domain(d3.extent(x))
+                    .range([this.marginLeft, this.width - this.marginRight]);
+
+                // Add the horizontal axis.
+                this.svg.append('g')
+                    .attr('transform', `translate(0,${this.height - this.marginBottom})`)
+                    .attr('class', 'xaxis')
+                    .call(d3.axisBottom(xScale).ticks(this.width / 80).tickSizeOuter(0));
+
+                // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+                this.points = movement
+                    .slice(Math.max(0, current - this.windowSize / 2), Math.min(movement.length, current + this.windowSize / 2))
+                    .map(d => [xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
+
+                this.groups = d3.rollup(this.points, v => Object.assign(v, { z: v[0][2] }), d => d[2]);
+
+                // Add the lines.
+                this.path = this.svg.append('g')
+                    .attr('class', 'plotline')
+                    .attr('fill', 'none')
+                    .attr('stroke-width', 1.5)
+                    .selectAll('path')
+                    .data(Array.from(this.groups, ([k, v]) => v))
+                    .join('path')
+                    .attr('stroke', '#555')
+                    .style('mix-blend-mode', 'multiply')
+                    .attr('d', d3.line()
+                        .x(d => d[0])
+                        .y(d => d[1]));
+
+                // update the vertical line and the dot
+                const cur_mov = movement[current];
+                const a = xScale(parseInt(cur_mov.update) * 400 + parseInt(cur_mov.step));
+                const b = this.yScale(parseFloat(cur_mov[[this.obsName]]));
+                const textB = parseFloat(cur_mov[[this.obsName]]);
+                const k = 0;
+
+                this.dot.attr('transform', `translate(${a},${b})`);
+                this.dot.select('text').text(textB);
+                this.lineX.attr('transform', `translate(${a},0)`)
+                    .attr('stroke', '#ddd');
+
+            }
+        }
+    }
+}
 
 function getSvg(realName) {
     const obsName = nameObsMap[realName];
@@ -174,14 +350,14 @@ function getSvg(realName) {
     let all_y = null;
     let yScale = null;
 
-    const timerD3 = d3.interval(updatePlot, 33);
+    // const timerD3 = d3.interval(updatePlot, 33);
 
     svg
         .on('pointerenter', pointerentered)
         .on('pointermove', pointermoved)
         .on('pointerleave', pointerleft)
         .on('touchstart', event => event.preventDefault());
-    return svg.node();
+    return svg;
 
     function updatePlot() {
         if (movement !== null) {
@@ -597,7 +773,7 @@ const updateAnglesAnymal = () => {
 let ignoreFirst = 0;
 
 const getCurrentMovementTime = () => {
-    if (timer === null) return 0;
+    if (timer === null) return Math.floor(ignoreFirst);
     const time = Date.now() - timer;
     // freq = 0.01 sec
     const freq = 0.03;
