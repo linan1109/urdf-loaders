@@ -155,6 +155,8 @@ class svgPlotter {
         this.path = null;
         this.groups = null;
         this.points = null;
+        this.brush = null;
+
         this.all_x = null;
         this.all_y = null;
         this.yScale = null;
@@ -186,6 +188,28 @@ class svgPlotter {
             .attr('y1', this.height * 0.9)
             .attr('y2', this.height * 0.1)
             .attr('stroke', 'black');
+
+        this.brush = d3.brushX()
+            .extent([[this.marginLeft, this.marginTop], [this.width - this.marginRight, this.height - this.marginBottom]])
+            .on('end', (event) => {
+                if (event.selection) {
+                    const [x0, x1] = event.selection.map(this.xScale.invert);
+                    if (x1 - x0 > 1) {
+                        const smallMovement = movement.filter(d => parseInt(d.update) * 400 + parseInt(d.step) >= x0 && parseInt(d.update) * 400 + parseInt(d.step) <= x1);
+                        const x = smallMovement.map(d => parseInt(d.update) * 400 + parseInt(d.step));
+                        const y = smallMovement.map(d => parseFloat(d[[this.obsName]]));
+                        this.xScale = d3.scaleLinear()
+                            .domain(d3.extent(x))
+                            .range([this.marginLeft, this.width - this.marginRight]);
+                        this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * 400 + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+                        this.drawByX();
+                    }
+                }
+            });
+
+        this.svg.append('g')
+            .attr('class', 'brush')
+            .call(this.brush);
 
         this.svg.on('pointerenter', (event) => this.pointerentered(event))
             .on('pointermove', (event) => this.pointermoved(event))
@@ -228,8 +252,6 @@ class svgPlotter {
             animToggle.classList.remove('checked');
             pauseAnimation();
         }
-        this.svg.selectAll('.plotline').remove();
-        this.svg.selectAll('.xaxis').remove();
         this.current = getCurrentMovementTime();
         this.xScale = d3.scaleLinear()
             .domain(d3.extent(this.all_x))
@@ -252,8 +274,6 @@ class svgPlotter {
                 timerD3.stop();
             }
             if (this.current >= 0 && this.current < movement.length) {
-                this.svg.selectAll('.plotline').remove();
-                this.svg.selectAll('.xaxis').remove();
                 if (this.all_x === null) {
                     // movement filter NaN
                     movement = movement.filter(d => !isNaN(parseFloat(d[this.obsName])));
@@ -299,6 +319,10 @@ class svgPlotter {
     }
 
     drawByX() {
+        // remove
+        this.svg.selectAll('.plotline').remove();
+        this.svg.selectAll('.xaxis').remove();
+
         // Add the horizontal axis.
         this.svg.append('g')
             .attr('transform', `translate(0,${this.height - this.marginBottom})`)
@@ -332,6 +356,8 @@ class svgPlotter {
         this.lineX.attr('transform', `translate(${a},0)`)
             .attr('stroke', '#ddd');
 
+        // remove the brush after drawing
+        this.svg.select('.brush').call(this.brush.move, null);
     }
 }
 
