@@ -128,6 +128,12 @@ class URDFViewer extends HTMLElement {
         const world = new THREE.Object3D();
         scene.add(world);
 
+        // Add a stationary object
+        const geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 ); 
+        const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
+        const cube = new THREE.Mesh( geometry, material ); 
+        scene.add( cube );
+
         const plane = new THREE.Mesh(
             new THREE.PlaneBufferGeometry(40, 40),
             new THREE.ShadowMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0.5 }),

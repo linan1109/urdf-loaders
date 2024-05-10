@@ -48,7 +48,14 @@ const nameObsMap = {
     'LH_KFE': 'obs_12',
     'RH_HAA': 'obs_13',
     'RH_HFE': 'obs_14',
-    'RH_KFE': 'obs_15'
+    'RH_KFE': 'obs_15',
+    'POS_0': 'pos_0',
+    'POS_1': 'pos_1',
+    'POS_2': 'pos_2',
+    'ROT_0': 'rot_0',
+    'ROT_1': 'rot_1',
+    'ROT_2': 'rot_2',
+    
 };
 
 // Global Functions
@@ -586,9 +593,10 @@ const updateAnglesAnymal = () => {
     for (let i = 0; i < names.length; i++) {
         // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
         // console.log(parseFloat(mov['obs_' + (i + 4)]));
-        viewer.setJointValue(names[i], parseFloat(mov['obs_' + (i + 4)]));
+        viewer.setJointValue(names[i], parseFloat(mov[names[i]]));
     }
-
+    viewer.robot.position.set( mov['pos_' + (0)], mov['pos_' + (1)], mov['pos_' + (2)]);
+    viewer.robot.rotation.set( mov['rot_' + (0)], mov['rot_' + (1)], mov['rot_' + (2)]);
 };
 
 const getCurrentMovementTime = () => {
