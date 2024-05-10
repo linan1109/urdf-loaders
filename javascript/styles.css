@@ -186,8 +186,17 @@ input:focus {
     margin: 20px;
 }
 
-#plots-controls > * {
-    width: 20%;
+#plots-controls #plots-controls-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: right;
+    justify-content: right;
+    margin: 20px;
+}
+
+#plots-controls #plots-controls-container > * {
+    width: 20%;    
     margin: 5px;
 }
 
