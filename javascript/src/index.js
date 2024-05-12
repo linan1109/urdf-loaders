@@ -42,7 +42,7 @@ let timerD3 = null;
 
 let movement = null;
 let movementIndexStart = 0;
-let movementStepEachUpdate = 400;
+// let movementStepEachUpdate = 400;
 let movementLength = 0;
 
 const nameObsMap = {
@@ -109,14 +109,15 @@ loadButton.addEventListener('change', e => {
         const data = e.target.result;
         movement = Papa.parse(data, { header: true }).data;
         // max of movement['step']
-        movementStepEachUpdate = d3.max(movement, d => parseInt(d.step)) + 1;
+        // movementStepEachUpdate = d3.max(movement, d => parseInt(d.step)) + 1;
         movementLength = movement.length;
         // first update and step
-        movementIndexStart = parseInt(movement[0].update) * movementStepEachUpdate + parseInt(movement[0].step);
+        // movementIndexStart = parseInt(movement[0].update) * movementStepEachUpdate + parseInt(movement[0].step);
+        movementIndexStart = 0;
         
         console.log('Loaded movement data');
         console.log('Length:' + movementLength);
-        console.log('Step each update:' + movementStepEachUpdate);
+        // console.log('Step each update:' + movementStepEachUpdate);
         console.log('Start index:' + movementIndexStart);
 
         // create toggle buttons
@@ -213,15 +214,19 @@ class svgPlotter {
             .extent([[this.marginLeft, this.marginTop], [this.width - this.marginRight, this.height - this.marginBottom]])
             .on('end', (event) => {
                 if (event.selection) {
-                    const [x0, x1] = event.selection.map(this.xScale.invert);
+                    let [x0, x1] = event.selection.map(this.xScale.invert);
+                    x0 = Math.floor(x0);
+                    x1 = Math.ceil(x1);
+                    console.log(x0, x1);
                     if (x1 - x0 > 1) {
-                        const smallMovement = movement.filter(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) >= x0 && parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) <= x1);
-                        const x = smallMovement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
-                        const y = smallMovement.map(d => parseFloat(d[[this.obsName]]));
+                        // const smallMovement = movement.filter(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) >= x0 && parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) <= x1);
+                        const x = d3.range(x0, x1);
+                        // const y = smallMovement.map(d => parseFloat(d[[this.obsName]]));
                         this.xScale = d3.scaleLinear()
                             .domain(d3.extent(x))
                             .range([this.marginLeft, this.width - this.marginRight]);
-                        this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+                        // this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+                        this.points = x.map((d, i) => [this.xScale(d), this.yScale(parseFloat(movement[d][this.obsName])), 0]);
                         this.drawByX();
                     }
                 }
@@ -277,7 +282,9 @@ class svgPlotter {
         this.xScale = d3.scaleLinear()
             .domain(d3.extent(this.all_x))
             .range([this.marginLeft, this.width - this.marginRight]);
-        this.points = movement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+        // this.points = movement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
+        this.points = this.all_x.map((d, i) => [this.xScale(d), this.yScale(parseFloat(movement[d][this.obsName])), 0]);
+
         this.drawByX();
     }
 
@@ -305,7 +312,8 @@ class svgPlotter {
                 if (this.all_x === null) {
                     // movement filter NaN
                     movement = movement.filter(d => !isNaN(parseFloat(d[this.obsName])));
-                    this.all_x = movement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
+                    // this.all_x = movement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
+                    this.all_x = movement.map((d, i) => i);
                     this.all_y = movement.map(d => parseFloat(d[[this.obsName]]));
 
                     this.yScale = d3.scaleLinear()
@@ -334,12 +342,11 @@ class svgPlotter {
                 this.xScale = d3.scaleLinear()
                     .domain(d3.extent(x))
                     .range([this.marginLeft, this.width - this.marginRight]);
-
-                this.points = movement
-                    .slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2))
-                    .map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
-
-
+                // this.points = movement
+                //     .slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2))
+                //     // .map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
+                //     .map((d, i) => [this.xScale(i), this.yScale(parseFloat(d[[this.obsName]])), 0]);
+                this.points = x.map((d, i) => [this.xScale(d), this.yScale(parseFloat(movement[d][this.obsName])), 0]);
                 this.drawByX();
             }
 
@@ -375,7 +382,8 @@ class svgPlotter {
 
         // update the vertical line and the dot
         const cur_mov = movement[this.current];
-        const a = this.xScale(parseInt(cur_mov.update) * movementStepEachUpdate + parseInt(cur_mov.step));
+        // const a = this.xScale(parseInt(cur_mov.update) * movementStepEachUpdate + parseInt(cur_mov.step));
+        const a = this.xScale(this.current);
         const b = this.yScale(parseFloat(cur_mov[[this.obsName]]));
         const textB = parseFloat(cur_mov[[this.obsName]]);
 
@@ -675,8 +683,6 @@ const updateAnglesAnymal = () => {
         return;
     }
     for (let i = 0; i < names.length; i++) {
-        // console.log(parseFloat(mov['obs_' + (i + 4)]) * DEG2RAD);
-        // console.log(parseFloat(mov['obs_' + (i + 4)]));
         viewer.setJointValue(names[i], parseFloat(mov[names[i]]));
     }
     viewer.robot.position.set( mov['pos_' + (0)], mov['pos_' + (1)], mov['pos_' + (2)]);
