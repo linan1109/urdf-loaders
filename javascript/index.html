@@ -33,7 +33,19 @@
             <div id="collision-toggle" class="toggle">Show Collision</div>
             <div id="do-animate" class="toggle">Show Movement</div>
             <div id="input-container">
-                <input type="file" id="load-movement"> Upload</input>
+                Movement 1
+                <br>
+                <input type="file" id="load-movement1" accept=".csv">
+            </div>
+            <div id="input-container">
+                Movement 2
+                <br>
+                <input type="file" id="load-movement2" accept=".csv"> 
+            </div>
+            <div id="input-container">
+                Movement 3 
+                <br>
+                <input type="file" id="load-movement3" accept=".csv">
             </div>
             <label>
                 Up Axis
@@ -55,7 +67,9 @@
             <div id="toggle-plots-controls"></div>
             <div id="plots-controls-container"></div>
         </div>
-        <div id="svg-container"></div>
+        <div id="svg-container">
+
+        </div>
     </plots-part>
 
     <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>

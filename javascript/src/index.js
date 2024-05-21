@@ -26,8 +26,9 @@ const controlsel = document.getElementById('controls');
 const controlsToggle = document.getElementById('toggle-controls');
 const animToggle = document.getElementById('do-animate');
 
-// const inputContainer = document.getElementById('input-container');
-const loadButton = document.getElementById('load-movement');
+const loadButton1 = document.getElementById('load-movement1');
+const loadButton2 = document.getElementById('load-movement2');
+const loadButton3 = document.getElementById('load-movement3');
 const svgContainer = document.getElementById('svg-container');
 const plotsControls = document.getElementById('plots-controls');
 const togglePlotsControls = document.getElementById('toggle-plots-controls');
@@ -35,17 +36,25 @@ const plotsControlsContainer = document.getElementById(
     'plots-controls-container',
 );
 
+const lineColors = {
+    noSelection: '#ddd',
+    selection: 'Black',
+    checked: '#00796B',
+};
+
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 let timer = null;
 const svgList = {};
+const checkedObs = [];
 let timerD3 = null;
 
-let movement = null;
+let movement1 = null;
+let movement2 = null;
+let movement3 = null;
 let movementIndexStart = 0;
-// let movementStepEachUpdate = 400;
-let movementLength = 0;
+let movementMinLen = Number.MAX_SAFE_INTEGER;
 
 const nameObsMap = {
     LF_HAA: 'LF_HAA',
@@ -60,6 +69,8 @@ const nameObsMap = {
     RH_HAA: 'RH_HAA',
     RH_HFE: 'RH_HFE',
     RH_KFE: 'RH_KFE',
+};
+const positionMap = {
     POS_0: 'pos_0',
     POS_1: 'pos_1',
     POS_2: 'pos_2',
@@ -100,73 +111,97 @@ autocenterToggle.addEventListener('click', () => {
     viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
 });
 
-togglePlotsControls.addEventListener('click', () =>
-    plotsControls.classList.toggle('hidden'),
-);
+togglePlotsControls.addEventListener('click', () => {
+    plotsControls.classList.toggle('hidden');
+});
 
-loadButton.addEventListener('change', (e) => {
-    const fileInput = document.querySelector('input[type="file"]');
+const addPlotSelectToggles = () => {
+    // ADD right bar selection
+    while (plotsControlsContainer.firstChild) {
+        plotsControlsContainer.removeChild(plotsControlsContainer.firstChild);
+    }
+
+    for (const key in nameObsMap) {
+        // create toggle button
+        const toggle = document.createElement('div');
+        toggle.className = 'toggle';
+        toggle.innerHTML = key;
+        toggle.textContent = key;
+        toggle.addEventListener('click', () => {
+            if (toggle.classList.contains('checked')) {
+                toggle.classList.remove('checked');
+                // remove from checkedObs
+                const index = checkedObs.indexOf(key);
+                if (index > -1) {
+                    checkedObs.splice(index, 1);
+                    updateAllSVG();
+                }
+            } else {
+                toggle.classList.add('checked');
+                checkedObs.push(key);
+                updateAllSVG();
+            }
+        });
+        plotsControlsContainer.appendChild(toggle);
+    }
+};
+
+const loadMovementFromCSV = (movement, robotNum) => {
+    const fileInput = document.getElementById('load-movement' + robotNum);
     const file = fileInput.files[0];
     const reader = new FileReader();
     reader.onload = function(e) {
         const data = e.target.result;
         movement = Papa.parse(data, { header: true }).data;
-        // max of movement['step']
-        // movementStepEachUpdate = d3.max(movement, d => parseInt(d.step)) + 1;
-        movementLength = movement.length;
-        // first update and step
-        // movementIndexStart = parseInt(movement[0].update) * movementStepEachUpdate + parseInt(movement[0].step);
+        const movementLength = movement.length;
         movementIndexStart = 0;
 
         console.log('Loaded movement data');
         console.log('Length:' + movementLength);
-        // console.log('Step each update:' + movementStepEachUpdate);
         console.log('Start index:' + movementIndexStart);
 
-        // create toggle buttons
-        while (plotsControlsContainer.firstChild) {
-            plotsControlsContainer.removeChild(
-                plotsControlsContainer.firstChild,
-            );
+        if (svgList[robotNum] !== undefined) {
+            svgList[robotNum].svg.remove();
         }
 
-        for (const key in nameObsMap) {
-            // create toggle button
-            const toggle = document.createElement('div');
-            toggle.className = 'toggle';
-            toggle.innerHTML = key;
-            toggle.textContent = key;
-            toggle.addEventListener('click', () => {
-                if (toggle.classList.contains('checked')) {
-                    toggle.classList.remove('checked');
-                    const svg = document.getElementById('plot-' + key);
-                    svg.remove();
-                    delete svgList[key];
-                } else {
-                    toggle.classList.add('checked');
-                    const svg = new SvgPlotter(key);
-                    const svgNode = svg.svg.node();
-                    svgNode.id = 'plot-' + key;
-                    svgContainer.appendChild(svgNode);
-                    svg.updatePlotOnTime();
-                    svgList[key] = svg;
-                }
-            });
-            plotsControlsContainer.appendChild(toggle);
-        }
+        const svg = new SvgPlotter(movement, robotNum);
+        const svgNode = svg.svg.node();
+        svgNode.id = 'plot-all';
+        svgContainer.appendChild(svgNode);
+        svgList[robotNum] = svg;
+        svg.updatePlotOnTime();
 
-        while (svgContainer.firstChild) {
-            svgContainer.removeChild(svgContainer.firstChild);
-        }
+        movement1 = robotNum === 1 ? movement : movement1;
+        movement2 = robotNum === 2 ? movement : movement2;
+        movement3 = robotNum === 3 ? movement : movement3;
+
+        movementMinLen = Math.min(movementLength, movementMinLen);
     };
     reader.readAsText(file);
-});
+};
+
+loadButton1.addEventListener('change', (e) =>
+    loadMovementFromCSV(movement1, 1),
+);
+loadButton2.addEventListener('change', (e) =>
+    loadMovementFromCSV(movement2, 2),
+);
+loadButton3.addEventListener('change', (e) =>
+    loadMovementFromCSV(movement3, 3),
+);
+
+const updateAllSVG = () => {
+    for (const key in svgList) {
+        const svg = svgList[key];
+        svg.updatePlotOnTime();
+    }
+};
 
 class SvgPlotter {
 
-    constructor(realName) {
-        this.realName = realName;
-        this.obsName = nameObsMap[realName];
+    constructor(movement, robotNum) {
+        this.movement = movement;
+        this.robotNum = robotNum;
         this.width = 600;
         this.height = 300;
         this.marginTop = 20;
@@ -181,14 +216,15 @@ class SvgPlotter {
         this.lineX = null;
         this.path = null;
         this.groups = null;
-        this.points = null;
+        this.points = [];
         this.brush = null;
 
         this.all_x = null;
-        this.all_y = null;
+        this.all_y = {};
         this.yScale = null;
         this.xScale = null;
         this.current = null;
+        this.currentObs = null;
 
         this.setup();
     }
@@ -234,9 +270,7 @@ class SvgPlotter {
                     x1 = Math.ceil(x1);
                     console.log(x0, x1);
                     if (x1 - x0 > 1) {
-                        // const smallMovement = movement.filter(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) >= x0 && parseInt(d.update) * movementStepEachUpdate + parseInt(d.step) <= x1);
                         const x = d3.range(x0, x1);
-                        // const y = smallMovement.map(d => parseFloat(d[[this.obsName]]));
                         this.xScale = d3
                             .scaleLinear()
                             .domain(d3.extent(x))
@@ -244,12 +278,20 @@ class SvgPlotter {
                                 this.marginLeft,
                                 this.width - this.marginRight,
                             ]);
-                        // this.points = smallMovement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
-                        this.points = x.map((d, i) => [
-                            this.xScale(d),
-                            this.yScale(parseFloat(movement[d][this.obsName])),
-                            0,
-                        ]);
+                        this.points = [];
+                        for (const key in nameObsMap) {
+                            this.points = this.points.concat(
+                                x.map((d, i) => [
+                                    this.xScale(d),
+                                    this.yScale(
+                                        parseFloat(
+                                            this.movement[d][nameObsMap[key]],
+                                        ),
+                                    ),
+                                    key,
+                                ]),
+                            );
+                        }
                         this.drawByX();
                     }
                 }
@@ -278,15 +320,33 @@ class SvgPlotter {
                 Math.hypot(x - xm, y - ym),
             );
             const [x, y, k] = this.points[i];
+            this.currentObs = k;
             const textY = this.yScale.invert(y);
-            this.path.style('stroke', '#ddd');
+            this.path
+                .style('stroke', ({ z }) =>
+                    z === k
+                        ? lineColors.selection
+                        : checkedObs.includes(z)
+                            ? lineColors.checked
+                            : lineColors.noSelection,
+                )
+                .filter(({ z }) => z === k)
+                .raise();
             this.dot.attr('transform', `translate(${ x },${ y })`);
             this.dot.select('text').text(textY);
             this.lineX.attr('transform', `translate(${ x },0)`);
 
+            const value = this.yScale.invert(ym);
             this.svg
-                .property('value', movement[i])
+                .property('value', value)
                 .dispatch('input', { bubbles: true });
+        } else {
+            const [xm, ym] = d3.pointer(event);
+            const i = d3.leastIndex(this.points, ([x, y]) =>
+                Math.hypot(x - xm, y - ym),
+            );
+            const [, , k] = this.points[i];
+            this.currentObs = k;
         }
     }
 
@@ -295,6 +355,10 @@ class SvgPlotter {
         this.dot.attr('display', 'none');
         this.svg.node().value = null;
         this.svg.dispatch('input', { bubbles: true });
+        this.currentObs = null;
+        if (timer === null) {
+            this.updatePlotOnTime();
+        }
     }
 
     dblclicked() {
@@ -307,12 +371,16 @@ class SvgPlotter {
             .scaleLinear()
             .domain(d3.extent(this.all_x))
             .range([this.marginLeft, this.width - this.marginRight]);
-        // this.points = movement.map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]]), 0)]);
-        this.points = this.all_x.map((d, i) => [
-            this.xScale(d),
-            this.yScale(parseFloat(movement[d][this.obsName])),
-            0,
-        ]);
+        this.points = [];
+        for (const key in nameObsMap) {
+            this.points = this.points.concat(
+                this.all_x.map((d, i) => [
+                    this.xScale(d),
+                    this.yScale(parseFloat(this.movement[d][nameObsMap[key]])),
+                    key,
+                ]),
+            );
+        }
 
         this.drawByX();
     }
@@ -333,69 +401,72 @@ class SvgPlotter {
         }
     }
 
+    initMovement() {
+        this.all_x = d3.range(this.movement.length - 1);
+
+        // y min and max
+
+        for (const key in nameObsMap) {
+            this.all_y[key] = this.movement.map((d) =>
+                parseFloat(d[nameObsMap[key]]),
+            );
+        }
+        const yMin = d3.min(Object.values(this.all_y).flat());
+        const yMax = d3.max(Object.values(this.all_y).flat());
+
+        this.yScale = d3
+            .scaleLinear()
+            .domain([yMin, yMax])
+            .range([this.height - this.marginBottom, this.marginTop]);
+        // Add the vertical axis.
+        this.svg
+            .append('g')
+            .attr('transform', `translate(${ this.marginLeft },0)`)
+            .attr('class', 'yaxis')
+            .call(d3.axisLeft(this.yScale))
+            .call((g) => g.select('.domain').remove())
+            .call(
+                this.voronoi
+                    ? () => {}
+                    : (g) =>
+                        g
+                            .selectAll('.tick line')
+                            .clone()
+                            .attr(
+                                'x2',
+                                this.width -
+                                      this.marginLeft -
+                                      this.marginRight,
+                            )
+                            .attr('stroke-opacity', 0.1),
+            )
+            .call((g) =>
+                g
+                    .append('text')
+                    .attr('x', -this.marginLeft)
+                    .attr('y', 10)
+                    .attr('fill', 'currentColor')
+                    .attr('text-anchor', 'start')
+                    .text('Robot ' + this.robotNum),
+            );
+    }
+
     updatePlotOnTime() {
-        if (movement !== null) {
+        if (this.movement !== null) {
             this.current = getCurrentMovementTime();
-            if (this.current >= movement.length) {
+            if (this.current >= this.movement.length) {
                 timerD3.stop();
             }
-            if (this.current >= 0 && this.current < movement.length) {
+            if (this.current >= 0 && this.current < this.movement.length) {
                 if (this.all_x === null) {
-                    // movement filter NaN
-                    movement = movement.filter(
-                        (d) => !isNaN(parseFloat(d[this.obsName])),
-                    );
-                    // this.all_x = movement.map(d => parseInt(d.update) * movementStepEachUpdate + parseInt(d.step));
-                    this.all_x = movement.map((d, i) => i);
-                    this.all_y = movement.map((d) =>
-                        parseFloat(d[[this.obsName]]),
-                    );
-
-                    this.yScale = d3
-                        .scaleLinear()
-                        .domain(d3.extent(this.all_y))
-                        .range([
-                            this.height - this.marginBottom,
-                            this.marginTop,
-                        ]);
-                    // Add the vertical axis.
-                    this.svg
-                        .append('g')
-                        .attr('transform', `translate(${ this.marginLeft },0)`)
-                        .attr('class', 'yaxis')
-                        .call(d3.axisLeft(this.yScale))
-                        .call((g) => g.select('.domain').remove())
-                        .call(
-                            this.voronoi
-                                ? () => {}
-                                : (g) =>
-                                    g
-                                        .selectAll('.tick line')
-                                        .clone()
-                                        .attr(
-                                            'x2',
-                                            this.width -
-                                                  this.marginLeft -
-                                                  this.marginRight,
-                                        )
-                                        .attr('stroke-opacity', 0.1),
-                        )
-                        .call((g) =>
-                            g
-                                .append('text')
-                                .attr('x', -this.marginLeft)
-                                .attr('y', 10)
-                                .attr('fill', 'currentColor')
-                                .attr('text-anchor', 'start')
-                                .text(this.realName),
-                        );
+                    this.initMovement();
                 }
 
                 // slice the window for the current time
                 const x = this.all_x.slice(
                     Math.max(0, this.current - this.windowSize / 2),
                     Math.min(
-                        movement.length,
+                        this.movement.length,
                         this.current + this.windowSize / 2,
                     ),
                 );
@@ -404,15 +475,20 @@ class SvgPlotter {
                     .scaleLinear()
                     .domain(d3.extent(x))
                     .range([this.marginLeft, this.width - this.marginRight]);
-                // this.points = movement
-                //     .slice(Math.max(0, this.current - this.windowSize / 2), Math.min(movement.length, this.current + this.windowSize / 2))
-                //     // .map(d => [this.xScale(parseInt(d.update) * movementStepEachUpdate + parseInt(d.step)), this.yScale(parseFloat(d[[this.obsName]])), 0]);
-                //     .map((d, i) => [this.xScale(i), this.yScale(parseFloat(d[[this.obsName]])), 0]);
-                this.points = x.map((d, i) => [
-                    this.xScale(d),
-                    this.yScale(parseFloat(movement[d][this.obsName])),
-                    0,
-                ]);
+
+                // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+                this.points = [];
+                for (const key in nameObsMap) {
+                    this.points = this.points.concat(
+                        x.map((d, i) => [
+                            this.xScale(d),
+                            this.yScale(
+                                parseFloat(this.movement[d][nameObsMap[key]]),
+                            ),
+                            key,
+                        ]),
+                    );
+                }
                 this.drawByX();
             }
         }
@@ -451,9 +527,8 @@ class SvgPlotter {
             .attr('fill', 'none')
             .attr('stroke-width', 1.5)
             .selectAll('path')
-            .data(Array.from(this.groups, ([k, v]) => v))
+            .data(this.groups.values())
             .join('path')
-            .attr('stroke', '#555')
             .style('mix-blend-mode', 'multiply')
             .attr(
                 'd',
@@ -462,19 +537,32 @@ class SvgPlotter {
                     .x((d) => d[0])
                     .y((d) => d[1]),
             );
+        // keys in checkedObs are blue, others are grey
+        this.path
+            .style('stroke', ({ z }) =>
+                checkedObs.includes(z)
+                    ? lineColors.checked
+                    : z === this.currentObs
+                        ? lineColors.selection
+                        : lineColors.noSelection,
+            )
+            .filter(({ z }) => checkedObs.includes(z))
+            .raise();
 
         // update the vertical line and the dot
-        const curMov = movement[this.current];
-        // const a = this.xScale(parseInt(cur_mov.update) * movementStepEachUpdate + parseInt(cur_mov.step));
         const a = this.xScale(this.current);
-        const b = this.yScale(parseFloat(curMov[[this.obsName]]));
-        const textB = parseFloat(curMov[[this.obsName]]);
-
-        this.dot.attr('transform', `translate(${ a },${ b })`);
-        this.dot.select('text').text(textB);
         this.lineX
             .attr('transform', `translate(${ a },0)`)
             .attr('stroke', '#ddd');
+
+        if (this.currentObs !== null) {
+            const textY = parseFloat(
+                this.movement[this.current][this.currentObs],
+            );
+            const y = this.yScale(textY);
+            this.dot.attr('transform', `translate(${ a },${ y })`);
+            this.dot.select('text').text(textY);
+        }
 
         // remove the brush after drawing
         this.svg.select('.brush').call(this.brush.move, null);
@@ -736,30 +824,15 @@ const updateAngles = () => {
     }
 };
 
-const updateAnglesAnymal = () => {
+const updateAnglesAnymal = (movement, robotNum) => {
     if (!viewer.setJointValue) return;
     // reset everything to 0 first
-    const resetJointValues = viewer.angles;
-    for (const name in resetJointValues) resetJointValues[name] = 0;
-    viewer.setJointValues(resetJointValues);
+    // const resetJointValues = viewer.angles;
+    // for (const name in resetJointValues) resetJointValues[name] = 0;
+    // viewer.setJointValues(resetJointValues);
 
     const current = getCurrentMovementTime();
-
-    // console.log(current)
-    const names = [
-        'LF_HAA',
-        'LF_HFE',
-        'LF_KFE',
-        'RF_HAA',
-        'RF_HFE',
-        'RF_KFE',
-        'LH_HAA',
-        'LH_HFE',
-        'LH_KFE',
-        'RH_HAA',
-        'RH_HFE',
-        'RH_KFE',
-    ];
+    const names = Object.keys(nameObsMap);
 
     var mov = movement[current];
     if (mov === undefined) {
@@ -792,6 +865,13 @@ const getCurrentMovementTime = () => {
     // freq = 0.01 sec
     const freq = 0.03;
     const current = Math.floor(time / 1000 / freq + ignoreFirst);
+    if (current >= movementMinLen) {
+        ignoreFirst = movementMinLen - 1;
+        timer = null;
+        timerD3.stop();
+        animToggle.classList.remove('checked');
+        return movementMinLen - 1;
+    }
     return current;
 };
 
@@ -800,7 +880,7 @@ function timerD3Update() {
         const svg = svgList[key];
         svg.updatePlotOnTime();
     }
-    updateAnglesAnymal();
+    updateAnglesAnymal(movement1, 1);
 }
 
 function pauseAnimation() {
@@ -817,7 +897,7 @@ function startAnimation() {
 }
 
 const updateLoop = () => {
-    if (movement !== null) {
+    if (movement1 !== null || movement2 !== null || movement3 !== null) {
         if (animToggle.classList.contains('checked')) {
             startAnimation();
         } else {
@@ -847,14 +927,9 @@ const updateList = () => {
 updateList();
 
 document.addEventListener('WebComponentsReady', () => {
+    addPlotSelectToggles();
     animToggle.addEventListener('click', () => {
         animToggle.classList.toggle('checked');
-        // change the text of the button
-        // if (animToggle.classList.contains('checked')) {
-        //     animToggle.textContent = 'Pause Animation';
-        // } else {
-        //     animToggle.textContent = 'Continue Animate Joints';
-        // }
     });
 
     // stop the animation if user tried to manipulate the model
