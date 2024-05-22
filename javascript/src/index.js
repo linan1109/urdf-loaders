@@ -618,7 +618,7 @@ viewer.addEventListener('manipulate-end', (e) => {
 
 // create the sliders
 viewer.addEventListener('urdf-processed', () => {
-    const r = viewer.robot;
+    const r = viewer.robots[0];
     Object.keys(r.joints)
         .sort((a, b) => {
             const da = a
@@ -710,7 +710,7 @@ viewer.addEventListener('urdf-processed', () => {
             }
 
             slider.addEventListener('input', () => {
-                viewer.setJointValue(joint.name, slider.value);
+                viewer.setJointValue(0, joint.name, slider.value);
                 li.update();
             });
 
@@ -720,7 +720,7 @@ viewer.addEventListener('urdf-processed', () => {
                 )
                     ? 1.0
                     : RAD2DEG;
-                viewer.setJointValue(joint.name, input.value * degMultiplier);
+                viewer.setJointValue(0, joint.name, input.value * degMultiplier);
                 li.update();
             });
 
@@ -790,42 +790,43 @@ document.addEventListener('WebComponentsReady', () => {
 });
 
 // init 2D UI and animation
-const updateAngles = () => {
-    if (!viewer.setJointValue) return;
+// const updateAngles = () => {
+//     if (!viewer.setJointValue) return;
 
-    // reset everything to 0 first
-    const resetJointValues = viewer.angles;
-    for (const name in resetJointValues) resetJointValues[name] = 0;
-    viewer.setJointValues(resetJointValues);
+//     // reset everything to 0 first
+//     const resetJointValues = viewer.angles;
+//     for (const name in resetJointValues) resetJointValues[name] = 0;
+//     viewer.setJointValues(resetJointValues);
 
-    // animate the legs
-    const time = Date.now() / 3e2;
-    for (let i = 1; i <= 6; i++) {
-        const offset = (i * Math.PI) / 3;
-        const ratio = Math.max(0, Math.sin(time + offset));
+//     // animate the legs
+//     const time = Date.now() / 3e2;
+//     for (let i = 1; i <= 6; i++) {
+//         const offset = (i * Math.PI) / 3;
+//         const ratio = Math.max(0, Math.sin(time + offset));
 
-        viewer.setJointValue(
-            `HP${ i }`,
-            THREE.MathUtils.lerp(30, 0, ratio) * DEG2RAD,
-        );
-        viewer.setJointValue(
-            `KP${ i }`,
-            THREE.MathUtils.lerp(90, 150, ratio) * DEG2RAD,
-        );
-        viewer.setJointValue(
-            `AP${ i }`,
-            THREE.MathUtils.lerp(-30, -60, ratio) * DEG2RAD,
-        );
+//         viewer.setJointValue(
+//             `HP${ i }`,
+//             THREE.MathUtils.lerp(30, 0, ratio) * DEG2RAD,
+//         );
+//         viewer.setJointValue(
+//             `KP${ i }`,
+//             THREE.MathUtils.lerp(90, 150, ratio) * DEG2RAD,
+//         );
+//         viewer.setJointValue(
+//             `AP${ i }`,
+//             THREE.MathUtils.lerp(-30, -60, ratio) * DEG2RAD,
+//         );
 
-        viewer.setJointValue(`TC${ i }A`, THREE.MathUtils.lerp(0, 0.065, ratio));
-        viewer.setJointValue(`TC${ i }B`, THREE.MathUtils.lerp(0, 0.065, ratio));
+//         viewer.setJointValue(`TC${ i }A`, THREE.MathUtils.lerp(0, 0.065, ratio));
+//         viewer.setJointValue(`TC${ i }B`, THREE.MathUtils.lerp(0, 0.065, ratio));
 
-        viewer.setJointValue(`W${ i }`, window.performance.now() * 0.001);
-    }
-};
+//         viewer.setJointValue(`W${ i }`, window.performance.now() * 0.001);
+//     }
+// };
 
 const updateAnglesAnymal = (movement, robotNum) => {
     if (!viewer.setJointValue) return;
+    if (!movement) return;
     // reset everything to 0 first
     // const resetJointValues = viewer.angles;
     // for (const name in resetJointValues) resetJointValues[name] = 0;
@@ -838,19 +839,19 @@ const updateAnglesAnymal = (movement, robotNum) => {
     if (mov === undefined) {
         timer = null;
         for (let i = 0; i < names.length; i++) {
-            viewer.setJointValue(names[i], 0);
+            viewer.setJointValue(robotNum-1, names[i], 0);
         }
         return;
     }
     for (let i = 0; i < names.length; i++) {
-        viewer.setJointValue(names[i], parseFloat(mov[names[i]]));
+        viewer.setJointValue(robotNum-1, names[i], parseFloat(mov[names[i]]));
     }
-    viewer.robot.position.set(
+    viewer.robots[robotNum-1].position.set(
         mov['pos_' + 0],
         mov['pos_' + 1],
         mov['pos_' + 2],
     );
-    viewer.robot.rotation.set(
+    viewer.robots[robotNum-1].rotation.set(
         mov['rot_' + 0],
         mov['rot_' + 1],
         mov['rot_' + 2],
@@ -881,6 +882,7 @@ function timerD3Update() {
         svg.updatePlotOnTime();
     }
     updateAnglesAnymal(movement1, 1);
+    updateAnglesAnymal(movement2, 2);
 }
 
 function pauseAnimation() {
@@ -936,7 +938,7 @@ document.addEventListener('WebComponentsReady', () => {
     viewer.addEventListener('manipulate-start', (e) =>
         animToggle.classList.remove('checked'),
     );
-    viewer.addEventListener('urdf-processed', (e) => updateAngles());
+    // viewer.addEventListener('urdf-processed', (e) => updateAngles());
     updateLoop();
     viewer.camera.position.set(-5.5, 3.5, 5.5);
 });

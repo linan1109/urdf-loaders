@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from './URDFLoader.js';
+import { timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
 const emptyRaycast = () => {};
@@ -51,35 +52,35 @@ class URDFViewer extends HTMLElement {
     get showCollision() { return this.hasAttribute('show-collision') || false; }
     set showCollision(val) { val ? this.setAttribute('show-collision', true) : this.removeAttribute('show-collision'); }
 
-    get jointValues() {
+    // get jointValues() {
 
-        const values = {};
-        if (this.robot) {
+    //     const values = {};
+    //     if (this.robot) {
 
-            for (const name in this.robot.joints) {
+    //         for (const name in this.robot.joints) {
 
-                const joint = this.robot.joints[name];
-                values[name] = joint.jointValue.length === 1 ? joint.angle : [...joint.jointValue];
+    //             const joint = this.robot.joints[name];
+    //             values[name] = joint.jointValue.length === 1 ? joint.angle : [...joint.jointValue];
 
-            }
+    //         }
 
-        }
+    //     }
 
-        return values;
+    //     return values;
 
-    }
-    set jointValues(val) { this.setJointValues(val); }
+    // }
+    // set jointValues(val) { this.setJointValues(val); }
 
-    get angles() {
+    // get angles() {
 
-        return this.jointValues;
+    //     return this.jointValues;
 
-    }
-    set angles(v) {
+    // }
+    // set angles(v) {
 
-        this.jointValues = v;
+    //     this.jointValues = v;
 
-    }
+    // }
 
     /* Lifecycle Functions */
     constructor() {
@@ -90,6 +91,8 @@ class URDFViewer extends HTMLElement {
         this._dirty = false;
         this._loadScheduled = false;
         this.robot = null;
+        this.robots = [];
+        this.robot2 = null;
         this.loadMeshFunc = null;
         this.urlModifierFunc = null;
 
@@ -109,6 +112,7 @@ class URDFViewer extends HTMLElement {
         dirLight.shadow.mapSize.height = 2048;
         dirLight.shadow.normalBias = 0.001;
         dirLight.castShadow = true;
+        dirLight.intensity = 0.0;
         scene.add(dirLight);
         scene.add(dirLight.target);
 
@@ -132,7 +136,7 @@ class URDFViewer extends HTMLElement {
         const geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 ); 
         const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
         const cube = new THREE.Mesh( geometry, material ); 
-        scene.add( cube );
+        scene.add(cube);
 
         const plane = new THREE.Mesh(
             new THREE.PlaneBufferGeometry(40, 40),
@@ -324,12 +328,12 @@ class URDFViewer extends HTMLElement {
 
     // Set the joint with jointName to
     // angle in degrees
-    setJointValue(jointName, ...values) {
+    setJointValue(robot, jointName, ...values) {
 
-        if (!this.robot) return;
-        if (!this.robot.joints[jointName]) return;
+        if (!this.robots[robot]) return;
+        if (!this.robots[robot].joints[jointName]) return;
 
-        if (this.robot.joints[jointName].setJointValue(...values)) {
+        if (this.robots[robot].joints[jointName].setJointValue(...values)) {
 
             this.redraw();
             this.dispatchEvent(new CustomEvent('angle-change', { bubbles: true, cancelable: true, detail: jointName }));
@@ -349,231 +353,243 @@ class URDFViewer extends HTMLElement {
     // lowest point below the robot and focuses the
     // camera on the center of the scene
     _updateEnvironment() {
-
-        const robot = this.robot;
-        if (!robot) return;
-
-        this.world.updateMatrixWorld();
-
+        
         const bbox = new THREE.Box3();
         bbox.makeEmpty();
-        robot.traverse(c => {
-            if (c.isURDFVisual) {
-                bbox.expandByObject(c);
+        // for (const robot of this.robots) {
+        for (let index = 0; index < this.robots.length; index++) {
+            const robot = this.robots[index]
+            // const robot = this.robot;
+            if (!robot) return;
+    
+            this.world.updateMatrixWorld();
+    
+            robot.traverse(c => {
+                if (c.isURDFVisual) {
+                    bbox.expandByObject(c);
+                }
+            });
+
+
+            const center = bbox.getCenter(new THREE.Vector3());
+            this.controls.target.y = center.y;
+            this.plane.position.y = bbox.min.y - 1e-3;
+    
+            const dirLight = this.directionalLight;
+            dirLight.castShadow = this.displayShadow;
+    
+            if (this.displayShadow) {
+    
+                // Update the shadow camera rendering bounds to encapsulate the
+                // model. We use the bounding sphere of the bounding box for
+                // simplicity -- this could be a tighter fit.
+                const sphere = bbox.getBoundingSphere(new THREE.Sphere());
+                const minmax = sphere.radius;
+                const cam = dirLight.shadow.camera;
+                cam.left = cam.bottom = -minmax;
+                cam.right = cam.top = minmax;
+    
+                // Update the camera to focus on the center of the model so the
+                // shadow can encapsulate it
+                const offset = dirLight.position.clone().sub(dirLight.target.position);
+                dirLight.target.position.copy(center);
+                dirLight.position.copy(center).add(offset);
+                // console.log(dirLight.position, robot.uuid)
+                if (index === 0) {
+                    robot.traverse(c => {
+                        if (c.isMesh) {
+                            // console.log(c.material)
+                            // console.log(c.visible)
+                            // c.visible = false
+                            if (c.material.color) {
+                                c.material.color.setHex( 0xffffff );
+                            }
+                        }
+                    });
+                }
+    
+                cam.updateProjectionMatrix();
+    
             }
-        });
-
-        const center = bbox.getCenter(new THREE.Vector3());
-        this.controls.target.y = center.y;
-        this.plane.position.y = bbox.min.y - 1e-3;
-
-        const dirLight = this.directionalLight;
-        dirLight.castShadow = this.displayShadow;
-
-        if (this.displayShadow) {
-
-            // Update the shadow camera rendering bounds to encapsulate the
-            // model. We use the bounding sphere of the bounding box for
-            // simplicity -- this could be a tighter fit.
-            const sphere = bbox.getBoundingSphere(new THREE.Sphere());
-            const minmax = sphere.radius;
-            const cam = dirLight.shadow.camera;
-            cam.left = cam.bottom = -minmax;
-            cam.right = cam.top = minmax;
-
-            // Update the camera to focus on the center of the model so the
-            // shadow can encapsulate it
-            const offset = dirLight.position.clone().sub(dirLight.target.position);
-            dirLight.target.position.copy(center);
-            dirLight.position.copy(center).add(offset);
-
-            cam.updateProjectionMatrix();
-
+            // return
         }
+
 
     }
 
     _scheduleLoad() {
-
-        // if our current model is already what's being requested
-        // or has been loaded then early out
         if (this._prevload === `${ this.package }|${ this.urdf }`) return;
         this._prevload = `${ this.package }|${ this.urdf }`;
-
-        // if we're already waiting on a load then early out
+    
         if (this._loadScheduled) return;
         this._loadScheduled = true;
 
-        if (this.robot) {
-
-            this.robot.traverse(c => c.dispose && c.dispose());
-            this.robot.parent.remove(this.robot);
-            this.robot = null;
-
-        }
-
-        requestAnimationFrame(() => {
-
-            this._loadUrdf(this.package, this.urdf);
-            this._loadScheduled = false;
-
-        });
-
-    }
-
-    // Watch the package and urdf field and load the robot model.
-    // This should _only_ be called from _scheduleLoad because that
-    // ensures the that current robot has been removed
-    _loadUrdf(pkg, urdf) {
-
-        this.dispatchEvent(new CustomEvent('urdf-change', { bubbles: true, cancelable: true, composed: true }));
-
-        if (urdf) {
-
-            // Keep track of this request and make
-            // sure it doesn't get overwritten by
-            // a subsequent one
-            this._requestId++;
-            const requestId = this._requestId;
-
-            const updateMaterials = mesh => {
-
-                mesh.traverse(c => {
-
-                    if (c.isMesh) {
-
-                        c.castShadow = true;
-                        c.receiveShadow = true;
-
-                        if (c.material) {
-
-                            const mats =
-                                (Array.isArray(c.material) ? c.material : [c.material])
-                                    .map(m => {
-
-                                        if (m instanceof THREE.MeshBasicMaterial) {
-
-                                            m = new THREE.MeshPhongMaterial();
-
-                                        }
-
-                                        if (m.map) {
-
-                                            m.map.colorSpace = THREE.SRGBColorSpace;
-
-                                        }
-
-                                        return m;
-
-                                    });
-                            c.material = mats.length === 1 ? mats[0] : mats;
-
-                        }
-
-                    }
-
-                });
-
-            };
-
-            if (pkg.includes(':') && (pkg.split(':')[1].substring(0, 2)) !== '//') {
-                // E.g. pkg = "pkg_name: path/to/pkg_name, pk2: path2/to/pk2"}
-
-                // Convert pkg(s) into a map. E.g.
-                // { "pkg_name": "path/to/pkg_name",
-                //   "pk2":      "path2/to/pk2"      }
-
-                pkg = pkg.split(',').reduce((map, value) => {
-
-                    const split = value.split(/:/).filter(x => !!x);
-                    const pkgName = split.shift().trim();
-                    const pkgPath = split.join(':').trim();
-                    map[pkgName] = pkgPath;
-
-                    return map;
-
-                }, {});
+        for (const robot of this.robots) {
+            if (robot) {
+                robot.traverse(c => c.dispose && c.dispose());
+                robot.parent.remove(robot);
+                robot = null;
             }
-
-            let robot = null;
-            const manager = new THREE.LoadingManager();
-            manager.onLoad = () => {
-
-                // If another request has come in to load a new
-                // robot, then ignore this one
-                if (this._requestId !== requestId) {
-
-                    robot.traverse(c => c.dispose && c.dispose());
-                    return;
-
-                }
-
-                this.robot = robot;
-                this.world.add(robot);
-                updateMaterials(robot);
-
-                this._setIgnoreLimits(this.ignoreLimits);
+            // if (this.robot2) {
+            //     this.robot2.traverse(c => c.dispose && c.dispose());
+            //     this.robot2.parent.remove(this.robot2);
+            //     this.robot2 = null;
+            // }
+        }
+    
+    
+        this._loadUrdf(this.package, this.urdf, 0, [5, 0, 0])
+            .then(() => this._loadUrdf(this.package, this.urdf, 1, [0, 0, 0]))
+            .then(() => {
+                this._loadScheduled = false;
                 this._updateCollisionVisibility();
-
                 this.dispatchEvent(new CustomEvent('urdf-processed', { bubbles: true, cancelable: true, composed: true }));
                 this.dispatchEvent(new CustomEvent('geometry-loaded', { bubbles: true, cancelable: true, composed: true }));
-
                 this.recenter();
-
-            };
-
-            if (this.urlModifierFunc) {
-
-                manager.setURLModifier(this.urlModifierFunc);
-
-            }
-
-            const loader = new URDFLoader(manager);
-            loader.packages = pkg;
-            loader.loadMeshCb = this.loadMeshFunc;
-            loader.fetchOptions = { mode: 'cors', credentials: 'same-origin' };
-            loader.parseCollision = true;
-            loader.load(urdf, model => robot = model);
-
-        }
-
+            });
     }
+    
+    _loadUrdf(pkg, urdf, robot_to_add, pos) {
+        return new Promise((resolve, reject) => {
+            this.dispatchEvent(new CustomEvent('urdf-change', { bubbles: true, cancelable: true, composed: true }));
+    
+            if (urdf) {
+                this._requestId++;
+                const requestId = this._requestId;
+    
+                const updateMaterials = mesh => {
+                    mesh.traverse(c => {
+                        if (c.isMesh) {
+                            c.castShadow = true;
+                            c.receiveShadow = true;
+                            if (c.material) {
+                                const mats =
+                                    (Array.isArray(c.material) ? c.material : [c.material])
+                                        .map(m => {
+                                            if (m instanceof THREE.MeshBasicMaterial) {
+                                                m = new THREE.MeshPhongMaterial();
+                                            }
+                                            if (m.map) {
+                                                m.map.colorSpace = THREE.SRGBColorSpace;
+                                            }
+                                            return m;
+                                        });
+                                c.material = mats.length === 1 ? mats[0] : mats;
+                            }
+                        }
+                    });
+                };
+    
+                if (pkg.includes(':') && (pkg.split(':')[1].substring(0, 2)) !== '//') {
+                    pkg = pkg.split(',').reduce((map, value) => {
+                        const split = value.split(/:/).filter(x => !!x);
+                        const pkgName = split.shift().trim();
+                        const pkgPath = split.join(':').trim();
+                        map[pkgName] = pkgPath;
+                        return map;
+                    }, {});
+                }
+    
+                let robot = null;
+                const manager = new THREE.LoadingManager();
+                manager.onLoad = () => {
+                    if (0) {
+                        robot.traverse(c => c.dispose && c.dispose());
+                        return;
+                    }
+                    
+                        // this.robot = robot;
+                        this.world.add(robot);
+                        updateMaterials(robot);
+                        robot.position.set(...pos);
+                        this.robots.push(robot)
+                    // if (robot_to_add === 0) {
+                    //     this.robot = robot;
+                    //     this.world.add(robot);
+                    //     updateMaterials(robot);
+                    //     this.robot.position.set(...pos);
+                    // } else {
+                    //     this.robot2 = robot;
+                    //     this.world.add(robot);
+                    //     updateMaterials(robot);
+                    //     this.robot2.position.set(...pos);
+                    // }
+    
+                    this._setIgnoreLimits(this.ignoreLimits);
+                    resolve();
+                };
+    
+                if (this.urlModifierFunc) {
+                    manager.setURLModifier(this.urlModifierFunc);
+                }
+    
+                const loader = new URDFLoader(manager);
+                loader.packages = pkg;
+                loader.loadMeshCb = this.loadMeshFunc;
+                loader.fetchOptions = { mode: 'cors', credentials: 'same-origin' };
+                loader.parseCollision = true;
+                loader.load(urdf, model => robot = model);
+            }
+        });
+    }
+    
 
     _updateCollisionVisibility() {
 
         const showCollision = this.showCollision;
         const collisionMaterial = this._collisionMaterial;
-        const robot = this.robot;
-
-        if (robot === null) return;
-
         const colliders = [];
-        robot.traverse(c => {
 
-            if (c.isURDFCollider) {
+        for (const robot of this.robots) {
 
-                c.visible = showCollision;
-                colliders.push(c);
-
+            // const robot = this.robot;
+    
+            if (robot === null) return;
+            if (robot) {
+                
+                robot.traverse(c => {
+    
+                    if (c.isURDFCollider) {
+    
+                        c.visible = showCollision;
+                        colliders.push(c);
+    
+                    }
+    
+                });
             }
-
-        });
-
-        colliders.forEach(coll => {
-
-            coll.traverse(c => {
-
-                if (c.isMesh) {
-
-                    c.raycast = emptyRaycast;
-                    c.material = collisionMaterial;
-                    c.castShadow = false;
-
-                }
-
+    
+            // if (this.robot2) {
+    
+            //     this.robot2.traverse(c => {
+        
+            //         if (c.isURDFCollider) {
+        
+            //             c.visible = showCollision;
+            //             colliders.push(c);
+        
+            //         }
+        
+            //     });
+            // }
+    
+    
+            colliders.forEach(coll => {
+    
+                coll.traverse(c => {
+    
+                    if (c.isMesh) {
+    
+                        c.raycast = emptyRaycast;
+                        c.material = collisionMaterial;
+                        c.castShadow = false;
+    
+                    }
+    
+                });
+    
             });
-
-        });
+        }
 
     }
 
@@ -598,18 +614,36 @@ class URDFViewer extends HTMLElement {
     // joint limits or not
     _setIgnoreLimits(ignore, dispatch = false) {
 
-        if (this.robot) {
+        for (const robot of this.robots) {
 
-            Object
-                .values(this.robot.joints)
-                .forEach(joint => {
-
-                    joint.ignoreLimits = ignore;
-                    joint.setJointValue(...joint.jointValue);
-
-                });
-
+            if (robot) {
+    
+                Object
+                    .values(robot.joints)
+                    .forEach(joint => {
+    
+                        joint.ignoreLimits = ignore;
+                        joint.setJointValue(...joint.jointValue);
+    
+                    });
+    
+            }
         }
+
+
+        // if (this.robot2) {
+
+        //     Object
+        //         .values(this.robot2.joints)
+        //         .forEach(joint => {
+
+        //             joint.ignoreLimits = ignore;
+        //             joint.setJointValue(...joint.jointValue);
+
+        //         });
+
+        // }
+
 
         if (dispatch) {
 
