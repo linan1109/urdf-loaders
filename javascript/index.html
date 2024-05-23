@@ -33,19 +33,55 @@
             <div id="collision-toggle" class="toggle">Show Collision</div>
             <div id="do-animate" class="toggle">Show Movement</div>
             <div id="input-container">
-                Movement 1
+                Robot Movement 1
                 <br>
                 <input type="file" id="load-movement1" accept=".csv">
+                <div class="robot-controls">
+                    <div id="robot1-visible" class="toggle checked robot-control">Visible</div>
+                    <div id="robot1-highlight" class="toggle robot-control">Highlight</div>
+                    <div id="robot1-position" class="toggle robot-control">Update Pos.</div>
+                    <div class="init-position">
+                        Init Pos. (
+                        <input id="robot1-positionx" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot1-positiony" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot1-positionz" type="number" class="position-input" value="0" step="0.1">
+                        )
+                    </div>
+                </div>
             </div>
             <div id="input-container">
-                Movement 2
+                Robot Movement 2
                 <br>
-                <input type="file" id="load-movement2" accept=".csv"> 
+                <input type="file" id="load-movement2" accept=".csv">
+                <div class="robot-controls">
+                    <div id="robot2-visible" class="toggle checked robot-control">Visible</div>
+                    <div id="robot2-highlight" class="toggle robot-control">Highlight</div>
+                    <div id="robot2-position" class="toggle robot-control">Update Pos.</div>
+                    <div class="init-position">
+                        Init Pos. (
+                        <input id="robot2-positionx" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot2-positiony" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot2-positionz" type="number" class="position-input" value="0" step="0.1">
+                        )
+                    </div>
+                </div>
             </div>
             <div id="input-container">
-                Movement 3 
+                Robot Movement 3 
                 <br>
                 <input type="file" id="load-movement3" accept=".csv">
+                <div class="robot-controls">
+                    <div id="robot3-visible" class="toggle checked robot-control">Visible</div>
+                    <div id="robot3-highlight" class="toggle robot-control">Highlight</div>
+                    <div id="robot3-position" class="toggle robot-control">Update Pos.</div>
+                    <div class="init-position">
+                        Init Pos. (
+                        <input id="robot3-positionx" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot3-positiony" type="number" class="position-input" value="0" step="0.1">, 
+                        <input id="robot3-positionz" type="number" class="position-input" value="0" step="0.1">
+                        )
+                    </div>
+                </div>
             </div>
             <label>
                 Up Axis

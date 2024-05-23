@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from './URDFLoader.js';
+import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
 const emptyRaycast = () => {};
@@ -15,6 +16,9 @@ const emptyRaycast = () => {};
 // geometry-loaded: Fires when all the geometry has been fully loaded
 // ignore-limits-change: Fires when the 'ignore-limits' attribute changes
 // angle-change: Fires when an angle changes
+// position-change: Fires when an position changes
+// rotation-change: Fires when an rotation changes
+// init-position-change: Fires when an initial position changes
 export default
 class URDFViewer extends HTMLElement {
 
@@ -51,35 +55,35 @@ class URDFViewer extends HTMLElement {
     get showCollision() { return this.hasAttribute('show-collision') || false; }
     set showCollision(val) { val ? this.setAttribute('show-collision', true) : this.removeAttribute('show-collision'); }
 
-    get jointValues() {
+    // get jointValues() {
 
-        const values = {};
-        if (this.robot) {
+    //     const values = {};
+    //     if (this.robot) {
 
-            for (const name in this.robot.joints) {
+    //         for (const name in this.robot.joints) {
 
-                const joint = this.robot.joints[name];
-                values[name] = joint.jointValue.length === 1 ? joint.angle : [...joint.jointValue];
+    //             const joint = this.robot.joints[name];
+    //             values[name] = joint.jointValue.length === 1 ? joint.angle : [...joint.jointValue];
 
-            }
+    //         }
 
-        }
+    //     }
 
-        return values;
+    //     return values;
 
-    }
-    set jointValues(val) { this.setJointValues(val); }
+    // }
+    // set jointValues(val) { this.setJointValues(val); }
 
-    get angles() {
+    // get angles() {
 
-        return this.jointValues;
+    //     return this.jointValues;
 
-    }
-    set angles(v) {
+    // }
+    // set angles(v) {
 
-        this.jointValues = v;
+    //     this.jointValues = v;
 
-    }
+    // }
 
     /* Lifecycle Functions */
     constructor() {
@@ -90,8 +94,27 @@ class URDFViewer extends HTMLElement {
         this._dirty = false;
         this._loadScheduled = false;
         this.robot = null;
+        this.robots = {};
         this.loadMeshFunc = null;
         this.urlModifierFunc = null;
+
+        // Init Robots
+        this.robotNames = [
+            1,
+            2,
+            3,
+        ]
+        this.initialPositions = [
+            [0,1,0],
+            [0,0,0],
+            [0,-1,0],
+        ]
+        // colors for highlighting
+        this.robotColors = this.robotNames.reduce((acc, name) => {
+            acc[name] = {}
+            return acc
+        }, {});
+        
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -109,6 +132,7 @@ class URDFViewer extends HTMLElement {
         dirLight.shadow.mapSize.height = 2048;
         dirLight.shadow.normalBias = 0.001;
         dirLight.castShadow = true;
+        dirLight.intensity = 0.0;
         scene.add(dirLight);
         scene.add(dirLight.target);
 
@@ -132,7 +156,7 @@ class URDFViewer extends HTMLElement {
         const geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 ); 
         const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
         const cube = new THREE.Mesh( geometry, material ); 
-        scene.add( cube );
+        scene.add(cube);
 
         const plane = new THREE.Mesh(
             new THREE.PlaneBufferGeometry(40, 40),
@@ -324,24 +348,115 @@ class URDFViewer extends HTMLElement {
 
     // Set the joint with jointName to
     // angle in degrees
-    setJointValue(jointName, ...values) {
-
-        if (!this.robot) return;
-        if (!this.robot.joints[jointName]) return;
-
-        if (this.robot.joints[jointName].setJointValue(...values)) {
-
+    setJointValue(robot, jointName, ...values) {
+        if (!this.robots[robot]) return;
+        if (!this.robots[robot].joints[jointName]) return;
+        if (this.robots[robot].joints[jointName].setJointValue(...values)) {
             this.redraw();
             this.dispatchEvent(new CustomEvent('angle-change', { bubbles: true, cancelable: true, detail: jointName }));
-
         }
-
+    }
+    setJointValues(values) {
+        for (const name in values) this.setJointValue(name, values[name]);
     }
 
-    setJointValues(values) {
+    getRobotInitPosition(robot, index) {
+        if (!this.robots[robot]) return;
+        return this.robots[robot].initPosition[index]
+    }
 
-        for (const name in values) this.setJointValue(name, values[name]);
+    setRobotInitPosition(robot, index, position) {
+        if (!this.robots[robot]) return;
+        const currentInitPosition = this.robots[robot].initPosition
+        const newInitPosition = [
+            index === 0 ? position : currentInitPosition[0],
+            index === 1 ? position : currentInitPosition[1],
+            index === 2 ? position : currentInitPosition[2],
+        ]
+        const currentPos = this.robots[robot].position
+        if (this.robots[robot].position.set(
+            newInitPosition[0] + currentPos.x - currentInitPosition[0], 
+            newInitPosition[1] + currentPos.y - currentInitPosition[1], 
+            newInitPosition[2] + currentPos.z - currentInitPosition[2]
+        )) {
+            currentInitPosition[0] = newInitPosition[0]
+            currentInitPosition[1] = newInitPosition[1]
+            currentInitPosition[2] = newInitPosition[2]
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('position-change', { bubbles: true, cancelable: true, detail: {robot, position} }));
+        }
+    }
 
+    setRobotPosition(robot, positions) {
+        if (!this.robots[robot]) return;
+        if (this.robots[robot].standStill) return;
+        let initPosition = this.robots[robot].initPosition
+        if (this.robots[robot].position.set(
+            parseFloat(positions.x) + initPosition[0], 
+            parseFloat(positions.y) + initPosition[1], 
+            parseFloat(positions.z) + initPosition[2]
+        )) {
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('position-change', { bubbles: true, cancelable: true, detail: {robot, positions} }));
+        }
+    }
+
+    setRobotRotation(robot, rotations) {
+        if (!this.robots[robot]) return;
+        if (this.robots[robot].standStill) return;
+        if (this.robots[robot].rotation.set(rotations.x, rotations.y, rotations.z)) {
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('rotation-change', { bubbles: true, cancelable: true, detail: {robot, rotations} }));
+        }
+    }
+
+    setRobotStandStill(robot, standStill) {
+        if (!this.robots[robot]) return;
+        this.robots[robot].standStill = standStill
+        let initPosition = this.robots[robot].initPosition
+        if (standStill) {
+            if (this.robots[robot].position.set(
+                initPosition[0], 
+                initPosition[1], 
+                initPosition[2]
+            ) && this.robots[robot].rotation.set(0,0,0)) {
+                this.redraw();
+            }
+        }
+    }
+       
+    setRobotVisibility(robot, visibility) {
+        if (!this.robots[robot]) return;
+        this.robots[robot].traverse(c => {
+            if (c.isMesh) {
+                c.visible = visibility
+            }
+        }) 
+        this.redraw()
+        this.dispatchEvent(new CustomEvent('visibility-change', { bubbles: true, cancelable: true }));
+    }
+
+    setRobotHighlight(robot, highlight) {
+        if (!this.robots[robot]) return;
+        if (highlight) {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        c.material.color.setHex( 0xff0000 );
+                    }
+                }
+            }) 
+        } else {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        c.material.color = new THREE.Color(this.robotColors[robot][c.material.uuid])
+                    }
+                }
+            }) 
+        }
+        this.redraw()
+        this.dispatchEvent(new CustomEvent('highlight-change', { bubbles: true, cancelable: true }));
     }
 
     /* Private Functions */
@@ -349,231 +464,211 @@ class URDFViewer extends HTMLElement {
     // lowest point below the robot and focuses the
     // camera on the center of the scene
     _updateEnvironment() {
-
-        const robot = this.robot;
-        if (!robot) return;
-
-        this.world.updateMatrixWorld();
-
+        
         const bbox = new THREE.Box3();
         bbox.makeEmpty();
-        robot.traverse(c => {
-            if (c.isURDFVisual) {
-                bbox.expandByObject(c);
+        // for (const robot of this.robots) {
+        for (let index = 0; index < Object.keys(this.robots).length; index++) {
+            const robot = this.robots[Object.keys(this.robots)[index]]
+            if (!robot) return;
+    
+            this.world.updateMatrixWorld();
+    
+            robot.traverse(c => {
+                if (c.isURDFVisual) {
+                    bbox.expandByObject(c);
+                }
+            });
+
+
+            const center = bbox.getCenter(new THREE.Vector3());
+            this.controls.target.y = center.y;
+            this.plane.position.y = bbox.min.y - 1e-3;
+    
+            const dirLight = this.directionalLight;
+            dirLight.castShadow = this.displayShadow;
+    
+            if (this.displayShadow) {
+    
+                // Update the shadow camera rendering bounds to encapsulate the
+                // model. We use the bounding sphere of the bounding box for
+                // simplicity -- this could be a tighter fit.
+                const sphere = bbox.getBoundingSphere(new THREE.Sphere());
+                const minmax = sphere.radius;
+                const cam = dirLight.shadow.camera;
+                cam.left = cam.bottom = -minmax;
+                cam.right = cam.top = minmax;
+    
+                // Update the camera to focus on the center of the model so the
+                // shadow can encapsulate it
+                const offset = dirLight.position.clone().sub(dirLight.target.position);
+                dirLight.target.position.copy(center);
+                dirLight.position.copy(center).add(offset);
+    
+                cam.updateProjectionMatrix();
+    
             }
-        });
-
-        const center = bbox.getCenter(new THREE.Vector3());
-        this.controls.target.y = center.y;
-        this.plane.position.y = bbox.min.y - 1e-3;
-
-        const dirLight = this.directionalLight;
-        dirLight.castShadow = this.displayShadow;
-
-        if (this.displayShadow) {
-
-            // Update the shadow camera rendering bounds to encapsulate the
-            // model. We use the bounding sphere of the bounding box for
-            // simplicity -- this could be a tighter fit.
-            const sphere = bbox.getBoundingSphere(new THREE.Sphere());
-            const minmax = sphere.radius;
-            const cam = dirLight.shadow.camera;
-            cam.left = cam.bottom = -minmax;
-            cam.right = cam.top = minmax;
-
-            // Update the camera to focus on the center of the model so the
-            // shadow can encapsulate it
-            const offset = dirLight.position.clone().sub(dirLight.target.position);
-            dirLight.target.position.copy(center);
-            dirLight.position.copy(center).add(offset);
-
-            cam.updateProjectionMatrix();
-
         }
+
 
     }
 
     _scheduleLoad() {
-
-        // if our current model is already what's being requested
-        // or has been loaded then early out
         if (this._prevload === `${ this.package }|${ this.urdf }`) return;
         this._prevload = `${ this.package }|${ this.urdf }`;
-
-        // if we're already waiting on a load then early out
+    
         if (this._loadScheduled) return;
         this._loadScheduled = true;
 
-        if (this.robot) {
-
-            this.robot.traverse(c => c.dispose && c.dispose());
-            this.robot.parent.remove(this.robot);
-            this.robot = null;
-
+        for (const robot in this.robots) {
+            if (this.robots[robot]) {
+                this.robots[robot].traverse(c => c.dispose && c.dispose());
+                this.robots[robot].parent.remove(this.robots[robot]);
+                this.robots[robot] = null;
+            }
         }
 
-        requestAnimationFrame(() => {
+        let initPromise = this._loadUrdf(this.package, this.urdf, this.robotNames[0], this.initialPositions[0])
 
-            this._loadUrdf(this.package, this.urdf);
-            this._loadScheduled = false;
-
-        });
-
-    }
-
-    // Watch the package and urdf field and load the robot model.
-    // This should _only_ be called from _scheduleLoad because that
-    // ensures the that current robot has been removed
-    _loadUrdf(pkg, urdf) {
-
-        this.dispatchEvent(new CustomEvent('urdf-change', { bubbles: true, cancelable: true, composed: true }));
-
-        if (urdf) {
-
-            // Keep track of this request and make
-            // sure it doesn't get overwritten by
-            // a subsequent one
-            this._requestId++;
-            const requestId = this._requestId;
-
-            const updateMaterials = mesh => {
-
-                mesh.traverse(c => {
-
-                    if (c.isMesh) {
-
-                        c.castShadow = true;
-                        c.receiveShadow = true;
-
-                        if (c.material) {
-
-                            const mats =
-                                (Array.isArray(c.material) ? c.material : [c.material])
-                                    .map(m => {
-
-                                        if (m instanceof THREE.MeshBasicMaterial) {
-
-                                            m = new THREE.MeshPhongMaterial();
-
-                                        }
-
-                                        if (m.map) {
-
-                                            m.map.colorSpace = THREE.SRGBColorSpace;
-
-                                        }
-
-                                        return m;
-
-                                    });
-                            c.material = mats.length === 1 ? mats[0] : mats;
-
-                        }
-
-                    }
-
-                });
-
-            };
-
-            if (pkg.includes(':') && (pkg.split(':')[1].substring(0, 2)) !== '//') {
-                // E.g. pkg = "pkg_name: path/to/pkg_name, pk2: path2/to/pk2"}
-
-                // Convert pkg(s) into a map. E.g.
-                // { "pkg_name": "path/to/pkg_name",
-                //   "pk2":      "path2/to/pk2"      }
-
-                pkg = pkg.split(',').reduce((map, value) => {
-
-                    const split = value.split(/:/).filter(x => !!x);
-                    const pkgName = split.shift().trim();
-                    const pkgPath = split.join(':').trim();
-                    map[pkgName] = pkgPath;
-
-                    return map;
-
-                }, {});
-            }
-
-            let robot = null;
-            const manager = new THREE.LoadingManager();
-            manager.onLoad = () => {
-
-                // If another request has come in to load a new
-                // robot, then ignore this one
-                if (this._requestId !== requestId) {
-
-                    robot.traverse(c => c.dispose && c.dispose());
-                    return;
-
-                }
-
-                this.robot = robot;
-                this.world.add(robot);
-                updateMaterials(robot);
-
-                this._setIgnoreLimits(this.ignoreLimits);
+        this.initialPositions.slice(1).reduce((currentPromise, position, index) => {
+            return currentPromise.then(() => this._loadUrdf(this.package, this.urdf, this.robotNames[index+1], position))
+        }, initPromise).then(() => {
+                this._loadScheduled = false;
                 this._updateCollisionVisibility();
-
+                this._storeRobotColors();
                 this.dispatchEvent(new CustomEvent('urdf-processed', { bubbles: true, cancelable: true, composed: true }));
                 this.dispatchEvent(new CustomEvent('geometry-loaded', { bubbles: true, cancelable: true, composed: true }));
-
                 this.recenter();
-
-            };
-
-            if (this.urlModifierFunc) {
-
-                manager.setURLModifier(this.urlModifierFunc);
-
+            });
+    }
+    
+    _loadUrdf(pkg, urdf, robotName, pos) {
+        return new Promise((resolve, reject) => {
+            this.dispatchEvent(new CustomEvent('urdf-change', { bubbles: true, cancelable: true, composed: true }));
+    
+            if (urdf) {
+                this._requestId++;
+                const requestId = this._requestId;
+    
+                const updateMaterials = mesh => {
+                    mesh.traverse(c => {
+                        if (c.isMesh) {
+                            c.castShadow = true;
+                            c.receiveShadow = true;
+                            if (c.material) {
+                                const mats =
+                                    (Array.isArray(c.material) ? c.material : [c.material])
+                                        .map(m => {
+                                            if (m instanceof THREE.MeshBasicMaterial) {
+                                                m = new THREE.MeshPhongMaterial();
+                                            }
+                                            if (m.map) {
+                                                m.map.colorSpace = THREE.SRGBColorSpace;
+                                            }
+                                            return m;
+                                        });
+                                c.material = mats.length === 1 ? mats[0] : mats;
+                            }
+                        }
+                    });
+                };
+    
+                if (pkg.includes(':') && (pkg.split(':')[1].substring(0, 2)) !== '//') {
+                    pkg = pkg.split(',').reduce((map, value) => {
+                        const split = value.split(/:/).filter(x => !!x);
+                        const pkgName = split.shift().trim();
+                        const pkgPath = split.join(':').trim();
+                        map[pkgName] = pkgPath;
+                        return map;
+                    }, {});
+                }
+    
+                let robot = null;
+                const manager = new THREE.LoadingManager();
+                manager.onLoad = () => {
+                    if (0) {
+                        robot.traverse(c => c.dispose && c.dispose());
+                        return;
+                    }
+                        this.world.add(robot);
+                        updateMaterials(robot);
+                        robot.position.set(...pos);
+                        this.robots[robotName] = robot
+                        this.robots[robotName].standStill = false
+                        this.robots[robotName].initPosition = pos
+    
+                    this._setIgnoreLimits(this.ignoreLimits);
+                    resolve();
+                };
+    
+                if (this.urlModifierFunc) {
+                    manager.setURLModifier(this.urlModifierFunc);
+                }
+    
+                const loader = new URDFLoader(manager);
+                loader.packages = pkg;
+                loader.loadMeshCb = this.loadMeshFunc;
+                loader.fetchOptions = { mode: 'cors', credentials: 'same-origin' };
+                loader.parseCollision = true;
+                loader.load(urdf, model => robot = model);
             }
-
-            const loader = new URDFLoader(manager);
-            loader.packages = pkg;
-            loader.loadMeshCb = this.loadMeshFunc;
-            loader.fetchOptions = { mode: 'cors', credentials: 'same-origin' };
-            loader.parseCollision = true;
-            loader.load(urdf, model => robot = model);
-
+        });
+    }
+    
+    _storeRobotColors() {
+        for (const robot in this.robots) {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        this.robotColors[robot][c.material.uuid] = new THREE.Color(
+                            c.material.color.r,
+                            c.material.color.g,
+                            c.material.color.b )
+                    }
+                }
+            }) 
         }
-
     }
 
     _updateCollisionVisibility() {
 
         const showCollision = this.showCollision;
         const collisionMaterial = this._collisionMaterial;
-        const robot = this.robot;
-
-        if (robot === null) return;
-
         const colliders = [];
-        robot.traverse(c => {
 
-            if (c.isURDFCollider) {
-
-                c.visible = showCollision;
-                colliders.push(c);
-
+        for (const robot in this.robots) {
+    
+            if (this.robots[robot] === null) return;
+            if (this.robots[robot]) {
+                
+                this.robots[robot].traverse(c => {
+    
+                    if (c.isURDFCollider) {
+    
+                        c.visible = showCollision;
+                        colliders.push(c);
+    
+                    }
+    
+                });
             }
-
-        });
-
-        colliders.forEach(coll => {
-
-            coll.traverse(c => {
-
-                if (c.isMesh) {
-
-                    c.raycast = emptyRaycast;
-                    c.material = collisionMaterial;
-                    c.castShadow = false;
-
-                }
-
+    
+            colliders.forEach(coll => {
+    
+                coll.traverse(c => {
+    
+                    if (c.isMesh) {
+    
+                        c.raycast = emptyRaycast;
+                        c.material = collisionMaterial;
+                        c.castShadow = false;
+    
+                    }
+    
+                });
+    
             });
-
-        });
+        }
 
     }
 
@@ -598,17 +693,20 @@ class URDFViewer extends HTMLElement {
     // joint limits or not
     _setIgnoreLimits(ignore, dispatch = false) {
 
-        if (this.robot) {
+        for (const robot in this.robots) {
 
-            Object
-                .values(this.robot.joints)
-                .forEach(joint => {
-
-                    joint.ignoreLimits = ignore;
-                    joint.setJointValue(...joint.jointValue);
-
-                });
-
+            if (robot) {
+    
+                Object
+                    .values(this.robots[robot].joints)
+                    .forEach(joint => {
+    
+                        joint.ignoreLimits = ignore;
+                        joint.setJointValue(...joint.jointValue);
+    
+                    });
+    
+            }
         }
 
         if (dispatch) {
