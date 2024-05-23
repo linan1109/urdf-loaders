@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from './URDFLoader.js';
-import { timeout } from 'd3';
+import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
 const emptyRaycast = () => {};
@@ -16,6 +16,9 @@ const emptyRaycast = () => {};
 // geometry-loaded: Fires when all the geometry has been fully loaded
 // ignore-limits-change: Fires when the 'ignore-limits' attribute changes
 // angle-change: Fires when an angle changes
+// position-change: Fires when an position changes
+// rotation-change: Fires when an rotation changes
+// init-position-change: Fires when an initial position changes
 export default
 class URDFViewer extends HTMLElement {
 
@@ -91,10 +94,27 @@ class URDFViewer extends HTMLElement {
         this._dirty = false;
         this._loadScheduled = false;
         this.robot = null;
-        this.robots = [];
-        this.robot2 = null;
+        this.robots = {};
         this.loadMeshFunc = null;
         this.urlModifierFunc = null;
+
+        // Init Robots
+        this.robotNames = [
+            1,
+            2,
+            3,
+        ]
+        this.initialPositions = [
+            [0,1,0],
+            [0,0,0],
+            [0,-1,0],
+        ]
+        // colors for highlighting
+        this.robotColors = this.robotNames.reduce((acc, name) => {
+            acc[name] = {}
+            return acc
+        }, {});
+        
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -329,23 +349,114 @@ class URDFViewer extends HTMLElement {
     // Set the joint with jointName to
     // angle in degrees
     setJointValue(robot, jointName, ...values) {
-
         if (!this.robots[robot]) return;
         if (!this.robots[robot].joints[jointName]) return;
-
         if (this.robots[robot].joints[jointName].setJointValue(...values)) {
-
             this.redraw();
             this.dispatchEvent(new CustomEvent('angle-change', { bubbles: true, cancelable: true, detail: jointName }));
-
         }
-
+    }
+    setJointValues(values) {
+        for (const name in values) this.setJointValue(name, values[name]);
     }
 
-    setJointValues(values) {
+    getRobotInitPosition(robot, index) {
+        if (!this.robots[robot]) return;
+        return this.robots[robot].initPosition[index]
+    }
 
-        for (const name in values) this.setJointValue(name, values[name]);
+    setRobotInitPosition(robot, index, position) {
+        if (!this.robots[robot]) return;
+        const currentInitPosition = this.robots[robot].initPosition
+        const newInitPosition = [
+            index === 0 ? position : currentInitPosition[0],
+            index === 1 ? position : currentInitPosition[1],
+            index === 2 ? position : currentInitPosition[2],
+        ]
+        const currentPos = this.robots[robot].position
+        if (this.robots[robot].position.set(
+            newInitPosition[0] + currentPos.x - currentInitPosition[0], 
+            newInitPosition[1] + currentPos.y - currentInitPosition[1], 
+            newInitPosition[2] + currentPos.z - currentInitPosition[2]
+        )) {
+            currentInitPosition[0] = newInitPosition[0]
+            currentInitPosition[1] = newInitPosition[1]
+            currentInitPosition[2] = newInitPosition[2]
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('position-change', { bubbles: true, cancelable: true, detail: {robot, position} }));
+        }
+    }
 
+    setRobotPosition(robot, positions) {
+        if (!this.robots[robot]) return;
+        if (this.robots[robot].standStill) return;
+        let initPosition = this.robots[robot].initPosition
+        if (this.robots[robot].position.set(
+            parseFloat(positions.x) + initPosition[0], 
+            parseFloat(positions.y) + initPosition[1], 
+            parseFloat(positions.z) + initPosition[2]
+        )) {
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('position-change', { bubbles: true, cancelable: true, detail: {robot, positions} }));
+        }
+    }
+
+    setRobotRotation(robot, rotations) {
+        if (!this.robots[robot]) return;
+        if (this.robots[robot].standStill) return;
+        if (this.robots[robot].rotation.set(rotations.x, rotations.y, rotations.z)) {
+            this.redraw();
+            this.dispatchEvent(new CustomEvent('rotation-change', { bubbles: true, cancelable: true, detail: {robot, rotations} }));
+        }
+    }
+
+    setRobotStandStill(robot, standStill) {
+        if (!this.robots[robot]) return;
+        this.robots[robot].standStill = standStill
+        let initPosition = this.robots[robot].initPosition
+        if (standStill) {
+            if (this.robots[robot].position.set(
+                initPosition[0], 
+                initPosition[1], 
+                initPosition[2]
+            ) && this.robots[robot].rotation.set(0,0,0)) {
+                this.redraw();
+            }
+        }
+    }
+       
+    setRobotVisibility(robot, visibility) {
+        if (!this.robots[robot]) return;
+        this.robots[robot].traverse(c => {
+            if (c.isMesh) {
+                c.visible = visibility
+            }
+        }) 
+        this.redraw()
+        this.dispatchEvent(new CustomEvent('visibility-change', { bubbles: true, cancelable: true }));
+    }
+
+    setRobotHighlight(robot, highlight) {
+        if (!this.robots[robot]) return;
+        if (highlight) {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        c.material.color.setHex( 0xff0000 );
+                    }
+                }
+            }) 
+        } else {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        c.material.color = new THREE.Color(this.robotColors[robot][c.material.uuid])
+                    }
+                }
+            }) 
+        }
+        this.redraw()
+        this.dispatchEvent(new CustomEvent('highlight-change', { bubbles: true, cancelable: true }));
     }
 
     /* Private Functions */
@@ -357,9 +468,8 @@ class URDFViewer extends HTMLElement {
         const bbox = new THREE.Box3();
         bbox.makeEmpty();
         // for (const robot of this.robots) {
-        for (let index = 0; index < this.robots.length; index++) {
-            const robot = this.robots[index]
-            // const robot = this.robot;
+        for (let index = 0; index < Object.keys(this.robots).length; index++) {
+            const robot = this.robots[Object.keys(this.robots)[index]]
             if (!robot) return;
     
             this.world.updateMatrixWorld();
@@ -394,24 +504,10 @@ class URDFViewer extends HTMLElement {
                 const offset = dirLight.position.clone().sub(dirLight.target.position);
                 dirLight.target.position.copy(center);
                 dirLight.position.copy(center).add(offset);
-                // console.log(dirLight.position, robot.uuid)
-                if (index === 0) {
-                    robot.traverse(c => {
-                        if (c.isMesh) {
-                            // console.log(c.material)
-                            // console.log(c.visible)
-                            // c.visible = false
-                            if (c.material.color) {
-                                c.material.color.setHex( 0xffffff );
-                            }
-                        }
-                    });
-                }
     
                 cam.updateProjectionMatrix();
     
             }
-            // return
         }
 
 
@@ -424,32 +520,29 @@ class URDFViewer extends HTMLElement {
         if (this._loadScheduled) return;
         this._loadScheduled = true;
 
-        for (const robot of this.robots) {
-            if (robot) {
-                robot.traverse(c => c.dispose && c.dispose());
-                robot.parent.remove(robot);
-                robot = null;
+        for (const robot in this.robots) {
+            if (this.robots[robot]) {
+                this.robots[robot].traverse(c => c.dispose && c.dispose());
+                this.robots[robot].parent.remove(this.robots[robot]);
+                this.robots[robot] = null;
             }
-            // if (this.robot2) {
-            //     this.robot2.traverse(c => c.dispose && c.dispose());
-            //     this.robot2.parent.remove(this.robot2);
-            //     this.robot2 = null;
-            // }
         }
-    
-    
-        this._loadUrdf(this.package, this.urdf, 0, [5, 0, 0])
-            .then(() => this._loadUrdf(this.package, this.urdf, 1, [0, 0, 0]))
-            .then(() => {
+
+        let initPromise = this._loadUrdf(this.package, this.urdf, this.robotNames[0], this.initialPositions[0])
+
+        this.initialPositions.slice(1).reduce((currentPromise, position, index) => {
+            return currentPromise.then(() => this._loadUrdf(this.package, this.urdf, this.robotNames[index+1], position))
+        }, initPromise).then(() => {
                 this._loadScheduled = false;
                 this._updateCollisionVisibility();
+                this._storeRobotColors();
                 this.dispatchEvent(new CustomEvent('urdf-processed', { bubbles: true, cancelable: true, composed: true }));
                 this.dispatchEvent(new CustomEvent('geometry-loaded', { bubbles: true, cancelable: true, composed: true }));
                 this.recenter();
             });
     }
     
-    _loadUrdf(pkg, urdf, robot_to_add, pos) {
+    _loadUrdf(pkg, urdf, robotName, pos) {
         return new Promise((resolve, reject) => {
             this.dispatchEvent(new CustomEvent('urdf-change', { bubbles: true, cancelable: true, composed: true }));
     
@@ -497,23 +590,12 @@ class URDFViewer extends HTMLElement {
                         robot.traverse(c => c.dispose && c.dispose());
                         return;
                     }
-                    
-                        // this.robot = robot;
                         this.world.add(robot);
                         updateMaterials(robot);
                         robot.position.set(...pos);
-                        this.robots.push(robot)
-                    // if (robot_to_add === 0) {
-                    //     this.robot = robot;
-                    //     this.world.add(robot);
-                    //     updateMaterials(robot);
-                    //     this.robot.position.set(...pos);
-                    // } else {
-                    //     this.robot2 = robot;
-                    //     this.world.add(robot);
-                    //     updateMaterials(robot);
-                    //     this.robot2.position.set(...pos);
-                    // }
+                        this.robots[robotName] = robot
+                        this.robots[robotName].standStill = false
+                        this.robots[robotName].initPosition = pos
     
                     this._setIgnoreLimits(this.ignoreLimits);
                     resolve();
@@ -533,6 +615,20 @@ class URDFViewer extends HTMLElement {
         });
     }
     
+    _storeRobotColors() {
+        for (const robot in this.robots) {
+            this.robots[robot].traverse(c => {
+                if (c.isMesh) {
+                    if (c.material.color) {
+                        this.robotColors[robot][c.material.uuid] = new THREE.Color(
+                            c.material.color.r,
+                            c.material.color.g,
+                            c.material.color.b )
+                    }
+                }
+            }) 
+        }
+    }
 
     _updateCollisionVisibility() {
 
@@ -540,14 +636,12 @@ class URDFViewer extends HTMLElement {
         const collisionMaterial = this._collisionMaterial;
         const colliders = [];
 
-        for (const robot of this.robots) {
-
-            // const robot = this.robot;
+        for (const robot in this.robots) {
     
-            if (robot === null) return;
-            if (robot) {
+            if (this.robots[robot] === null) return;
+            if (this.robots[robot]) {
                 
-                robot.traverse(c => {
+                this.robots[robot].traverse(c => {
     
                     if (c.isURDFCollider) {
     
@@ -558,21 +652,6 @@ class URDFViewer extends HTMLElement {
     
                 });
             }
-    
-            // if (this.robot2) {
-    
-            //     this.robot2.traverse(c => {
-        
-            //         if (c.isURDFCollider) {
-        
-            //             c.visible = showCollision;
-            //             colliders.push(c);
-        
-            //         }
-        
-            //     });
-            // }
-    
     
             colliders.forEach(coll => {
     
@@ -614,12 +693,12 @@ class URDFViewer extends HTMLElement {
     // joint limits or not
     _setIgnoreLimits(ignore, dispatch = false) {
 
-        for (const robot of this.robots) {
+        for (const robot in this.robots) {
 
             if (robot) {
     
                 Object
-                    .values(robot.joints)
+                    .values(this.robots[robot].joints)
                     .forEach(joint => {
     
                         joint.ignoreLimits = ignore;
@@ -629,21 +708,6 @@ class URDFViewer extends HTMLElement {
     
             }
         }
-
-
-        // if (this.robot2) {
-
-        //     Object
-        //         .values(this.robot2.joints)
-        //         .forEach(joint => {
-
-        //             joint.ignoreLimits = ignore;
-        //             joint.setJointValue(...joint.jointValue);
-
-        //         });
-
-        // }
-
 
         if (dispatch) {
 

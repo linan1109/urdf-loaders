@@ -115,6 +115,65 @@ togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
 });
 
+class RobotControlsEventListeners {
+    constructor(robotNumber) {
+        this.robotNumber = robotNumber
+        this.toggleVisibility = document.getElementById(`robot${robotNumber}-visible`);
+        this.toggleHightlight = document.getElementById(`robot${robotNumber}-highlight`);
+        this.toggleMovement = document.getElementById(`robot${robotNumber}-position`);
+        this.initialPosition = {
+            x: document.getElementById(`robot${robotNumber}-positionx`),
+            y: document.getElementById(`robot${robotNumber}-positiony`),
+            z: document.getElementById(`robot${robotNumber}-positionz`)
+        };
+        viewer.addEventListener('urdf-processed', () => this.initEventListeners())
+    }
+
+    initEventListeners() {
+        viewer.setRobotVisibility(this.robotNumber, true)
+        this.toggleVisibility.addEventListener('click', () => {
+            this.toggleVisibility.classList.toggle('checked');
+            if (this.toggleVisibility.classList.contains('checked')) {
+                viewer.setRobotVisibility(this.robotNumber, true)
+            } else {
+                viewer.setRobotVisibility(this.robotNumber, false)
+            }
+        });
+
+        viewer.setRobotHighlight(this.robotNumber, false)
+        this.toggleHightlight.addEventListener('click', () => {
+            this.toggleHightlight.classList.toggle('checked');
+            if (this.toggleHightlight.classList.contains('checked')) {
+                viewer.setRobotHighlight(this.robotNumber, true)
+            } else {
+                viewer.setRobotHighlight(this.robotNumber, false)
+            }
+        });
+
+        viewer.setRobotStandStill(this.robotNumber, true)
+        this.toggleMovement.addEventListener('click', () => {
+            this.toggleMovement.classList.toggle('checked');
+            if (this.toggleMovement.classList.contains('checked')) {
+                viewer.setRobotStandStill(this.robotNumber, false)
+            } else {
+                viewer.setRobotStandStill(this.robotNumber, true)
+            }
+        });
+
+        Object.values(this.initialPosition).forEach((input, index) => {
+            // init values
+            input.value = viewer.getRobotInitPosition(this.robotNumber, index)
+            input.addEventListener('change', () => {
+                let position = parseFloat(input.value)
+                viewer.setRobotInitPosition(this.robotNumber, index, position)
+            });
+        });
+    }
+}
+// Initialize listeners for 3 robots
+const robotControlsEventListeners = [1, 2, 3].map(num => new RobotControlsEventListeners(num));
+
+
 const addPlotSelectToggles = () => {
     // ADD right bar selection
     while (plotsControlsContainer.firstChild) {
@@ -618,7 +677,7 @@ viewer.addEventListener('manipulate-end', (e) => {
 
 // create the sliders
 viewer.addEventListener('urdf-processed', () => {
-    const r = viewer.robots[0];
+    const r = viewer.robots[1];
     Object.keys(r.joints)
         .sort((a, b) => {
             const da = a
@@ -710,7 +769,7 @@ viewer.addEventListener('urdf-processed', () => {
             }
 
             slider.addEventListener('input', () => {
-                viewer.setJointValue(0, joint.name, slider.value);
+                viewer.setJointValue(1, joint.name, slider.value);
                 li.update();
             });
 
@@ -720,7 +779,7 @@ viewer.addEventListener('urdf-processed', () => {
                 )
                     ? 1.0
                     : RAD2DEG;
-                viewer.setJointValue(0, joint.name, input.value * degMultiplier);
+                viewer.setJointValue(1, joint.name, input.value * degMultiplier);
                 li.update();
             });
 
@@ -839,23 +898,39 @@ const updateAnglesAnymal = (movement, robotNum) => {
     if (mov === undefined) {
         timer = null;
         for (let i = 0; i < names.length; i++) {
-            viewer.setJointValue(robotNum-1, names[i], 0);
+            viewer.setJointValue(robotNum, names[i], 0);
         }
         return;
     }
     for (let i = 0; i < names.length; i++) {
-        viewer.setJointValue(robotNum-1, names[i], parseFloat(mov[names[i]]));
+        viewer.setJointValue(robotNum, names[i], parseFloat(mov[names[i]]));
     }
-    viewer.robots[robotNum-1].position.set(
-        mov['pos_' + 0],
-        mov['pos_' + 1],
-        mov['pos_' + 2],
-    );
-    viewer.robots[robotNum-1].rotation.set(
-        mov['rot_' + 0],
-        mov['rot_' + 1],
-        mov['rot_' + 2],
-    );
+};
+
+const updatePositionAnymal = (movement, robotNum) => {
+    if (!movement) return;
+    const current = getCurrentMovementTime();
+    const names = Object.keys(nameObsMap);
+
+    var mov = movement[current];
+    if (mov === undefined) {
+        timer = null;
+        return;
+    }
+    viewer.setRobotPosition(robotNum, {x:mov['pos_' + 0], y:mov['pos_' + 1], z:mov['pos_' + 2]})
+};
+
+const updateRotationAnymal = (movement, robotNum) => {
+    if (!movement) return;
+    const current = getCurrentMovementTime();
+    const names = Object.keys(nameObsMap);
+
+    var mov = movement[current];
+    if (mov === undefined) {
+        timer = null;
+        return;
+    }
+    viewer.setRobotRotation(robotNum, {x:mov['rot_' + 0], y:mov['rot_' + 1], z:mov['rot_' + 2]})
 };
 
 let ignoreFirst = 0;
@@ -883,6 +958,16 @@ function timerD3Update() {
     }
     updateAnglesAnymal(movement1, 1);
     updateAnglesAnymal(movement2, 2);
+    updateAnglesAnymal(movement3, 3);
+
+    updatePositionAnymal(movement1, 1);
+    updatePositionAnymal(movement2, 2);
+    updatePositionAnymal(movement2, 3);
+
+    updateRotationAnymal(movement1, 1);
+    updateRotationAnymal(movement2, 2);
+    updateRotationAnymal(movement3, 3);
+
 }
 
 function pauseAnimation() {
