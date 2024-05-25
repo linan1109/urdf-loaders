@@ -32,18 +32,22 @@ const loadButton3 = document.getElementById('load-movement3');
 const svgContainer = document.getElementById('svg-container');
 const plotsControls = document.getElementById('plots-controls');
 const togglePlotsControls = document.getElementById('toggle-plots-controls');
-const plotsControlsContainer = document.getElementById(
-    'plots-controls-container',
+const plotsLinkControlsContainer = document.getElementById(
+    'plots-link-controls-container',
 );
+const plotsGroupSelection = document.getElementById('plots-group-selection');
+const plotsLinkOptionName = document.getElementById('plots-link-option-name');
+const plotsRobotControlsContainer = document.getElementById(
+    'plots-robot-controls-container',
+);
+const plotsRobotOptionName = document.getElementById('plots-robot-option-name');
+
 const robotControls1 = document.getElementById('robot1-controls');
 const robotControls2 = document.getElementById('robot2-controls');
 const robotControls3 = document.getElementById('robot3-controls');
 const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
 const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
 const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
-
-const plotsGroupSelection = document.getElementById('plots-group-selection');
-const plotsOptionName = document.getElementById('plots-option-name');
 
 const lineColors = {
     noSelection: '#ddd',
@@ -57,6 +61,7 @@ let sliders = {};
 let timer = null;
 const svgList = {};
 const checkedObs = [];
+const checkedRobots = [];
 let timerD3 = null;
 
 let movement1 = null;
@@ -196,10 +201,12 @@ const robotControlsEventListeners = [1, 2, 3].map(
     (num) => new RobotControlsEventListeners(num),
 );
 
-const addPlotSelectToggles = () => {
+const addObsSelectToggles = () => {
     // ADD right bar selection
-    while (plotsControlsContainer.firstChild) {
-        plotsControlsContainer.removeChild(plotsControlsContainer.firstChild);
+    while (plotsLinkControlsContainer.firstChild) {
+        plotsLinkControlsContainer.removeChild(
+            plotsLinkControlsContainer.firstChild,
+        );
     }
 
     for (const key in nameObsMap) {
@@ -230,8 +237,40 @@ const addPlotSelectToggles = () => {
             }
             console.log(checkedObs);
         });
-        plotsControlsContainer.appendChild(toggle);
+        plotsLinkControlsContainer.appendChild(toggle);
     }
+};
+
+const addRobotSelectToggles = (robotNum) => {
+    const toggle = document.createElement('div');
+    toggle.className = 'toggle';
+    toggle.classList.add('checked');
+    toggle.innerHTML = 'Robot ' + robotNum;
+    toggle.textContent = 'Robot ' + robotNum;
+    toggle.addEventListener('click', () => {
+        if (toggle.classList.contains('checked')) {
+            toggle.classList.remove('checked');
+            // remove from checkedRobots
+            const index = checkedRobots.indexOf(robotNum);
+            if (index > -1) {
+                checkedRobots.splice(index, 1);
+                updateAllSVG();
+            }
+            if (svgList[robotNum] !== undefined) {
+                svgList[robotNum].svg.remove();
+            }
+        } else {
+            toggle.classList.add('checked');
+            checkedRobots.push(robotNum);
+            if (groupByRobot === true) {
+                addRobotSVG(robotNum);
+            }
+            updateAllSVG();
+        }
+        console.log(checkedRobots);
+    });
+
+    plotsRobotControlsContainer.appendChild(toggle);
 };
 
 const loadMovementFromCSV = (movement, robotNum) => {
@@ -262,6 +301,14 @@ const loadMovementFromCSV = (movement, robotNum) => {
                 svg.initMovement();
                 svg.updatePlotOnTime();
             }
+        }
+        addRobotSelectToggles(robotNum);
+        if (plotsLinkControlsContainer.childElementCount === 0) {
+            if (groupByRobot === true) {
+                plotsLinkOptionName.textContent = 'Highlight Options:';
+                plotsRobotOptionName.textContent = 'Plot Robots:';
+            }
+            addObsSelectToggles();
         }
     };
     reader.readAsText(file);
@@ -317,7 +364,8 @@ plotsGroupSelection.addEventListener('change', () => {
         svgContainer.removeChild(svgContainer.firstChild);
     }
     if (plotsGroupSelection.value === 'Robot') {
-        plotsOptionName.textContent = 'Highlight Options:';
+        plotsLinkOptionName.textContent = 'Highlight Options:';
+        plotsRobotOptionName.textContent = 'Plot Robots:';
         groupByRobot = true;
         if (movement1 !== null) {
             addRobotSVG(1);
@@ -329,7 +377,8 @@ plotsGroupSelection.addEventListener('change', () => {
             addRobotSVG(3);
         }
     } else {
-        plotsOptionName.textContent = 'Plot Links:';
+        plotsLinkOptionName.textContent = 'Plot Links:';
+        plotsRobotOptionName.textContent = 'Highlight Robots:';
         groupByRobot = false;
         for (const key in checkedObs) {
             addObsSVG(checkedObs[key]);
@@ -623,7 +672,6 @@ const updateList = () => {
 updateList();
 
 document.addEventListener('WebComponentsReady', () => {
-    addPlotSelectToggles();
     animToggle.addEventListener('click', () => {
         animToggle.classList.toggle('checked');
     });
@@ -1169,7 +1217,11 @@ class SvgPlotterObs {
             const textY = this.yScale.invert(y);
             this.path
                 .style('stroke', ({ z }) =>
-                    z === k ? lineColors.selection : lineColors.noSelection,
+                    checkedRobots.includes(z)
+                        ? lineColors.checked
+                        : z === this.currentMov
+                            ? lineColors.selection
+                            : lineColors.noSelection,
                 )
                 .filter(({ z }) => z === k)
                 .raise();
@@ -1438,9 +1490,11 @@ class SvgPlotterObs {
 
         this.path
             .style('stroke', ({ z }) =>
-                z === this.currentMov
-                    ? lineColors.selection
-                    : lineColors.noSelection,
+                checkedRobots.includes(z)
+                    ? lineColors.checked
+                    : z === this.currentMov
+                        ? lineColors.selection
+                        : lineColors.noSelection,
             )
             .filter(({ z }) => z === this.currentMov)
             .raise();

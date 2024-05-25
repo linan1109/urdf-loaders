@@ -193,7 +193,7 @@ input:focus {
     width: 100%;
 }
 
-#plots-controls #plots-controls-container{
+#plots-controls .plots-controls-container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -201,7 +201,7 @@ input:focus {
     justify-content: left;
 }
 
-#plots-controls #plots-controls-container > * {
+#plots-controls .plots-controls-container > * {
     width: 20%;
     margin: 5px;
 }
