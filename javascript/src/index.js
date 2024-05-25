@@ -235,7 +235,6 @@ const addObsSelectToggles = () => {
                 }
                 updateAllSVG();
             }
-            console.log(checkedObs);
         });
         plotsLinkControlsContainer.appendChild(toggle);
     }
@@ -267,7 +266,6 @@ const addRobotSelectToggles = (robotNum) => {
             }
             updateAllSVG();
         }
-        console.log(checkedRobots);
     });
 
     plotsRobotControlsContainer.appendChild(toggle);
@@ -280,6 +278,8 @@ const loadMovementFromCSV = (movement, robotNum) => {
     reader.onload = function(e) {
         const data = e.target.result;
         movement = Papa.parse(data, { header: true }).data;
+        // remove last empty row
+        movement.pop();
         const movementLength = movement.length;
         movementIndexStart = 0;
 
@@ -1062,7 +1062,6 @@ class SvgPlotterObs {
 
     constructor(obsName) {
         this.obsName = obsName; // key in nameObsMap
-        console.log(this.obsName);
         this.width = (95 / 100) * svgContainer.offsetWidth;
         this.height = this.width * 0.5;
         this.marginTop = 20;
@@ -1320,7 +1319,6 @@ class SvgPlotterObs {
 
     initMovement() {
         this.all_x = d3.range(movementMinLen - 1);
-        console.log('this.obsName' + this.obsName);
         // y min and max
         if (movement1 !== null) {
             this.all_y[1] = movement1.map((d) =>
@@ -1444,7 +1442,6 @@ class SvgPlotterObs {
     }
 
     drawByX() {
-        console.log(this.points);
         // remove
         this.svg.selectAll('.plotline').remove();
         this.svg.selectAll('.xaxis').remove();
