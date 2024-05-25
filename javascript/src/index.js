@@ -53,6 +53,7 @@ const lineColors = {
     noSelection: '#ddd',
     selection: 'Black',
     checked: '#00796B',
+    mouseOver: 'Red',
 };
 
 const DEG2RAD = Math.PI / 180;
@@ -71,6 +72,7 @@ let movementIndexStart = 0;
 let movementMinLen = Number.MAX_SAFE_INTEGER;
 
 let groupByRobot = true;
+let mouseOverObs = null;
 
 const nameObsMap = {
     LF_HAA: 'LF_HAA',
@@ -129,6 +131,26 @@ autocenterToggle.addEventListener('click', () => {
 
 togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
+});
+
+viewer.addEventListener('joint-mouseover', (event) => {
+    mouseOverObs = event.detail;
+    if (timer === null) {
+        for (const key in svgList) {
+            const svg = svgList[key];
+            svg.updatePlotOnTime();
+        }
+    }
+});
+
+viewer.addEventListener('joint-mouseout', (event) => {
+    mouseOverObs = null;
+    if (timer === null) {
+        for (const key in svgList) {
+            const svg = svgList[key];
+            svg.updatePlotOnTime();
+        }
+    }
 });
 
 class RobotControlsEventListeners {
@@ -816,7 +838,7 @@ class SvgPlotterRobot {
                         ? lineColors.selection
                         : checkedObs.includes(z)
                             ? lineColors.checked
-                            : lineColors.noSelection,
+                            : z === mouseOverObs ? lineColors.mouseOver : lineColors.noSelection,
                 )
                 .filter(({ z }) => z === k)
                 .raise();
@@ -1032,7 +1054,7 @@ class SvgPlotterRobot {
                     ? lineColors.checked
                     : z === this.currentObs
                         ? lineColors.selection
-                        : lineColors.noSelection,
+                        : z === mouseOverObs ? lineColors.mouseOver : lineColors.noSelection,
             )
             .filter(({ z }) => checkedObs.includes(z))
             .raise();
