@@ -53,7 +53,7 @@ const lineColors = {
     noSelection: '#ddd',
     selection: 'Black',
     checked: '#00796B',
-    mouseOver: 'Red',
+    mouseOver: '#FF5722',
 };
 
 const DEG2RAD = Math.PI / 180;
@@ -313,6 +313,10 @@ const loadMovementFromCSV = (movement, robotNum) => {
         movement2 = robotNum === 2 ? movement : movement2;
         movement3 = robotNum === 3 ? movement : movement3;
         movementMinLen = Math.min(movementLength, movementMinLen);
+
+        if (!checkedRobots.includes(robotNum)) {
+            checkedRobots.push(robotNum);
+        }
 
         if (groupByRobot === true) {
             addRobotSVG(robotNum);
@@ -936,6 +940,9 @@ class SvgPlotterRobot {
             .call(d3.axisLeft(this.yScale))
             .call((g) => g.select('.domain').remove())
             .call(
+                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            )
+            .call(
                 this.voronoi
                     ? () => {}
                     : (g) =>
@@ -955,9 +962,11 @@ class SvgPlotterRobot {
                     .append('text')
                     .attr('x', -this.marginLeft)
                     .attr('y', 10)
-                    .attr('fill', 'currentColor')
+                    .attr('fill', 'black')
                     .attr('text-anchor', 'start')
                     .text('Robot ' + this.robotNum),
+            ).call(
+                (g) => g.selectAll('.tick text').attr('fill', 'black'),
             );
     }
 
@@ -1022,6 +1031,13 @@ class SvgPlotterRobot {
                     .axisBottom(this.xScale)
                     .ticks(this.width / 80)
                     .tickSizeOuter(0),
+            )
+            .call(
+                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            ).call(
+                (g) => g.select('.domain').attr('stroke', 'black').attr('stroke-width', 0.5),
+            ).call(
+                (g) => g.selectAll('.tick text').attr('fill', 'black'),
             );
 
         this.groups = d3.rollup(
@@ -1063,7 +1079,8 @@ class SvgPlotterRobot {
         const a = this.xScale(this.current);
         this.lineX
             .attr('transform', `translate(${ a },0)`)
-            .attr('stroke', '#ddd');
+            // .attr('stroke', '#ddd');
+            .attr('stroke', 'black');
 
         if (this.currentObs !== null) {
             const textY = parseFloat(
@@ -1376,6 +1393,9 @@ class SvgPlotterObs {
             .call(d3.axisLeft(this.yScale))
             .call((g) => g.select('.domain').remove())
             .call(
+                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            )
+            .call(
                 this.voronoi
                     ? () => {}
                     : (g) =>
@@ -1395,9 +1415,11 @@ class SvgPlotterObs {
                     .append('text')
                     .attr('x', -this.marginLeft)
                     .attr('y', 10)
-                    .attr('fill', 'currentColor')
                     .attr('text-anchor', 'start')
+                    .attr('fill', 'black')
                     .text(this.obsName),
+            ).call(
+                (g) => g.selectAll('.tick text').attr('fill', 'black'),
             );
     }
 
@@ -1481,6 +1503,13 @@ class SvgPlotterObs {
                     .axisBottom(this.xScale)
                     .ticks(this.width / 80)
                     .tickSizeOuter(0),
+            )
+            .call(
+                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            ).call(
+                (g) => g.select('.domain').attr('stroke', 'black').attr('stroke-width', 0.5),
+            ).call(
+                (g) => g.selectAll('.tick text').attr('fill', 'black'),
             );
 
         this.groups = d3.rollup(
@@ -1522,7 +1551,7 @@ class SvgPlotterObs {
         const a = this.xScale(this.current);
         this.lineX
             .attr('transform', `translate(${ a },0)`)
-            .attr('stroke', '#ddd');
+            .attr('stroke', 'black');
 
         if (this.currentMov !== null) {
             const mov =
