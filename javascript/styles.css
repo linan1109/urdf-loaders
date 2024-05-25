@@ -30,9 +30,10 @@ plots-part {
     overflow: hidden;
     float: right;
     position: absolute;
-    top: 20px;
+    top: 10px;
     right: 0;
-
+    border-left: white 1px dashed;
+    
 }
 
 body {
@@ -182,22 +183,26 @@ input:focus {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: right;
-    justify-content: right; 
+    align-items: left;
+    justify-content: left; 
     margin: 20px;
+}
+
+#plots-controls > * {
+    margin-bottom: 5px;
+    width: 100%;
 }
 
 #plots-controls #plots-controls-container{
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: right;
-    justify-content: right;
-    margin: 20px;
+    align-items: left;
+    justify-content: left;
 }
 
 #plots-controls #plots-controls-container > * {
-    width: 20%;    
+    width: 20%;
     margin: 5px;
 }
 
@@ -205,9 +210,9 @@ input:focus {
     width: 100%;
     margin-top: 0;
     margin-bottom: 10px;
-    text-align: right;
+    text-align: left;
     transition: 0.1s opacity linear;
-    border-top: 1px solid white;
+    border-bottom: 1px solid white;
 }
 
 #plots-controls #toggle-plots-controls:hover {
@@ -217,7 +222,7 @@ input:focus {
 
 #plots-controls #toggle-plots-controls:before {
     content: "hide plot options";
-    font-size: 12px;
+    /* font-size: 12px; */
     font-weight: normal;
 }
 
@@ -428,6 +433,10 @@ input:focus {
 
 .toggle.checked:after {
     opacity: 1;
+}
+
+#svg-container > svg {
+    margin-left: 2.5%;
 }
 
 @keyframes fade {
