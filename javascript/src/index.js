@@ -21,7 +21,7 @@ const collisionToggle = document.getElementById('collision-toggle');
 const radiansToggle = document.getElementById('radians-toggle');
 const autocenterToggle = document.getElementById('autocenter-toggle');
 const upSelect = document.getElementById('up-select');
-const sliderList = document.querySelector('#controls ul');
+// const sliderList = document.querySelector('#controls ul');
 const controlsel = document.getElementById('controls');
 const controlsToggle = document.getElementById('toggle-controls');
 const animToggle = document.getElementById('do-animate');
@@ -35,6 +35,13 @@ const togglePlotsControls = document.getElementById('toggle-plots-controls');
 const plotsControlsContainer = document.getElementById(
     'plots-controls-container',
 );
+const robotControls1 = document.getElementById('robot1-controls');
+const robotControls2 = document.getElementById('robot2-controls');
+const robotControls3 = document.getElementById('robot3-controls');
+const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
+const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
+const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
+
 
 const lineColors = {
     noSelection: '#ddd',
@@ -116,63 +123,74 @@ togglePlotsControls.addEventListener('click', () => {
 });
 
 class RobotControlsEventListeners {
+
     constructor(robotNumber) {
-        this.robotNumber = robotNumber
-        this.toggleVisibility = document.getElementById(`robot${robotNumber}-visible`);
-        this.toggleHightlight = document.getElementById(`robot${robotNumber}-highlight`);
-        this.toggleMovement = document.getElementById(`robot${robotNumber}-position`);
+        this.robotNumber = robotNumber;
+        this.toggleVisibility = document.getElementById(
+            `robot${ robotNumber }-visible`,
+        );
+        this.toggleHightlight = document.getElementById(
+            `robot${ robotNumber }-highlight`,
+        );
+        this.toggleMovement = document.getElementById(
+            `robot${ robotNumber }-position`,
+        );
         this.initialPosition = {
-            x: document.getElementById(`robot${robotNumber}-positionx`),
-            y: document.getElementById(`robot${robotNumber}-positiony`),
-            z: document.getElementById(`robot${robotNumber}-positionz`)
+            x: document.getElementById(`robot${ robotNumber }-positionx`),
+            y: document.getElementById(`robot${ robotNumber }-positiony`),
+            z: document.getElementById(`robot${ robotNumber }-positionz`),
         };
-        viewer.addEventListener('urdf-processed', () => this.initEventListeners())
+        viewer.addEventListener('urdf-processed', () =>
+            this.initEventListeners(),
+        );
     }
 
     initEventListeners() {
-        viewer.setRobotVisibility(this.robotNumber, true)
+        viewer.setRobotVisibility(this.robotNumber, true);
         this.toggleVisibility.addEventListener('click', () => {
             this.toggleVisibility.classList.toggle('checked');
             if (this.toggleVisibility.classList.contains('checked')) {
-                viewer.setRobotVisibility(this.robotNumber, true)
+                viewer.setRobotVisibility(this.robotNumber, true);
             } else {
-                viewer.setRobotVisibility(this.robotNumber, false)
+                viewer.setRobotVisibility(this.robotNumber, false);
             }
         });
 
-        viewer.setRobotHighlight(this.robotNumber, false)
+        viewer.setRobotHighlight(this.robotNumber, false);
         this.toggleHightlight.addEventListener('click', () => {
             this.toggleHightlight.classList.toggle('checked');
             if (this.toggleHightlight.classList.contains('checked')) {
-                viewer.setRobotHighlight(this.robotNumber, true)
+                viewer.setRobotHighlight(this.robotNumber, true);
             } else {
-                viewer.setRobotHighlight(this.robotNumber, false)
+                viewer.setRobotHighlight(this.robotNumber, false);
             }
         });
 
-        viewer.setRobotStandStill(this.robotNumber, true)
+        viewer.setRobotStandStill(this.robotNumber, true);
         this.toggleMovement.addEventListener('click', () => {
             this.toggleMovement.classList.toggle('checked');
             if (this.toggleMovement.classList.contains('checked')) {
-                viewer.setRobotStandStill(this.robotNumber, false)
+                viewer.setRobotStandStill(this.robotNumber, false);
             } else {
-                viewer.setRobotStandStill(this.robotNumber, true)
+                viewer.setRobotStandStill(this.robotNumber, true);
             }
         });
 
         Object.values(this.initialPosition).forEach((input, index) => {
             // init values
-            input.value = viewer.getRobotInitPosition(this.robotNumber, index)
+            input.value = viewer.getRobotInitPosition(this.robotNumber, index);
             input.addEventListener('change', () => {
-                let position = parseFloat(input.value)
-                viewer.setRobotInitPosition(this.robotNumber, index, position)
+                const position = parseFloat(input.value);
+                viewer.setRobotInitPosition(this.robotNumber, index, position);
             });
         });
     }
+
 }
 // Initialize listeners for 3 robots
-const robotControlsEventListeners = [1, 2, 3].map(num => new RobotControlsEventListeners(num));
-
+const robotControlsEventListeners = [1, 2, 3].map(
+    (num) => new RobotControlsEventListeners(num),
+);
 
 const addPlotSelectToggles = () => {
     // ADD right bar selection
@@ -635,6 +653,16 @@ controlsToggle.addEventListener('click', () =>
     controlsel.classList.toggle('hidden'),
 );
 
+robotControlsToggle1.addEventListener('click', () =>
+    robotControls1.classList.toggle('hidden'),
+);
+robotControlsToggle2.addEventListener('click', () =>
+    robotControls2.classList.toggle('hidden'),
+);
+robotControlsToggle3.addEventListener('click', () =>
+    robotControls3.classList.toggle('hidden'),
+);
+
 // watch for urdf changes
 viewer.addEventListener('urdf-change', () => {
     Object.values(sliders).forEach((sl) => sl.remove());
@@ -673,120 +701,6 @@ viewer.addEventListener('manipulate-start', (e) => {
 
 viewer.addEventListener('manipulate-end', (e) => {
     viewer.noAutoRecenter = originalNoAutoRecenter;
-});
-
-// create the sliders
-viewer.addEventListener('urdf-processed', () => {
-    const r = viewer.robots[1];
-    Object.keys(r.joints)
-        .sort((a, b) => {
-            const da = a
-                .split(/[^\d]+/g)
-                .filter((v) => !!v)
-                .pop();
-            const db = b
-                .split(/[^\d]+/g)
-                .filter((v) => !!v)
-                .pop();
-
-            if (da !== undefined && db !== undefined) {
-                const delta = parseFloat(da) - parseFloat(db);
-                if (delta !== 0) return delta;
-            }
-
-            if (a > b) return 1;
-            if (b > a) return -1;
-            return 0;
-        })
-        .map((key) => r.joints[key])
-        .forEach((joint) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-            <span title='${ joint.name }'>${ joint.name }</span>
-            <input type='range' value='0' step='0.0001'/>
-            <input type='number' step='0.0001' />
-            `;
-            li.setAttribute('joint-type', joint.jointType);
-            li.setAttribute('joint-name', joint.name);
-
-            sliderList.appendChild(li);
-
-            // update the joint display
-            const slider = li.querySelector('input[type="range"]');
-            const input = li.querySelector('input[type="number"]');
-            li.update = () => {
-                const degMultiplier = radiansToggle.classList.contains(
-                    'checked',
-                )
-                    ? 1.0
-                    : RAD2DEG;
-                let angle = joint.angle;
-
-                if (
-                    joint.jointType === 'revolute' ||
-                    joint.jointType === 'continuous'
-                ) {
-                    angle *= degMultiplier;
-                }
-
-                if (Math.abs(angle) > 1) {
-                    angle = angle.toFixed(1);
-                } else {
-                    angle = angle.toPrecision(2);
-                }
-
-                input.value = parseFloat(angle);
-
-                // directly input the value
-                slider.value = joint.angle;
-
-                if (viewer.ignoreLimits || joint.jointType === 'continuous') {
-                    slider.min = -6.28;
-                    slider.max = 6.28;
-
-                    input.min = -6.28 * degMultiplier;
-                    input.max = 6.28 * degMultiplier;
-                } else {
-                    slider.min = joint.limit.lower;
-                    slider.max = joint.limit.upper;
-
-                    input.min = joint.limit.lower * degMultiplier;
-                    input.max = joint.limit.upper * degMultiplier;
-                }
-            };
-
-            switch (joint.jointType) {
-
-                case 'continuous':
-                case 'prismatic':
-                case 'revolute':
-                    break;
-                default:
-                    li.update = () => {};
-                    input.remove();
-                    slider.remove();
-
-            }
-
-            slider.addEventListener('input', () => {
-                viewer.setJointValue(1, joint.name, slider.value);
-                li.update();
-            });
-
-            input.addEventListener('change', () => {
-                const degMultiplier = radiansToggle.classList.contains(
-                    'checked',
-                )
-                    ? 1.0
-                    : RAD2DEG;
-                viewer.setJointValue(1, joint.name, input.value * degMultiplier);
-                li.update();
-            });
-
-            li.update();
-
-            sliders[joint.name] = li;
-        });
 });
 
 document.addEventListener('WebComponentsReady', () => {
@@ -917,7 +831,11 @@ const updatePositionAnymal = (movement, robotNum) => {
         timer = null;
         return;
     }
-    viewer.setRobotPosition(robotNum, {x:mov['pos_' + 0], y:mov['pos_' + 1], z:mov['pos_' + 2]})
+    viewer.setRobotPosition(robotNum, {
+        x: mov['pos_' + 0],
+        y: mov['pos_' + 1],
+        z: mov['pos_' + 2],
+    });
 };
 
 const updateRotationAnymal = (movement, robotNum) => {
@@ -930,7 +848,11 @@ const updateRotationAnymal = (movement, robotNum) => {
         timer = null;
         return;
     }
-    viewer.setRobotRotation(robotNum, {x:mov['rot_' + 0], y:mov['rot_' + 1], z:mov['rot_' + 2]})
+    viewer.setRobotRotation(robotNum, {
+        x: mov['rot_' + 0],
+        y: mov['rot_' + 1],
+        z: mov['rot_' + 2],
+    });
 };
 
 let ignoreFirst = 0;
@@ -967,7 +889,6 @@ function timerD3Update() {
     updateRotationAnymal(movement1, 1);
     updateRotationAnymal(movement2, 2);
     updateRotationAnymal(movement3, 3);
-
 }
 
 function pauseAnimation() {
