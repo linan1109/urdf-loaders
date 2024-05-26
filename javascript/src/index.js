@@ -393,14 +393,8 @@ plotsGroupSelection.addEventListener('change', () => {
         plotsLinkOptionName.textContent = 'Highlight Options:';
         plotsRobotOptionName.textContent = 'Plot Robots:';
         groupByRobot = true;
-        if (movement1 !== null) {
-            addRobotSVG(1);
-        }
-        if (movement2 !== null) {
-            addRobotSVG(2);
-        }
-        if (movement3 !== null) {
-            addRobotSVG(3);
+        for (const key in checkedRobots) {
+            addRobotSVG(checkedRobots[key]);
         }
     } else {
         plotsLinkOptionName.textContent = 'Plot Links:';
