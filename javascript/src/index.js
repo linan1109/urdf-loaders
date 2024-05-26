@@ -328,7 +328,23 @@ const loadMovementFromCSV = (movement, robotNum) => {
                 svg.updatePlotOnTime();
             }
         }
-        addRobotSelectToggles(robotNum);
+
+        while (plotsRobotControlsContainer.firstChild) {
+            plotsRobotControlsContainer.removeChild(
+                plotsRobotControlsContainer.firstChild,
+            );
+        }
+
+        if (movement1 !== null) {
+            addRobotSelectToggles(1);
+        }
+        if (movement2 !== null) {
+            addRobotSelectToggles(2);
+        }
+        if (movement3 !== null) {
+            addRobotSelectToggles(3);
+        }
+
         if (plotsLinkControlsContainer.childElementCount === 0) {
             if (groupByRobot === true) {
                 plotsLinkOptionName.textContent = 'Highlight Options:';
