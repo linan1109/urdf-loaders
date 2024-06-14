@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import URDFManipulator from './urdf-manipulator-element.js';
+import globalTimer from './utils/globalTimer.js';
 
 customElements.define('urdf-viewer', URDFManipulator);
 
@@ -59,11 +60,9 @@ const lineColors = {
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
-let timer = null;
 const svgList = {};
 const checkedObs = [];
 const checkedRobots = [];
-let timerD3 = null;
 
 let movement1 = null;
 let movement2 = null;
@@ -135,7 +134,7 @@ togglePlotsControls.addEventListener('click', () => {
 
 viewer.addEventListener('joint-mouseover', (event) => {
     mouseOverObs = event.detail;
-    if (timer === null) {
+    if (!globalTimer.isRunning) {
         for (const key in svgList) {
             const svg = svgList[key];
             svg.updatePlotOnTime();
@@ -145,7 +144,7 @@ viewer.addEventListener('joint-mouseover', (event) => {
 
 viewer.addEventListener('joint-mouseout', (event) => {
     mouseOverObs = null;
-    if (timer === null) {
+    if (!globalTimer.isRunning) {
         for (const key in svgList) {
             const svg = svgList[key];
             svg.updatePlotOnTime();
@@ -583,7 +582,7 @@ const updateAnglesAnymal = (movement, robotNum) => {
 
     var mov = movement[current];
     if (mov === undefined) {
-        timer = null;
+        globalTimer.stop();
         for (let i = 0; i < names.length; i++) {
             viewer.setJointValue(robotNum, names[i], 0);
         }
@@ -601,7 +600,7 @@ const updatePositionAnymal = (movement, robotNum) => {
 
     var mov = movement[current];
     if (mov === undefined) {
-        timer = null;
+        globalTimer.stop();
         return;
     }
     viewer.setRobotPosition(robotNum, {
@@ -618,7 +617,7 @@ const updateRotationAnymal = (movement, robotNum) => {
 
     var mov = movement[current];
     if (mov === undefined) {
-        timer = null;
+        globalTimer.stop();
         return;
     }
     viewer.setRobotRotation(robotNum, {
@@ -628,18 +627,11 @@ const updateRotationAnymal = (movement, robotNum) => {
     });
 };
 
-let ignoreFirst = 0;
-
 const getCurrentMovementTime = () => {
-    if (timer === null) return Math.floor(ignoreFirst);
-    const time = Date.now() - timer;
-    // freq = 0.01 sec
-    const freq = 0.03;
-    const current = Math.floor(time / 1000 / freq + ignoreFirst);
+    const current = globalTimer.getCurrent();
     if (current >= movementMinLen) {
-        ignoreFirst = movementMinLen - 1;
-        timer = null;
-        timerD3.stop();
+        globalTimer.setIgnoreFirst(movementMinLen - 1);
+        globalTimer.stop();
         animToggle.classList.remove('checked');
         return movementMinLen - 1;
     }
@@ -665,16 +657,12 @@ function timerD3Update() {
 }
 
 function pauseAnimation() {
-    ignoreFirst = getCurrentMovementTime();
-    timer = null;
-    timerD3.stop();
+    globalTimer.setIgnoreFirst(getCurrentMovementTime());
+    globalTimer.stop();
 }
 
 function startAnimation() {
-    if (timer === null) {
-        timer = Date.now();
-        timerD3 = d3.interval(timerD3Update, 30);
-    }
+    globalTimer.start(timerD3Update, 30);
 }
 
 const updateLoop = () => {
@@ -682,7 +670,7 @@ const updateLoop = () => {
         if (animToggle.classList.contains('checked')) {
             startAnimation();
         } else {
-            if (timer !== null) {
+            if (!globalTimer.isRunning) {
                 pauseAnimation();
             }
         }
@@ -838,7 +826,7 @@ class SvgPlotterRobot {
     }
 
     pointermoved(event) {
-        if (timer === null) {
+        if (!globalTimer.isRunning) {
             const [xm, ym] = d3.pointer(event);
             const i = d3.leastIndex(this.points, ([x, y]) =>
                 Math.hypot(x - xm, y - ym),
@@ -852,7 +840,9 @@ class SvgPlotterRobot {
                         ? lineColors.selection
                         : checkedObs.includes(z)
                             ? lineColors.checked
-                            : z === mouseOverObs ? lineColors.mouseOver : lineColors.noSelection,
+                            : z === mouseOverObs
+                                ? lineColors.mouseOver
+                                : lineColors.noSelection,
                 )
                 .filter(({ z }) => z === k)
                 .raise();
@@ -880,7 +870,7 @@ class SvgPlotterRobot {
         this.svg.node().value = null;
         this.svg.dispatch('input', { bubbles: true });
         this.currentObs = null;
-        if (timer === null) {
+        if (!globalTimer.isRunning) {
             this.updatePlotOnTime();
         }
     }
@@ -918,9 +908,10 @@ class SvgPlotterRobot {
             // get the click position
             const [xm] = d3.pointer(event);
             console.log(this.xScale.invert(xm));
-            ignoreFirst = Math.floor(
+            const ignoreFirst = Math.floor(
                 this.xScale.invert(xm) - movementIndexStart,
             );
+            globalTimer.setIgnoreFirst(ignoreFirst);
             startAnimation();
         }
     }
@@ -949,8 +940,11 @@ class SvgPlotterRobot {
             .attr('class', 'yaxis')
             .call(d3.axisLeft(this.yScale))
             .call((g) => g.select('.domain').remove())
-            .call(
-                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            .call((g) =>
+                g
+                    .selectAll('.tick line')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
             )
             .call(
                 this.voronoi
@@ -975,16 +969,15 @@ class SvgPlotterRobot {
                     .attr('fill', 'black')
                     .attr('text-anchor', 'start')
                     .text('Robot ' + this.robotNum),
-            ).call(
-                (g) => g.selectAll('.tick text').attr('fill', 'black'),
-            );
+            )
+            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
     }
 
     updatePlotOnTime() {
         if (this.movement !== null) {
             this.current = getCurrentMovementTime();
             if (this.current >= this.movement.length) {
-                timerD3.stop();
+                globalTimer.stop();
             }
             if (this.current >= 0 && this.current < this.movement.length) {
                 if (this.all_x === null) {
@@ -1042,13 +1035,19 @@ class SvgPlotterRobot {
                     .ticks(this.width / 80)
                     .tickSizeOuter(0),
             )
-            .call(
-                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
-            ).call(
-                (g) => g.select('.domain').attr('stroke', 'black').attr('stroke-width', 0.5),
-            ).call(
-                (g) => g.selectAll('.tick text').attr('fill', 'black'),
-            );
+            .call((g) =>
+                g
+                    .selectAll('.tick line')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
+            )
+            .call((g) =>
+                g
+                    .select('.domain')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
+            )
+            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
 
         this.groups = d3.rollup(
             this.points,
@@ -1080,7 +1079,9 @@ class SvgPlotterRobot {
                     ? lineColors.checked
                     : z === this.currentObs
                         ? lineColors.selection
-                        : z === mouseOverObs ? lineColors.mouseOver : lineColors.noSelection,
+                        : z === mouseOverObs
+                            ? lineColors.mouseOver
+                            : lineColors.noSelection,
             )
             .filter(({ z }) => checkedObs.includes(z))
             .raise();
@@ -1255,7 +1256,7 @@ class SvgPlotterObs {
     }
 
     pointermoved(event) {
-        if (timer === null) {
+        if (!globalTimer.isRunning) {
             const [xm, ym] = d3.pointer(event);
             const i = d3.leastIndex(this.points, ([x, y]) =>
                 Math.hypot(x - xm, y - ym),
@@ -1297,7 +1298,7 @@ class SvgPlotterObs {
         this.svg.node().value = null;
         this.svg.dispatch('input', { bubbles: true });
         this.currentMov = null;
-        if (timer === null) {
+        if (!globalTimer.isRunning) {
             this.updatePlotOnTime();
         }
     }
@@ -1359,9 +1360,10 @@ class SvgPlotterObs {
             // get the click position
             const [xm] = d3.pointer(event);
             console.log(this.xScale.invert(xm));
-            ignoreFirst = Math.floor(
+            const ignoreFirst = Math.floor(
                 this.xScale.invert(xm) - movementIndexStart,
             );
+            globalTimer.setIgnoreFirst(ignoreFirst);
             startAnimation();
         }
     }
@@ -1402,8 +1404,11 @@ class SvgPlotterObs {
             .attr('class', 'yaxis')
             .call(d3.axisLeft(this.yScale))
             .call((g) => g.select('.domain').remove())
-            .call(
-                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
+            .call((g) =>
+                g
+                    .selectAll('.tick line')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
             )
             .call(
                 this.voronoi
@@ -1428,15 +1433,14 @@ class SvgPlotterObs {
                     .attr('text-anchor', 'start')
                     .attr('fill', 'black')
                     .text(this.obsName),
-            ).call(
-                (g) => g.selectAll('.tick text').attr('fill', 'black'),
-            );
+            )
+            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
     }
 
     updatePlotOnTime() {
         this.current = getCurrentMovementTime();
         if (this.current >= movementMinLen) {
-            timerD3.stop();
+            globalTimer.stop();
         }
         if (this.current >= 0 && this.current < movementMinLen) {
             if (this.all_x === null) {
@@ -1514,13 +1518,19 @@ class SvgPlotterObs {
                     .ticks(this.width / 80)
                     .tickSizeOuter(0),
             )
-            .call(
-                (g) => g.selectAll('.tick line').attr('stroke', 'black').attr('stroke-width', 0.5),
-            ).call(
-                (g) => g.select('.domain').attr('stroke', 'black').attr('stroke-width', 0.5),
-            ).call(
-                (g) => g.selectAll('.tick text').attr('fill', 'black'),
-            );
+            .call((g) =>
+                g
+                    .selectAll('.tick line')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
+            )
+            .call((g) =>
+                g
+                    .select('.domain')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
+            )
+            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
 
         this.groups = d3.rollup(
             this.points,
