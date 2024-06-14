@@ -37,6 +37,8 @@ const globalVariables = {
 
     groupByRobot: true,
     mouseOverObs: null,
+
+    addedRobotCount: 1,
 };
 
 export default globalVariables;

@@ -8,8 +8,6 @@ class MovementContainer {
     addMovement(robotNum, movement) {
         this.robotNums.push(robotNum);
         this.movementDict[robotNum] = movement;
-        console.log(this.movementDict);
-        console.log(this.robotNums);
     }
 
     getMovement(robotNum) {

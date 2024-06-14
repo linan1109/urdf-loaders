@@ -31,9 +31,9 @@ const upSelect = document.getElementById('up-select');
 const controlsel = document.getElementById('controls');
 const controlsToggle = document.getElementById('toggle-controls');
 
-const loadButton1 = document.getElementById('load-movement1');
-const loadButton2 = document.getElementById('load-movement2');
-const loadButton3 = document.getElementById('load-movement3');
+// const loadButton1 = document.getElementById('load-movement1');
+// const loadButton2 = document.getElementById('load-movement2');
+// const loadButton3 = document.getElementById('load-movement3');
 const svgContainer = document.getElementById('svg-container');
 const plotsControls = document.getElementById('plots-controls');
 const togglePlotsControls = document.getElementById('toggle-plots-controls');
@@ -47,12 +47,16 @@ const plotsRobotControlsContainer = document.getElementById(
 );
 const plotsRobotOptionName = document.getElementById('plots-robot-option-name');
 
-const robotControls1 = document.getElementById('robot1-controls');
-const robotControls2 = document.getElementById('robot2-controls');
-const robotControls3 = document.getElementById('robot3-controls');
-const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
-const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
-const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
+const robotControlContainer = document.getElementById(
+    'robot-control-container',
+);
+const addRobotButton = document.getElementById('add-robot-button');
+// const robotControls1 = document.getElementById('robot1-controls');
+// const robotControls2 = document.getElementById('robot2-controls');
+// const robotControls3 = document.getElementById('robot3-controls');
+// const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
+// const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
+// const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
@@ -95,6 +99,16 @@ togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
 });
 
+addRobotButton.addEventListener('click', () => {
+    createRobotControls(globalVariables.addedRobotCount);
+    viewer.addOneRobot(globalVariables.addedRobotCount, [
+        0,
+        globalVariables.addedRobotCount,
+        0,
+    ]);
+    globalVariables.addedRobotCount += 1;
+});
+
 viewer.addEventListener('joint-mouseover', (event) => {
     globalVariables.mouseOverObs = event.detail;
     if (!globalTimer.isRunning) {
@@ -115,75 +129,106 @@ viewer.addEventListener('joint-mouseout', (event) => {
     }
 });
 
-class RobotControlsEventListeners {
+function createRobotControls(robotNumber) {
+    // Create a container div
+    const container = document.createElement('div');
+    container.id = `input-container`;
 
-    constructor(robotNumber) {
-        this.robotNumber = robotNumber;
-        this.toggleVisibility = document.getElementById(
-            `robot${ robotNumber }-visible`,
-        );
-        this.toggleHightlight = document.getElementById(
-            `robot${ robotNumber }-highlight`,
-        );
-        this.toggleMovement = document.getElementById(
-            `robot${ robotNumber }-position`,
-        );
-        this.initialPosition = {
-            x: document.getElementById(`robot${ robotNumber }-positionx`),
-            y: document.getElementById(`robot${ robotNumber }-positiony`),
-            z: document.getElementById(`robot${ robotNumber }-positionz`),
-        };
-        viewer.addEventListener('urdf-processed', () =>
-            this.initEventListeners(),
-        );
-    }
+    // Create the inner HTML
+    container.innerHTML = `
+    Robot ${ robotNumber }
+    <br>
+    <div id="robot${ robotNumber }-controls" class="robot-controls hidden">
+        <div id="robot${ robotNumber }-toggle-controls" class="toggle-robot-controls"></div>
+        <div id="robot${ robotNumber }-visible" class="toggle checked robot-control">Visible</div>
+        <div id="robot${ robotNumber }-highlight" class="toggle robot-control">Highlight</div>
+        <div id="robot${ robotNumber }-position" class="toggle robot-control">Update Pos.</div>
+        <div class="init-position">
+            Init Pos. (
+            <input id="robot${ robotNumber }-positionx" type="number" class="position-input" value="0" step="0.1"/>, 
+            <input id="robot${ robotNumber }-positiony" type="number" class="position-input" value="${ robotNumber }" step="0.1"/>, 
+            <input id="robot${ robotNumber }-positionz" type="number" class="position-input" value="0" step="0.1"/>
+            )
+        </div>
+        <input type="file" id="load-movement${ robotNumber }" accept=".csv"/> 
+    </div>
+    `;
 
-    initEventListeners() {
-        viewer.setRobotVisibility(this.robotNumber, true);
-        this.toggleVisibility.addEventListener('click', () => {
-            this.toggleVisibility.classList.toggle('checked');
-            if (this.toggleVisibility.classList.contains('checked')) {
-                viewer.setRobotVisibility(this.robotNumber, true);
-            } else {
-                viewer.setRobotVisibility(this.robotNumber, false);
-            }
-        });
-
-        viewer.setRobotHighlight(this.robotNumber, false);
-        this.toggleHightlight.addEventListener('click', () => {
-            this.toggleHightlight.classList.toggle('checked');
-            if (this.toggleHightlight.classList.contains('checked')) {
-                viewer.setRobotHighlight(this.robotNumber, true);
-            } else {
-                viewer.setRobotHighlight(this.robotNumber, false);
-            }
-        });
-
-        viewer.setRobotStandStill(this.robotNumber, true);
-        this.toggleMovement.addEventListener('click', () => {
-            this.toggleMovement.classList.toggle('checked');
-            if (this.toggleMovement.classList.contains('checked')) {
-                viewer.setRobotStandStill(this.robotNumber, false);
-            } else {
-                viewer.setRobotStandStill(this.robotNumber, true);
-            }
-        });
-
-        Object.values(this.initialPosition).forEach((input, index) => {
-            // init values
-            input.value = viewer.getRobotInitPosition(this.robotNumber, index);
-            input.addEventListener('change', () => {
-                const position = parseFloat(input.value);
-                viewer.setRobotInitPosition(this.robotNumber, index, position);
-            });
-        });
-    }
-
+    robotControlContainer.appendChild(container);
+    viewer.addEventListener('urdf-processed', function handler(event) {
+        addListenerToNewRobot(robotNumber);
+        viewer.removeEventListener('urdf-processed', handler);
+    });
 }
-// Initialize listeners for 3 robots
-const robotControlsEventListeners = [1, 2, 3].map(
-    (num) => new RobotControlsEventListeners(num),
-);
+
+const addListenerToNewRobot = (robotNumber) => {
+    const robotControlsToggle = document.getElementById(
+        `robot${ robotNumber }-toggle-controls`,
+    );
+    const robotControls = document.getElementById(
+        `robot${ robotNumber }-controls`,
+    );
+    const toggleVisibility = document.getElementById(
+        `robot${ robotNumber }-visible`,
+    );
+    const toggleHightlight = document.getElementById(
+        `robot${ robotNumber }-highlight`,
+    );
+    const toggleMovement = document.getElementById(
+        `robot${ robotNumber }-position`,
+    );
+    const loadMovement = document.getElementById(`load-movement${ robotNumber }`);
+    const initialPosition = {
+        x: document.getElementById(`robot${ robotNumber }-positionx`),
+        y: document.getElementById(`robot${ robotNumber }-positiony`),
+        z: document.getElementById(`robot${ robotNumber }-positionz`),
+    };
+
+    robotControlsToggle.addEventListener('click', () => {
+        robotControls.classList.toggle('hidden');
+    });
+    loadMovement.addEventListener('change', () =>
+        loadMovementFromCSV(robotNumber),
+    );
+    viewer.setRobotVisibility(robotNumber, true);
+    toggleVisibility.addEventListener('click', () => {
+        toggleVisibility.classList.toggle('checked');
+        if (toggleVisibility.classList.contains('checked')) {
+            viewer.setRobotVisibility(robotNumber, true);
+        } else {
+            viewer.setRobotVisibility(robotNumber, false);
+        }
+    });
+
+    viewer.setRobotHighlight(robotNumber, false);
+    toggleHightlight.addEventListener('click', () => {
+        toggleHightlight.classList.toggle('checked');
+        if (toggleHightlight.classList.contains('checked')) {
+            viewer.setRobotHighlight(robotNumber, true);
+        } else {
+            viewer.setRobotHighlight(robotNumber, false);
+        }
+    });
+
+    viewer.setRobotStandStill(robotNumber, true);
+    toggleMovement.addEventListener('click', () => {
+        toggleMovement.classList.toggle('checked');
+        if (toggleMovement.classList.contains('checked')) {
+            viewer.setRobotStandStill(robotNumber, false);
+        } else {
+            viewer.setRobotStandStill(robotNumber, true);
+        }
+    });
+
+    Object.values(initialPosition).forEach((input, index) => {
+        // init values
+        input.value = viewer.getRobotInitPosition(robotNumber, index);
+        input.addEventListener('change', () => {
+            const position = parseFloat(input.value);
+            viewer.setRobotInitPosition(robotNumber, index, position);
+        });
+    });
+};
 
 const addObsSelectToggles = () => {
     // ADD right bar selection
@@ -276,7 +321,10 @@ const loadMovementFromCSV = (robotNum) => {
         }
         movementContainer.addMovement(robotNum, movement);
 
-        globalVariables.movementMinLen = Math.min(movementLength, globalVariables.movementMinLen);
+        globalVariables.movementMinLen = Math.min(
+            movementLength,
+            globalVariables.movementMinLen,
+        );
 
         if (!globalVariables.checkedRobots.includes(robotNum)) {
             globalVariables.checkedRobots.push(robotNum);
@@ -349,9 +397,9 @@ const addObsSVG = (obsName) => {
     svg.updatePlotOnTime();
 };
 
-loadButton1.addEventListener('change', (e) => loadMovementFromCSV(1));
-loadButton2.addEventListener('change', (e) => loadMovementFromCSV(2));
-loadButton3.addEventListener('change', (e) => loadMovementFromCSV(3));
+// loadButton1.addEventListener('change', (e) => loadMovementFromCSV(1));
+// loadButton2.addEventListener('change', (e) => loadMovementFromCSV(2));
+// loadButton3.addEventListener('change', (e) => loadMovementFromCSV(3));
 
 const updateAllSVG = () => {
     for (const key in svgList) {
@@ -387,15 +435,15 @@ controlsToggle.addEventListener('click', () =>
     controlsel.classList.toggle('hidden'),
 );
 
-robotControlsToggle1.addEventListener('click', () =>
-    robotControls1.classList.toggle('hidden'),
-);
-robotControlsToggle2.addEventListener('click', () =>
-    robotControls2.classList.toggle('hidden'),
-);
-robotControlsToggle3.addEventListener('click', () =>
-    robotControls3.classList.toggle('hidden'),
-);
+// robotControlsToggle1.addEventListener('click', () =>
+//     robotControls1.classList.toggle('hidden'),
+// );
+// robotControlsToggle2.addEventListener('click', () =>
+//     robotControls2.classList.toggle('hidden'),
+// );
+// robotControlsToggle3.addEventListener('click', () =>
+//     robotControls3.classList.toggle('hidden'),
+// );
 
 // watch for urdf changes
 viewer.addEventListener('urdf-change', () => {
@@ -580,6 +628,7 @@ document.addEventListener('WebComponentsReady', () => {
         // animToggle.classList.remove('checked'),
         animationControl.uncheck(),
     );
+    createRobotControls(0);
     globalTimer.setTimerD3UpdateFunc(timerD3Update);
     // viewer.addEventListener('urdf-processed', (e) => updateAngles());
     updateLoop();
