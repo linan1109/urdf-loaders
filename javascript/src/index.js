@@ -9,6 +9,7 @@ import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import URDFManipulator from './urdf-manipulator-element.js';
 import globalTimer from './utils/globalTimer.js';
+import movementContainer from './utils/movement-container.js';
 
 customElements.define('urdf-viewer', URDFManipulator);
 
@@ -64,9 +65,6 @@ const svgList = {};
 const checkedObs = [];
 const checkedRobots = [];
 
-let movement1 = null;
-let movement2 = null;
-let movement3 = null;
 let movementIndexStart = 0;
 let movementMinLen = Number.MAX_SAFE_INTEGER;
 
@@ -292,13 +290,13 @@ const addRobotSelectToggles = (robotNum) => {
     plotsRobotControlsContainer.appendChild(toggle);
 };
 
-const loadMovementFromCSV = (movement, robotNum) => {
+const loadMovementFromCSV = (robotNum) => {
     const fileInput = document.getElementById('load-movement' + robotNum);
     const file = fileInput.files[0];
     const reader = new FileReader();
     reader.onload = function(e) {
         const data = e.target.result;
-        movement = Papa.parse(data, { header: true }).data;
+        const movement = Papa.parse(data, { header: true }).data;
         // remove last empty row
         movement.pop();
         const movementLength = movement.length;
@@ -308,9 +306,8 @@ const loadMovementFromCSV = (movement, robotNum) => {
         console.log('Length:' + movementLength);
         console.log('Start index:' + movementIndexStart);
 
-        movement1 = robotNum === 1 ? movement : movement1;
-        movement2 = robotNum === 2 ? movement : movement2;
-        movement3 = robotNum === 3 ? movement : movement3;
+        movementContainer.addMovement(robotNum, movement);
+
         movementMinLen = Math.min(movementLength, movementMinLen);
 
         if (!checkedRobots.includes(robotNum)) {
@@ -334,14 +331,18 @@ const loadMovementFromCSV = (movement, robotNum) => {
             );
         }
 
-        if (movement1 !== null) {
-            addRobotSelectToggles(1);
-        }
-        if (movement2 !== null) {
-            addRobotSelectToggles(2);
-        }
-        if (movement3 !== null) {
-            addRobotSelectToggles(3);
+        // if (movement1 !== null) {
+        //     addRobotSelectToggles(1);
+        // }
+        // if (movement2 !== null) {
+        //     addRobotSelectToggles(2);
+        // }
+        // if (movement3 !== null) {
+        //     addRobotSelectToggles(3);
+        // }
+
+        for (const rbtnum in movementContainer.robotNums) {
+            addRobotSelectToggles(rbtnum);
         }
 
         if (plotsLinkControlsContainer.childElementCount === 0) {
@@ -359,8 +360,7 @@ const addRobotSVG = (robotNum) => {
     if (svgList[robotNum] !== undefined) {
         svgList[robotNum].svg.remove();
     }
-    const movement =
-        robotNum === 1 ? movement1 : robotNum === 2 ? movement2 : movement3;
+    const movement = movementContainer.movementDict[robotNum];
     const svg = new SvgPlotterRobot(movement, robotNum);
     const svgNode = svg.svg.node();
     svgNode.id = 'plot-all' + robotNum;
@@ -381,15 +381,9 @@ const addObsSVG = (obsName) => {
     svg.updatePlotOnTime();
 };
 
-loadButton1.addEventListener('change', (e) =>
-    loadMovementFromCSV(movement1, 1),
-);
-loadButton2.addEventListener('change', (e) =>
-    loadMovementFromCSV(movement2, 2),
-);
-loadButton3.addEventListener('change', (e) =>
-    loadMovementFromCSV(movement3, 3),
-);
+loadButton1.addEventListener('change', (e) => loadMovementFromCSV(1));
+loadButton2.addEventListener('change', (e) => loadMovementFromCSV(2));
+loadButton3.addEventListener('change', (e) => loadMovementFromCSV(3));
 
 const updateAllSVG = () => {
     for (const key in svgList) {
@@ -569,63 +563,97 @@ document.addEventListener('WebComponentsReady', () => {
 //     }
 // };
 
-const updateAnglesAnymal = (movement, robotNum) => {
+const updateAnymal = () => {
     if (!viewer.setJointValue) return;
-    if (!movement) return;
-    // reset everything to 0 first
-    // const resetJointValues = viewer.angles;
-    // for (const name in resetJointValues) resetJointValues[name] = 0;
-    // viewer.setJointValues(resetJointValues);
-
     const current = getCurrentMovementTime();
     const names = Object.keys(nameObsMap);
 
-    var mov = movement[current];
-    if (mov === undefined) {
-        globalTimer.stop();
-        for (let i = 0; i < names.length; i++) {
-            viewer.setJointValue(robotNum, names[i], 0);
+    for (const robotNum in movementContainer.robotNums) {
+        if (!movementContainer.hasMovement(robotNum)) continue;
+        const movement = movementContainer.getMovement(robotNum);
+        var mov = movement[current];
+        if (mov === undefined) {
+            globalTimer.stop();
+            for (let i = 0; i < names.length; i++) {
+                viewer.setJointValue(robotNum, names[i], 0);
+            }
+            return;
         }
-        return;
-    }
-    for (let i = 0; i < names.length; i++) {
-        viewer.setJointValue(robotNum, names[i], parseFloat(mov[names[i]]));
+        for (let i = 0; i < names.length; i++) {
+            viewer.setJointValue(robotNum, names[i], parseFloat(mov[names[i]]));
+        }
+
+        viewer.setRobotPosition(robotNum, {
+            x: mov['pos_' + 0],
+            y: mov['pos_' + 1],
+            z: mov['pos_' + 2],
+        });
+
+        viewer.setRobotRotation(robotNum, {
+            x: mov['rot_' + 0],
+            y: mov['rot_' + 1],
+            z: mov['rot_' + 2],
+        });
     }
 };
 
-const updatePositionAnymal = (movement, robotNum) => {
-    if (!movement) return;
-    const current = getCurrentMovementTime();
-    const names = Object.keys(nameObsMap);
+// const updateAnglesAnymal = (movement, robotNum) => {
+//     if (!viewer.setJointValue) return;
+//     if (!movement) return;
+//     // reset everything to 0 first
+//     // const resetJointValues = viewer.angles;
+//     // for (const name in resetJointValues) resetJointValues[name] = 0;
+//     // viewer.setJointValues(resetJointValues);
 
-    var mov = movement[current];
-    if (mov === undefined) {
-        globalTimer.stop();
-        return;
-    }
-    viewer.setRobotPosition(robotNum, {
-        x: mov['pos_' + 0],
-        y: mov['pos_' + 1],
-        z: mov['pos_' + 2],
-    });
-};
+//     const current = getCurrentMovementTime();
+//     const names = Object.keys(nameObsMap);
 
-const updateRotationAnymal = (movement, robotNum) => {
-    if (!movement) return;
-    const current = getCurrentMovementTime();
-    const names = Object.keys(nameObsMap);
+//     var mov = movement[current];
+//     if (mov === undefined) {
+//         globalTimer.stop();
+//         for (let i = 0; i < names.length; i++) {
+//             viewer.setJointValue(robotNum, names[i], 0);
+//         }
+//         return;
+//     }
+//     for (let i = 0; i < names.length; i++) {
+//         viewer.setJointValue(robotNum, names[i], parseFloat(mov[names[i]]));
+//     }
+// };
 
-    var mov = movement[current];
-    if (mov === undefined) {
-        globalTimer.stop();
-        return;
-    }
-    viewer.setRobotRotation(robotNum, {
-        x: mov['rot_' + 0],
-        y: mov['rot_' + 1],
-        z: mov['rot_' + 2],
-    });
-};
+// const updatePositionAnymal = (movement, robotNum) => {
+//     if (!movement) return;
+//     const current = getCurrentMovementTime();
+//     const names = Object.keys(nameObsMap);
+
+//     var mov = movement[current];
+//     if (mov === undefined) {
+//         globalTimer.stop();
+//         return;
+//     }
+//     viewer.setRobotPosition(robotNum, {
+//         x: mov['pos_' + 0],
+//         y: mov['pos_' + 1],
+//         z: mov['pos_' + 2],
+//     });
+// };
+
+// const updateRotationAnymal = (movement, robotNum) => {
+//     if (!movement) return;
+//     const current = getCurrentMovementTime();
+//     const names = Object.keys(nameObsMap);
+
+//     var mov = movement[current];
+//     if (mov === undefined) {
+//         globalTimer.stop();
+//         return;
+//     }
+//     viewer.setRobotRotation(robotNum, {
+//         x: mov['rot_' + 0],
+//         y: mov['rot_' + 1],
+//         z: mov['rot_' + 2],
+//     });
+// };
 
 const getCurrentMovementTime = () => {
     const current = globalTimer.getCurrent();
@@ -643,17 +671,7 @@ function timerD3Update() {
         const svg = svgList[key];
         svg.updatePlotOnTime();
     }
-    updateAnglesAnymal(movement1, 1);
-    updateAnglesAnymal(movement2, 2);
-    updateAnglesAnymal(movement3, 3);
-
-    updatePositionAnymal(movement1, 1);
-    updatePositionAnymal(movement2, 2);
-    updatePositionAnymal(movement2, 3);
-
-    updateRotationAnymal(movement1, 1);
-    updateRotationAnymal(movement2, 2);
-    updateRotationAnymal(movement3, 3);
+    updateAnymal();
 }
 
 function pauseAnimation() {
@@ -666,7 +684,7 @@ function startAnimation() {
 }
 
 const updateLoop = () => {
-    if (movement1 !== null || movement2 !== null || movement3 !== null) {
+    if (movementContainer.hasAnyMovement()) {
         if (animToggle.classList.contains('checked')) {
             startAnimation();
         } else {
@@ -1189,48 +1207,19 @@ class SvgPlotterObs {
                                 this.width - this.marginRight,
                             ]);
                         this.points = [];
-                        if (movement1 !== null) {
+                        for (const key in movementContainer.robotNums) {
+                            const movement = movementContainer.getMovement(key);
                             this.points = this.points.concat(
                                 x.map((d, i) => [
                                     this.xScale(d),
                                     this.yScale(
                                         parseFloat(
-                                            movement1[d][
+                                            movement[d][
                                                 nameObsMap[this.obsName]
                                             ],
                                         ),
                                     ),
-                                    1,
-                                ]),
-                            );
-                        }
-                        if (movement2 !== null) {
-                            this.points = this.points.concat(
-                                x.map((d, i) => [
-                                    this.xScale(d),
-                                    this.yScale(
-                                        parseFloat(
-                                            movement2[d][
-                                                nameObsMap[this.obsName]
-                                            ],
-                                        ),
-                                    ),
-                                    2,
-                                ]),
-                            );
-                        }
-                        if (movement3 !== null) {
-                            this.points = this.points.concat(
-                                x.map((d, i) => [
-                                    this.xScale(d),
-                                    this.yScale(
-                                        parseFloat(
-                                            movement3[d][
-                                                nameObsMap[this.obsName]
-                                            ],
-                                        ),
-                                    ),
-                                    3,
+                                    key,
                                 ]),
                             );
                         }
@@ -1314,36 +1303,15 @@ class SvgPlotterObs {
             .domain(d3.extent(this.all_x))
             .range([this.marginLeft, this.width - this.marginRight]);
         this.points = [];
-        if (movement1 !== null) {
+        for (const key in movementContainer.robotNums) {
+            const movement = movementContainer.getMovement(key);
             this.points = this.points.concat(
                 this.all_x.map((d, i) => [
                     this.xScale(d),
                     this.yScale(
-                        parseFloat(movement1[d][nameObsMap[this.obsName]]),
+                        parseFloat(movement[d][nameObsMap[this.obsName]]),
                     ),
-                    1,
-                ]),
-            );
-        }
-        if (movement2 !== null) {
-            this.points = this.points.concat(
-                this.all_x.map((d, i) => [
-                    this.xScale(d),
-                    this.yScale(
-                        parseFloat(movement2[d][nameObsMap[this.obsName]]),
-                    ),
-                    2,
-                ]),
-            );
-        }
-        if (movement3 !== null) {
-            this.points = this.points.concat(
-                this.all_x.map((d, i) => [
-                    this.xScale(d),
-                    this.yScale(
-                        parseFloat(movement3[d][nameObsMap[this.obsName]]),
-                    ),
-                    3,
+                    key,
                 ]),
             );
         }
@@ -1371,18 +1339,25 @@ class SvgPlotterObs {
     initMovement() {
         this.all_x = d3.range(movementMinLen - 1);
         // y min and max
-        if (movement1 !== null) {
-            this.all_y[1] = movement1.map((d) =>
-                parseFloat(d[nameObsMap[this.obsName]]),
-            );
-        }
-        if (movement2 !== null) {
-            this.all_y[2] = movement2.map((d) =>
-                parseFloat(d[nameObsMap[this.obsName]]),
-            );
-        }
-        if (movement3 !== null) {
-            this.all_y[3] = movement3.map((d) =>
+        // if (movement1 !== null) {
+        //     this.all_y[1] = movement1.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+        // if (movement2 !== null) {
+        //     this.all_y[2] = movement2.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+        // if (movement3 !== null) {
+        //     this.all_y[3] = movement3.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+
+        for (const rbtnum in movementContainer.robotNums) {
+            const movement = movementContainer.getMovement(rbtnum);
+            this.all_y[rbtnum] = movement.map((d) =>
                 parseFloat(d[nameObsMap[this.obsName]]),
             );
         }
@@ -1460,41 +1435,18 @@ class SvgPlotterObs {
 
             // Compute the points in pixel space as [x, y, z], where z is the name of the series.
             this.points = [];
-            // movement 1,2,3
-            if (movement1 !== null) {
+            for (const key in movementContainer.robotNums) {
+                const movement = movementContainer.getMovement(key);
                 this.points = this.points.concat(
                     x.map((d, i) => [
                         this.xScale(d),
                         this.yScale(
-                            parseFloat(movement1[d][nameObsMap[this.obsName]]),
+                            parseFloat(movement[d][nameObsMap[this.obsName]]),
                         ),
-                        1,
+                        key,
                     ]),
                 );
             }
-            if (movement2 !== null) {
-                this.points = this.points.concat(
-                    x.map((d, i) => [
-                        this.xScale(d),
-                        this.yScale(
-                            parseFloat(movement2[d][nameObsMap[this.obsName]]),
-                        ),
-                        2,
-                    ]),
-                );
-            }
-            if (movement3 !== null) {
-                this.points = this.points.concat(
-                    x.map((d, i) => [
-                        this.xScale(d),
-                        this.yScale(
-                            parseFloat(movement3[d][nameObsMap[this.obsName]]),
-                        ),
-                        3,
-                    ]),
-                );
-            }
-
             this.drawByX();
         }
     }
@@ -1574,12 +1526,7 @@ class SvgPlotterObs {
             .attr('stroke', 'black');
 
         if (this.currentMov !== null) {
-            const mov =
-                this.currentMov === 1
-                    ? movement1
-                    : this.currentMov === 2
-                        ? movement2
-                        : movement3;
+            const mov = movementContainer.getMovement(this.currentMov);
             const textY = parseFloat(
                 mov[this.current][nameObsMap[this.obsName]],
             );
