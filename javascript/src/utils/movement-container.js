@@ -8,10 +8,13 @@ class MovementContainer {
     addMovement(robotNum, movement) {
         this.robotNums.push(robotNum);
         this.movementDict[robotNum] = movement;
+        console.log(this.movementDict);
+        console.log(this.robotNums);
     }
 
     getMovement(robotNum) {
         if (!this.hasMovement(robotNum)) {
+            console.error('No movement found for robotNum', robotNum);
             return null;
         }
         return this.movementDict[robotNum];
@@ -23,6 +26,15 @@ class MovementContainer {
 
     hasAnyMovement() {
         return this.robotNums.length > 0;
+    }
+
+    removeMovement(robotNum) {
+        if (!this.hasMovement(robotNum)) {
+            return;
+        }
+        const index = this.robotNums.indexOf(robotNum);
+        this.robotNums.splice(index, 1);
+        delete this.movementDict[robotNum];
     }
 
 }
