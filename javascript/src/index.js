@@ -155,14 +155,19 @@ function createRobotControls(robotNumber) {
     `;
 
     robotControlContainer.appendChild(container);
+    // disable some controls before urdf is loaded
     animationControl.uncheck();
+    addRobotButton.disabled = true;
+
+    // one time event listener
     viewer.addEventListener('urdf-processed', function handler(event) {
         addListenerToNewRobot(robotNumber);
         for (const rbtnum of viewer.robotNames) {
             console.log('initRobotControlState', rbtnum);
             initRobotControlState(rbtnum);
         }
-
+        addRobotButton.disabled = false;
+        // remove the event listener
         viewer.removeEventListener('urdf-processed', handler);
     });
 }
