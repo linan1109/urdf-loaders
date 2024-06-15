@@ -12,6 +12,7 @@ import globalTimer from './utils/global-timer.js';
 import movementContainer from './utils/movement-container.js';
 import SvgPlotterObs from './utils/svg-plotter-obs.js';
 import SvgPlotterRobot from './utils/svg-plotter-robot.js';
+import SVGHeatmapRobot from './utils/svg-heatmap-robot.js';
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
 
@@ -31,9 +32,6 @@ const upSelect = document.getElementById('up-select');
 const controlsel = document.getElementById('controls');
 const controlsToggle = document.getElementById('toggle-controls');
 
-// const loadButton1 = document.getElementById('load-movement1');
-// const loadButton2 = document.getElementById('load-movement2');
-// const loadButton3 = document.getElementById('load-movement3');
 const svgContainer = document.getElementById('svg-container');
 const plotsControls = document.getElementById('plots-controls');
 const togglePlotsControls = document.getElementById('toggle-plots-controls');
@@ -57,6 +55,10 @@ const addRobotButton = document.getElementById('add-robot-button');
 // const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
 // const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
 // const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
+
+const golbalHeatmapContainer = document.getElementById(
+    'golbal-heatmap-container',
+);
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
@@ -136,10 +138,17 @@ function createRobotControls(robotNumber) {
 
     // Create the inner HTML
     container.innerHTML = `
-    Robot ${ robotNumber }
-    <br>
+    <div class="title-name">
+        Robot ${ robotNumber }
+    </div>
     <div id="robot${ robotNumber }-controls" class="robot-controls hidden">
         <div id="robot${ robotNumber }-toggle-controls" class="toggle-robot-controls"></div>
+        <div>
+            <label for="load-movement${ robotNumber }"  class="beautiful-label">
+                Load Movement
+            </label>
+            <input type="file" id="load-movement${ robotNumber }" class="load-movement-input" accept=".csv"/> 
+        </div>    
         <div id="robot${ robotNumber }-visible" class="toggle checked robot-control">Visible</div>
         <div id="robot${ robotNumber }-highlight" class="toggle robot-control">Highlight</div>
         <div id="robot${ robotNumber }-position" class="toggle robot-control">Update Pos.</div>
@@ -150,7 +159,6 @@ function createRobotControls(robotNumber) {
             <input id="robot${ robotNumber }-positionz" type="number" class="position-input" value="0" step="0.1"/>
             )
         </div>
-        <input type="file" id="load-movement${ robotNumber }" accept=".csv"/> 
     </div>
     `;
 
@@ -336,6 +344,7 @@ const loadMovementFromCSV = (robotNum) => {
         // remove last empty row
         movement.pop();
         const movementLength = movement.length;
+        console.log(movement);
         globalVariables.movementIndexStart = 0;
 
         console.log('Loaded movement data');
@@ -373,16 +382,6 @@ const loadMovementFromCSV = (robotNum) => {
             );
         }
 
-        // if (movement1 !== null) {
-        //     addRobotSelectToggles(1);
-        // }
-        // if (movement2 !== null) {
-        //     addRobotSelectToggles(2);
-        // }
-        // if (movement3 !== null) {
-        //     addRobotSelectToggles(3);
-        // }
-
         for (const rbtnum of movementContainer.robotNums) {
             addRobotSelectToggles(rbtnum);
         }
@@ -393,6 +392,11 @@ const loadMovementFromCSV = (robotNum) => {
                 plotsRobotOptionName.textContent = 'Plot Robots:';
             }
             addObsSelectToggles();
+        }
+
+        // add global heatmap
+        if (globalVariables.groupByRobot) {
+            addGlobalRobotHeatmap(robotNum);
         }
     };
     reader.readAsText(file);
@@ -411,6 +415,17 @@ const addRobotSVG = (robotNum) => {
     svg.updatePlotOnTime();
 };
 
+const addGlobalRobotHeatmap = (robotNum) => {
+    const svg = new SVGHeatmapRobot(
+        robotNum,
+        100,
+        golbalHeatmapContainer.offsetWidth,
+        window.innerHeight * 0.2,
+    );
+    const svgNode = svg.svg.node();
+    golbalHeatmapContainer.appendChild(svgNode);
+};
+
 const addObsSVG = (obsName) => {
     if (svgList[obsName] !== undefined) {
         svgList[obsName].svg.remove();
@@ -422,10 +437,6 @@ const addObsSVG = (obsName) => {
     svgList[obsName] = svg;
     svg.updatePlotOnTime();
 };
-
-// loadButton1.addEventListener('change', (e) => loadMovementFromCSV(1));
-// loadButton2.addEventListener('change', (e) => loadMovementFromCSV(2));
-// loadButton3.addEventListener('change', (e) => loadMovementFromCSV(3));
 
 const updateAllSVG = () => {
     for (const key in svgList) {
@@ -460,16 +471,6 @@ plotsGroupSelection.addEventListener('change', () => {
 controlsToggle.addEventListener('click', () =>
     controlsel.classList.toggle('hidden'),
 );
-
-// robotControlsToggle1.addEventListener('click', () =>
-//     robotControls1.classList.toggle('hidden'),
-// );
-// robotControlsToggle2.addEventListener('click', () =>
-//     robotControls2.classList.toggle('hidden'),
-// );
-// robotControlsToggle3.addEventListener('click', () =>
-//     robotControls3.classList.toggle('hidden'),
-// );
 
 // watch for urdf changes
 viewer.addEventListener('urdf-change', () => {

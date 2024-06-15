@@ -1,5 +1,5 @@
 const globalVariables = {
-    nameObsMap: {
+    nameObsMap: { // Name to the obs column name mapping
         LF_HAA: 'LF_HAA',
         LF_HFE: 'LF_HFE',
         LF_KFE: 'LF_KFE',
