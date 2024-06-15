@@ -155,11 +155,36 @@ function createRobotControls(robotNumber) {
     `;
 
     robotControlContainer.appendChild(container);
+    animationControl.uncheck();
     viewer.addEventListener('urdf-processed', function handler(event) {
         addListenerToNewRobot(robotNumber);
+        for (const rbtnum of viewer.robotNames) {
+            console.log('initRobotControlState', rbtnum);
+            initRobotControlState(rbtnum);
+        }
+
         viewer.removeEventListener('urdf-processed', handler);
     });
 }
+
+const initRobotControlState = (robotNumber) => {
+    const toggleVisibility = document.getElementById(
+        `robot${ robotNumber }-visible`,
+    );
+    const toggleHightlight = document.getElementById(
+        `robot${ robotNumber }-highlight`,
+    );
+    const toggleMovement = document.getElementById(
+        `robot${ robotNumber }-position`,
+    );
+
+    const visibility = toggleVisibility.classList.contains('checked');
+    viewer.setRobotVisibility(robotNumber, visibility);
+    const highlight = toggleHightlight.classList.contains('checked');
+    viewer.setRobotHighlight(robotNumber, highlight);
+    const standStill = !toggleMovement.classList.contains('checked');
+    viewer.setRobotStandStill(robotNumber, standStill);
+};
 
 const addListenerToNewRobot = (robotNumber) => {
     const robotControlsToggle = document.getElementById(
@@ -190,7 +215,6 @@ const addListenerToNewRobot = (robotNumber) => {
     loadMovement.addEventListener('change', () =>
         loadMovementFromCSV(robotNumber),
     );
-    viewer.setRobotVisibility(robotNumber, true);
     toggleVisibility.addEventListener('click', () => {
         toggleVisibility.classList.toggle('checked');
         if (toggleVisibility.classList.contains('checked')) {
@@ -200,7 +224,6 @@ const addListenerToNewRobot = (robotNumber) => {
         }
     });
 
-    viewer.setRobotHighlight(robotNumber, false);
     toggleHightlight.addEventListener('click', () => {
         toggleHightlight.classList.toggle('checked');
         if (toggleHightlight.classList.contains('checked')) {
@@ -209,8 +232,6 @@ const addListenerToNewRobot = (robotNumber) => {
             viewer.setRobotHighlight(robotNumber, false);
         }
     });
-
-    viewer.setRobotStandStill(robotNumber, true);
     toggleMovement.addEventListener('click', () => {
         toggleMovement.classList.toggle('checked');
         if (toggleMovement.classList.contains('checked')) {
@@ -596,9 +617,8 @@ const updateLoop = () => {
         if (animationControl.isChecked()) {
             globalTimer.start();
         } else {
-            if (!globalTimer.isRunning) {
-                globalTimer.setIgnoreFirst(getCurrentMovementTime());
-                globalTimer.stop();
+            if (globalTimer.isRunning) {
+                globalTimer.pause();
             }
         }
     }

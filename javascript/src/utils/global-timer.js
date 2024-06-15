@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { movementMinLen } from './global-variables.js';
+import globalVariables from './global-variables.js';
 
 const interval = 30;
 
@@ -39,6 +39,13 @@ class GlobalTimer {
         }
     }
 
+    pause() {
+        if (this.isRunning) {
+            this.setIgnoreFirst(this.getCurrent());
+            this.stop();
+        }
+    }
+
     getCurrent() {
         if (!this.isRunning) {
             this.current = Math.floor(this.ignoreFirst);
@@ -46,21 +53,16 @@ class GlobalTimer {
         }
         const time = Date.now() - this.startTime;
         this.current = Math.floor(time / 1000 / this.freq + this.ignoreFirst);
-        if (this.current >= movementMinLen) {
+        if (this.current >= globalVariables.movementMinLen) {
             this.stop();
-            this.ignoreFirst = movementMinLen - 1;
-            this.current = movementMinLen - 1;
+            this.ignoreFirst = globalVariables.movementMinLen - 1;
+            this.current = globalVariables.movementMinLen - 1;
         }
         return this.current;
     }
 
     setIgnoreFirst(ignoreFirst) {
         this.ignoreFirst = ignoreFirst;
-    }
-
-    pause() {
-        this.setIgnoreFirst(this.getCurrent());
-        this.stop();
     }
 
 }
