@@ -59,6 +59,7 @@ const addRobotButton = document.getElementById('add-robot-button');
 const golbalHeatmapContainer = document.getElementById(
     'golbal-heatmap-container',
 );
+const globalHeatmapSelection = document.getElementById('global-heatmap-selection');
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
@@ -101,6 +102,15 @@ togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
 });
 
+globalHeatmapSelection.addEventListener('change', (e) => {
+    const robotNum = parseInt(e.target.value);
+    if (globalVariables.groupByRobot) {
+        addGlobalRobotHeatmap(robotNum);
+    }
+});
+
+
+
 addRobotButton.addEventListener('click', () => {
     createRobotControls(globalVariables.addedRobotCount);
     viewer.addOneRobot(globalVariables.addedRobotCount, [
@@ -130,6 +140,7 @@ viewer.addEventListener('joint-mouseout', (event) => {
         }
     }
 });
+
 
 function createRobotControls(robotNumber) {
     // Create a container div
@@ -179,6 +190,13 @@ function createRobotControls(robotNumber) {
         viewer.removeEventListener('urdf-processed', handler);
     });
 }
+
+const addNewRobotOptionToGlobalHeatmapSelection = (robotNum) => {
+    const option = document.createElement('option');
+    option.value = robotNum;
+    option.textContent = `Robot ${ robotNum }`;
+    globalHeatmapSelection.appendChild(option);
+};
 
 const initRobotControlState = (robotNumber) => {
     const toggleVisibility = document.getElementById(
@@ -394,8 +412,11 @@ const loadMovementFromCSV = (robotNum) => {
             addObsSelectToggles();
         }
 
-        // add global heatmap
-        if (globalVariables.groupByRobot) {
+        // add new robot option to global heatmap selection
+        addNewRobotOptionToGlobalHeatmapSelection(robotNum);
+
+        // add global heatmap if group by robot and no global heatmap
+        if (globalVariables.groupByRobot === true && golbalHeatmapContainer.childElementCount === 0) {
             addGlobalRobotHeatmap(robotNum);
         }
     };
@@ -416,6 +437,10 @@ const addRobotSVG = (robotNum) => {
 };
 
 const addGlobalRobotHeatmap = (robotNum) => {
+    while (golbalHeatmapContainer.firstChild) {
+        golbalHeatmapContainer.removeChild(golbalHeatmapContainer.firstChild);
+    }
+
     const svg = new SVGHeatmapRobot(
         robotNum,
         100,

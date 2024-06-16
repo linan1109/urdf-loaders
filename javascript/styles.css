@@ -49,6 +49,7 @@ global-heatmap-part {
     border-top: var(--main-text-color) 1px dashed;
     position: absolute;
     float: center;
+    flex-direction: row;
 }
 
 body {
@@ -541,3 +542,8 @@ input:focus {
     transform: scale(0.95);
 }
 
+global-heatmap-part > div {
+    width: 100%;
+    display: flex;
+    
+}
