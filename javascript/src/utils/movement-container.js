@@ -6,11 +6,13 @@ class MovementContainer {
     }
 
     addMovement(robotNum, movement) {
+        robotNum = parseInt(robotNum);
         this.robotNums.push(robotNum);
         this.movementDict[robotNum] = movement;
     }
 
     getMovement(robotNum) {
+        robotNum = parseInt(robotNum);
         if (!this.hasMovement(robotNum)) {
             console.error('No movement found for robotNum', robotNum);
             return null;
@@ -19,6 +21,7 @@ class MovementContainer {
     }
 
     hasMovement(robotNum) {
+        robotNum = parseInt(robotNum);
         return this.robotNums.includes(robotNum);
     }
 
@@ -27,6 +30,7 @@ class MovementContainer {
     }
 
     removeMovement(robotNum) {
+        robotNum = parseInt(robotNum);
         if (!this.hasMovement(robotNum)) {
             return;
         }

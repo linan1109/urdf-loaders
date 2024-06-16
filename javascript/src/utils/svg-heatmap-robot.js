@@ -5,7 +5,9 @@ import globalVariables from './global-variables.js';
 export default class SVGHeatmapRobot {
 
     constructor(robotNum, gridNum, offsetWidth, offsetHeight) {
+        console.log('robotNum', robotNum);
         this.data = movementContainer.getMovement(robotNum);
+        console.log('data', this.data);
         this.gridNum = gridNum;
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
