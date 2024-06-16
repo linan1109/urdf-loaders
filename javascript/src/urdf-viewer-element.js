@@ -368,12 +368,25 @@ export default class URDFViewer extends HTMLElement {
         this.redraw();
     }
 
+    deleteOne(robotName) {
+        if (!this.robots[robotName]) return;
+        this.robots[robotName].traverse((c) => c.dispose && c.dispose());
+        this.robots[robotName].parent.remove(this.robots[robotName]);
+        delete this.robots[robotName];
+
+        const index = this.robotNames.indexOf(robotName);
+        this.robotNames.splice(index, 1);
+        this.initialPositions.splice(index, 1);
+
+        this.redraw();
+    }
+
     addOneRobot(robotName, initialPosition) {
         this.robotNames.push(robotName);
         this.initialPositions.push(initialPosition);
         this.robotColors[robotName] = {};
         this._scheduleLoad();
-        
+
         // this._loadUrdf(this.package, this.urdf, robotName, initialPosition);
         // this._loadScheduled = false;
         // this._updateCollisionVisibility();
@@ -393,7 +406,7 @@ export default class URDFViewer extends HTMLElement {
         //     }),
         // );
         // this.recenter();
-        
+
     }
 
     // Set the joint with jointName to
@@ -612,6 +625,12 @@ export default class URDFViewer extends HTMLElement {
         // if (this._prevload === `${ this.package }|${ this.urdf }`) return;
         // this._prevload = `${ this.package }|${ this.urdf }`;
 
+        // if no robots are defined, don't load anything
+        if (this.robotNames.length === 0) {
+            this.redraw();
+            return;
+        }
+
         if (this._loadScheduled) return;
         this._loadScheduled = true;
 
@@ -622,7 +641,7 @@ export default class URDFViewer extends HTMLElement {
             }
         }
         this.robots = {};
-        console.log('schedule load');
+        // console.log('schedule load');
         const initPromise = this._loadUrdf(
             this.package,
             this.urdf,
@@ -643,7 +662,7 @@ export default class URDFViewer extends HTMLElement {
                 );
             }, initPromise)
             .then(() => {
-                console.log('load done');
+                // console.log('load done');
                 this._loadScheduled = false;
                 this._updateCollisionVisibility();
                 this._storeRobotColors();

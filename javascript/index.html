@@ -75,10 +75,12 @@
                 <div id="plots-controls" class="hidden">
                     <div id="toggle-plots-controls"></div>
                     <label>
-                        Plots Group by:
+                        Plots Option:
                         <select id="plots-group-selection">
-                            <option value="Robot" selected>Robot</option>
-                            <option value="Link">Link</option>
+                            <option value="LineRobot" selected>Line Plot by Robot</option>
+                            <option value="LineLink">Line Plot by Link</option>
+                            <option value="HeatMapRobot">Heat Map by Robot</option>
+                            <option value="HeatMapLink">Heat Map by Link</option>
                         </select>
                     </label>
                     <div id="plots-link-option-name"></div>
@@ -104,7 +106,7 @@
                 </label>
                 <select id="global-heatmap-selection"></select>
             </div>
-            <div id="golbal-heatmap-container"></div>
+            <div id="golbal-heatmap-container" ></div>
         </global-heatmap-part>
         <script src="./src/index.js"></script>
     </body>

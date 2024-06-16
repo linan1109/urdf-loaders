@@ -141,11 +141,11 @@ viewer.addEventListener('joint-mouseout', (event) => {
     }
 });
 
-
 function createRobotControls(robotNumber) {
     // Create a container div
     const container = document.createElement('div');
-    container.id = `input-container`;
+    container.id = `input-container-${ robotNumber }`;
+    container.className = 'input-container';
 
     // Create the inner HTML
     container.innerHTML = `
@@ -160,6 +160,7 @@ function createRobotControls(robotNumber) {
             </label>
             <input type="file" id="load-movement${ robotNumber }" class="load-movement-input" accept=".csv"/> 
         </div>    
+        <button id="robot${ robotNumber }-delete" class="beautful-button">Delete</button>
         <div id="robot${ robotNumber }-visible" class="toggle checked robot-control">Visible</div>
         <div id="robot${ robotNumber }-highlight" class="toggle robot-control">Highlight</div>
         <div id="robot${ robotNumber }-position" class="toggle robot-control">Update Pos.</div>
@@ -170,6 +171,7 @@ function createRobotControls(robotNumber) {
             <input id="robot${ robotNumber }-positionz" type="number" class="position-input" value="0" step="0.1"/>
             )
         </div>
+        <div id="robot${ robotNumber }-file-name" style="font-size:12px;padding-top: 2px;"> </div>
     </div>
     `;
 
@@ -239,6 +241,7 @@ const addListenerToNewRobot = (robotNumber) => {
         y: document.getElementById(`robot${ robotNumber }-positiony`),
         z: document.getElementById(`robot${ robotNumber }-positionz`),
     };
+    const deleteButton = document.getElementById(`robot${ robotNumber }-delete`);
 
     robotControlsToggle.addEventListener('click', () => {
         robotControls.classList.toggle('hidden');
@@ -270,6 +273,12 @@ const addListenerToNewRobot = (robotNumber) => {
         } else {
             viewer.setRobotStandStill(robotNumber, true);
         }
+    });
+
+    deleteButton.addEventListener('click', () => {
+        viewer.deleteOne(robotNumber);
+        const container = document.getElementById('input-container-' + robotNumber);
+        container.remove();
     });
 
     Object.values(initialPosition).forEach((input, index) => {
@@ -362,7 +371,7 @@ const loadMovementFromCSV = (robotNum) => {
         // remove last empty row
         movement.pop();
         const movementLength = movement.length;
-        console.log(movement);
+        // console.log(movement);
         globalVariables.movementIndexStart = 0;
 
         console.log('Loaded movement data');
@@ -419,6 +428,10 @@ const loadMovementFromCSV = (robotNum) => {
         if (globalVariables.groupByRobot === true && golbalHeatmapContainer.childElementCount === 0) {
             addGlobalRobotHeatmap(robotNum);
         }
+
+        const fileName = file.name;
+        const fileNameDiv = document.getElementById('robot' + robotNum + '-file-name');
+        fileNameDiv.textContent = fileName;
     };
     reader.readAsText(file);
 };
@@ -476,20 +489,24 @@ plotsGroupSelection.addEventListener('change', () => {
     while (svgContainer.firstChild) {
         svgContainer.removeChild(svgContainer.firstChild);
     }
-    if (plotsGroupSelection.value === 'Robot') {
+    if (plotsGroupSelection.value === 'LineRobot') {
         plotsLinkOptionName.textContent = 'Highlight Options:';
         plotsRobotOptionName.textContent = 'Plot Robots:';
         globalVariables.groupByRobot = true;
         for (const key in globalVariables.checkedRobots) {
             addRobotSVG(globalVariables.checkedRobots[key]);
         }
-    } else {
+    } else if (plotsGroupSelection.value === 'LineLink') {
         plotsLinkOptionName.textContent = 'Plot Links:';
         plotsRobotOptionName.textContent = 'Highlight Robots:';
         globalVariables.groupByRobot = false;
         for (const key in globalVariables.checkedObs) {
             addObsSVG(globalVariables.checkedObs[key]);
         }
+    } else if (plotsGroupSelection.value === 'HeatMapRobot') {
+        globalVariables.groupByRobot = true;
+    } else if (plotsGroupSelection.value === 'HeatMapLink') {
+        globalVariables.groupByRobot = false;
     }
 });
 

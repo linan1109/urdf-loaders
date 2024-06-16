@@ -42,7 +42,7 @@ export default class SVGHeatmapRobot {
 
     processData() {
         const dataLength = this.data.length;
-        console.log('dataLength', dataLength);
+        // console.log('dataLength', dataLength);
         const eachGridDataLength = Math.floor(dataLength / this.gridNum);
         const processedData = [];
 
@@ -74,8 +74,6 @@ export default class SVGHeatmapRobot {
         );
 
         const yLabels = this.yLabels;
-        console.log('xLabels', xLabels);
-        console.log('yLabels', yLabels);
         const colorScale = d3
             // .scaleSequential(d3.interpolateViridis)
             .scaleSequential(d3.interpolateRdBu)
