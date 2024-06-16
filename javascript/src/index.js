@@ -67,6 +67,7 @@ const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 const svgList = {};
+let globalHeatmapSvg = null;
 
 // Global Functions
 const setColor = (color) => {
@@ -111,6 +112,7 @@ globalHeatmapSelection.addEventListener('change', (e) => {
             globalHeatmapContainer.removeChild(
                 globalHeatmapContainer.firstChild,
             );
+            globalHeatmapSvg = null;
         }
         return;
     }
@@ -313,6 +315,7 @@ const addListenerToNewRobot = (robotNumber) => {
                 globalHeatmapContainer.removeChild(
                     globalHeatmapContainer.firstChild,
                 );
+                globalHeatmapSvg = null;
             }
         } else {
             const selectedOption = globalHeatmapSelection.options[0];
@@ -507,6 +510,7 @@ const addRobotSVG = (robotNum) => {
 const updateGlobalRobotHeatmap = (robotNum) => {
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
+        globalHeatmapSvg = null;
     }
 
     const svg = new SVGHeatmapRobot(
@@ -516,6 +520,7 @@ const updateGlobalRobotHeatmap = (robotNum) => {
         window.innerHeight * 0.2,
     );
     const svgNode = svg.svg.node();
+    globalHeatmapSvg = svg;
     globalHeatmapContainer.appendChild(svgNode);
 };
 
@@ -715,6 +720,9 @@ function timerD3Update() {
     for (const key in svgList) {
         const svg = svgList[key];
         svg.updatePlotOnTime();
+    }
+    if (globalHeatmapSvg !== null) {
+        globalHeatmapSvg.updatePlotOnTime();
     }
     updateAnymal();
 }

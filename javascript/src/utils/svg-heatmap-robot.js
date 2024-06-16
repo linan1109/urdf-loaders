@@ -1,13 +1,14 @@
 import * as d3 from 'd3';
 import movementContainer from './movement-container.js';
 import globalVariables from './global-variables.js';
+import globalTimer from './global-timer.js';
+import animationControl from './animation-control.js';
 
 export default class SVGHeatmapRobot {
 
     constructor(robotNum, gridNum, offsetWidth, offsetHeight) {
-        console.log('robotNum', robotNum);
         this.data = movementContainer.getMovement(robotNum);
-        console.log('data', this.data);
+        this.dataLength = this.data.length;
         this.gridNum = gridNum;
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
@@ -82,8 +83,7 @@ export default class SVGHeatmapRobot {
             .domain([
                 // d3.min(data, (d) => d.value),
                 // d3.max(data, (d) => d.value),
-                -3.14,
-                3.14,
+                -3.14, 3.14,
             ]);
 
         this.svg
@@ -131,9 +131,7 @@ export default class SVGHeatmapRobot {
 
         cards.exit().remove();
         const legends = [-3, -2, -1, 0, 1, 2, 3];
-        const legend = this.svg
-            .selectAll('.legend')
-            .data(legends);
+        const legend = this.svg.selectAll('.legend').data(legends);
 
         const legendEnter = legend.enter().append('g').attr('class', 'legend');
         const legendMargin = 20;
@@ -153,6 +151,68 @@ export default class SVGHeatmapRobot {
             .attr('x', heatmapWidth + legendMargin + this.gridWidth * 2) // Adjust x to align with the rect's right side
             .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2); // Center text vertically within the rect
         legend.exit().remove();
+
+        this.svg
+            .on('click', (event) => this.singleclicked(event))
+            .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointerleave', (event) => this.pointerleft(event));
+    }
+
+    updatePlotOnTime() {
+        // add the vertical line for current time
+        const current = globalTimer.getCurrent();
+        const x = current / this.dataLength;
+        this.drawlinebyx(x);
+    }
+
+    drawlinebyx(x) {
+        this.svg.selectAll('.vertical-line').remove();
+        this.svg
+            .append('line')
+            .attr('class', 'vertical-line')
+            .attr('x1', x * this.width)
+            .attr('y1', 0)
+            .attr('x2', x * this.width)
+            .attr('y2', this.height)
+            .style('stroke', 'black')
+            .style('stroke-width', 1);
+    }
+
+    singleclicked(event) {
+        if (globalTimer.isRunning) {
+            animationControl.uncheck();
+        } else {
+            console.log('singleclicked', event);
+            const [xw, y] = d3.pointer(event);
+            const x = xw / this.width;
+            const current = x * this.dataLength;
+            globalTimer.setIgnoreFirst(current);
+            animationControl.check();
+            globalTimer.start();
+            this.drawlinebyx();
+        }
+    }
+
+    pointerleft(event) {
+        // if amimation is running, do nothing
+        if (globalTimer.isRunning) {
+            return;
+        }
+        const current = globalTimer.getCurrent();
+        this.drawlinebyx(current / this.dataLength);
+    }
+
+    pointermoved(event) {
+        // if amimation is running, do nothing
+        if (globalTimer.isRunning) {
+            return;
+        }
+        const [x, y] = d3.pointer(event);
+        console.log('x', x, 'y', y);
+        if (x < 0 || x > this.width) {
+            return;
+        }
+        this.drawlinebyx(x / this.width);
     }
 
 }
