@@ -444,10 +444,13 @@ const loadMovementFromCSV = (robotNum) => {
         }
         movementContainer.addMovement(robotNum, movement);
 
-        globalVariables.movementMinLen = Math.min(
-            movementLength,
-            globalVariables.movementMinLen,
-        );
+        globalVariables.movementMinLen = movementLength;
+        for (const key in movementContainer.movementDict) {
+            globalVariables.movementMinLen = Math.min(
+                globalVariables.movementMinLen,
+                movementContainer.movementDict[key].length,
+            );
+        }
 
         if (!globalVariables.checkedRobots.includes(robotNum)) {
             globalVariables.checkedRobots.push(robotNum);
