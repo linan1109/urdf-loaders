@@ -204,6 +204,12 @@ function createRobotControls(robotNumber) {
 }
 
 const addNewRobotOptionToGlobalHeatmapSelection = (robotNum) => {
+    // if already exists, return
+    if (globalHeatmapSelection.querySelector(
+        `option[value='${ robotNum }']`,
+    )) {
+        return;
+    }
     const option = document.createElement('option');
     option.value = robotNum;
     option.textContent = `Robot ${ robotNum }`;
