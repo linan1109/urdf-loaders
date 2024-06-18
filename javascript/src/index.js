@@ -13,8 +13,10 @@ import movementContainer from './utils/movement-container.js';
 import SmallLineChartObs from './utils/small-svg/small-linechart-obs.js';
 import SmallLineChartRobot from './utils/small-svg/small-linechart-robot.js';
 import SmallHeatmapRobot from './utils/small-svg/small-heatmap-robot.js';
+import SmallHeatMapObs from './utils/small-svg/small-heatmap-obs.js';
 import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
+
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
 
@@ -364,10 +366,7 @@ const addObsSelectToggles = () => {
             } else {
                 toggle.classList.add('checked');
                 globalVariables.checkedObs.push(key);
-                if (globalVariables.groupByRobot === false) {
-                    addObsSVG(key);
-                }
-                updateAllSVG();
+                plotsSVGRedraw();
             }
         });
         plotsLinkControlsContainer.appendChild(toggle);
@@ -396,10 +395,7 @@ const addRobotSelectToggles = (robotNum) => {
         } else {
             toggle.classList.add('checked');
             globalVariables.checkedRobots.push(robotNum);
-            if (globalVariables.groupByRobot === true) {
-                addRobotSVG(robotNum);
-            }
-            updateAllSVG();
+            plotsSVGRedraw();
         }
     });
 
@@ -444,17 +440,6 @@ const loadMovementFromCSV = (robotNum) => {
             globalVariables.checkedRobots.push(robotNum);
         }
 
-        if (globalVariables.groupByRobot === true) {
-            addRobotSVG(robotNum);
-        }
-        if (globalVariables.groupByRobot === false) {
-            for (const key in svgList) {
-                const svg = svgList[key];
-                svg.initMovement();
-                svg.updatePlotOnTime();
-            }
-        }
-
         while (plotsRobotControlsContainer.firstChild) {
             plotsRobotControlsContainer.removeChild(
                 plotsRobotControlsContainer.firstChild,
@@ -476,11 +461,8 @@ const loadMovementFromCSV = (robotNum) => {
         // add new robot option to global heatmap selection
         addNewRobotOptionToGlobalHeatmapSelection(robotNum);
 
-        // add global heatmap if group by robot and no global heatmap
-        if (globalVariables.groupByRobot === true) {
-            globalHeatmapSelection.value = robotNum;
-            changeGlobalPlot(robotNum);
-        }
+        // update the svg
+        plotsSVGRedraw();
 
         const fileName = file.name;
         const fileNameDiv = document.getElementById(
@@ -572,6 +554,18 @@ const addObsSVG = (obsName) => {
     svg.updatePlotOnTime();
 };
 
+const addHeatMapObsSVG = (obsName) => {
+    if (svgList[obsName] !== undefined) {
+        svgList[obsName].svg.remove();
+    }
+    const svg = new SmallHeatMapObs(obsName, 25, svgContainer.offsetWidth);
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + obsName;
+    svgContainer.appendChild(svgNode);
+    svgList[obsName] = svg;
+    svg.updatePlotOnTime();
+};
+
 const updateAllSVG = () => {
     for (const key in svgList) {
         const svg = svgList[key];
@@ -579,6 +573,12 @@ const updateAllSVG = () => {
     }
     if (globalHeatmapSvg !== null) {
         globalHeatmapSvg.updatePlotOnTime();
+    } else {
+        if (globalHeatmapSelection.options.length > 0) {
+            const firstOption = globalHeatmapSelection.options[0];
+            globalHeatmapSelection.value = firstOption.value;
+            changeGlobalPlot(firstOption.value);
+        }
     }
 };
 
@@ -628,6 +628,11 @@ const plotsSVGRedraw = () => {
         changeGlobalPlot(firstOption.value, 'HeatMapRobot');
     } else if (plotsGroupSelection.value === 'HeatMapLink') {
         globalVariables.groupByRobot = false;
+        plotsLinkOptionName.textContent = 'Plot Links:';
+        plotsRobotOptionName.textContent = 'Highlight Robots:';
+        for (const key in globalVariables.checkedObs) {
+            addHeatMapObsSVG(globalVariables.checkedObs[key]);
+        }
     }
 };
 

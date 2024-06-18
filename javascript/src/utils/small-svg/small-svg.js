@@ -39,6 +39,7 @@ class smallSVG {
     pointermoved() {}
     pointerentered() {}
     pointerleft() {}
+    initMovement() {}
 
     // functions to be inherited
     updateWindowSize(windowSize) {
@@ -95,17 +96,134 @@ class SmallHeatMapSVG extends smallSVG {
 
     constructor(gridNum, offsetWidth) {
         super(offsetWidth);
-        this.width = (75 / 100) * offsetWidth;
+        this.width = (85 / 100) * offsetWidth;
         this.height = this.width * 0.4;
         this.gridNum = gridNum;
         this.gridWidth = this.width / gridNum;
-        this.yLabels = Object.values(globalVariables.nameObsMap);
-        this.gridHeight = this.height / this.yLabels.length;
 
         this.colorScale = d3
             .scaleSequential(d3.interpolateRdBu)
             .domain([-3.14, 3.14]);
         this.setup();
+    }
+
+    createHeatmap() {
+        this.svg = d3
+            .create('svg')
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .attr('viewBox', [0, 0, this.width, this.height])
+            .attr(
+                'style',
+                'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif; margin-left: 50px; margin-bottom:25px;',
+            );
+
+        const yLabels = this.yLabels;
+
+        this.svg
+            .selectAll('.yLabel')
+            .data(yLabels)
+            .enter()
+            .append('text')
+            .text((d) => d)
+            .attr('x', 0)
+            .attr('y', (d, i) => i * this.gridHeight)
+            .style('text-anchor', 'end')
+            .attr('transform', `translate(-6, ${ this.gridHeight / 1.5 })`)
+            .attr('class', 'yLabel mono axis');
+
+        // const legends = [-3, -2, -1, 0, 1, 2, 3];
+        // const legend = this.svg.selectAll('.legend').data(legends);
+
+        // const legendEnter = legend.enter().append('g').attr('class', 'legend');
+        // const legendMargin = 20;
+        // const heatmapWidth = this.width;
+        // legendEnter
+        //     .append('rect')
+        //     .attr('x', heatmapWidth + legendMargin)
+        //     .attr('y', (d, i) => this.gridHeight * i)
+        //     .attr('width', this.gridWidth * 1.5)
+        //     .attr('height', this.gridHeight / 2)
+        //     .style('fill', (d, i) => this.colorScale(legends[i]));
+
+        // legendEnter
+        //     .append('text')
+        //     .attr('class', 'mono')
+        //     .text((d) => ` ${ d }`)
+        //     .attr('x', heatmapWidth + legendMargin + this.gridWidth * 2)
+        //     .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2);
+        // legend.exit().remove();
+
+        // bind events
+        this.svg
+            .on('click', (event) => this.singleclicked(event))
+            .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointerleave', (event) => this.pointerleft(event));
+    }
+
+    updatePlotOnTime() {
+        const current = globalTimer.getCurrent();
+
+        let xStart = current - this.windowSize / 2;
+        let xEnd = current + this.windowSize / 2;
+        if (xStart < 0) {
+            xStart = 0;
+            xEnd = this.windowSize;
+        }
+        if (xEnd > this.dataLength) {
+            xEnd = this.dataLength;
+            xStart = xEnd - this.windowSize;
+        }
+        this.xScale = d3
+            .scaleLinear()
+            .domain([xStart, xEnd])
+            .range([0, this.width]);
+
+        this.svg.selectAll('.xaxis').remove();
+        this.svg.selectAll('.card').remove();
+
+        // update the x axis
+        this.svg
+            .append('g')
+            .attr('transform', `translate(0, -1)`)
+            .attr('class', 'xaxis')
+            .call(
+                d3
+                    .axisTop(this.xScale)
+                    .ticks(this.width / 80)
+                    .tickSizeOuter(0),
+            )
+            .call((g) =>
+                g
+                    .selectAll('.tick line')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 0.5),
+            )
+            .call((g) => g.select('.domain').remove())
+            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
+
+        // update the cards
+        const data = this.processData(xStart);
+        const cards = this.svg
+            .selectAll('.card')
+            .data(data, (d) => `${ d.y }:${ d.x }`);
+
+        cards
+            .enter()
+            .append('rect')
+            .attr('x', (d) => d.x * this.gridWidth)
+            .attr('y', (d) => d.y * this.gridHeight)
+            .attr('class', 'hour bordered')
+            .attr('width', this.gridWidth)
+            .attr('height', this.gridHeight)
+            .merge(cards)
+            .transition()
+            .duration(0)
+            .style('fill', (d) => this.colorScale(d.value));
+
+        cards.exit().remove();
+
+        this.drawLineX(current);
     }
 
     // functions to be inherited
@@ -144,6 +262,10 @@ class SmallHeatMapSVG extends smallSVG {
             .attr('transform', `translate(${ a },0)`)
             .attr('stroke', 'black');
         this.lineX.raise();
+    }
+
+    initMovement() {
+        this.updatePlotOnTime();
     }
 
 }
