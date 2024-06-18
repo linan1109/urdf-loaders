@@ -9,6 +9,7 @@ export default class SvgPlotterObs extends smallSVG {
     constructor(obsName, offsetWidth) {
         super(offsetWidth);
         this.obsName = obsName; // key in nameObsMap
+        this.currentMov = null;
     }
 
     setup() {

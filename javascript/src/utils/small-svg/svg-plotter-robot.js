@@ -10,6 +10,7 @@ export default class SvgPlotterRobot extends smallSVG {
         super(offsetWidth);
         this.movement = movementContainer.getMovement(robotNum);
         this.robotNum = robotNum;
+        this.currentObs = null;
     }
 
     setup() {
@@ -345,6 +346,7 @@ export default class SvgPlotterRobot extends smallSVG {
             const textY = parseFloat(
                 this.movement[this.current][this.currentObs],
             );
+
             const y = this.yScale(textY);
             this.dot.attr('transform', `translate(${ a },${ y })`);
             this.dot.select('text').text(textY);

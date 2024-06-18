@@ -30,8 +30,7 @@ export default class smallSVG {
         this.all_y = {};
         this.yScale = null;
         this.xScale = null;
-        this.current = null;
-        this.currentMov = null;
+        this.current = globalTimer.current;
 
         this.setup();
     }

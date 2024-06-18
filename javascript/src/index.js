@@ -63,8 +63,8 @@ const globalHeatmapSelection = document.getElementById(
     'global-heatmap-selection',
 );
 
-const DEG2RAD = Math.PI / 180;
-const RAD2DEG = 1 / DEG2RAD;
+// const DEG2RAD = Math.PI / 180;
+// const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 const svgList = {};
 let globalHeatmapSvg = null;
@@ -517,6 +517,7 @@ const addRobotSVG = (robotNum) => {
 };
 
 const updateGlobalRobotHeatmap = (robotNum) => {
+    console.log('updateGlobalRobotHeatmap', robotNum);
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
         globalHeatmapSvg = null;
