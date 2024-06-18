@@ -584,7 +584,6 @@ const changeGlobalPlotToLineObs = (obsName) => {
 const changeGlobalPlot = (num, type = null) => {
     if (type === null) {
         type = plotsGroupSelection.value;
-        console.log('type', type);
     }
     if (type === 'HeatMapRobot') {
         changeGlobalPlotToHeatmapRobot(num);
