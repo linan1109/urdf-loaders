@@ -10,8 +10,9 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import URDFManipulator from './urdf-manipulator-element.js';
 import globalTimer from './utils/global-timer.js';
 import movementContainer from './utils/movement-container.js';
-import SvgPlotterObs from './utils/small-svg/svg-plotter-obs.js';
-import SvgPlotterRobot from './utils/small-svg/svg-plotter-robot.js';
+import SmallLineChartObs from './utils/small-svg/small-linechart-obs.js';
+import SmallLineChartRobot from './utils/small-svg/small-linechart-robot.js';
+import SmallHeatmapRobot from './utils/small-svg/small-heatmap-robot.js';
 import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import animationControl from './utils/animation-control.js';
@@ -495,9 +496,21 @@ const addRobotSVG = (robotNum) => {
         svgList[robotNum].svg.remove();
     }
     // const movement = movementContainer.movementDict[robotNum];
-    const svg = new SvgPlotterRobot(robotNum, svgContainer.offsetWidth);
+    const svg = new SmallLineChartRobot(robotNum, svgContainer.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'plot-all' + robotNum;
+    svgContainer.appendChild(svgNode);
+    svgList[robotNum] = svg;
+    svg.updatePlotOnTime();
+};
+
+const addHeatMapRobotSVG = (robotNum) => {
+    if (svgList[robotNum] !== undefined) {
+        svgList[robotNum].svg.remove();
+    }
+    const svg = new SmallHeatmapRobot(robotNum, 25, svgContainer.offsetWidth);
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + robotNum;
     svgContainer.appendChild(svgNode);
     svgList[robotNum] = svg;
     svg.updatePlotOnTime();
@@ -551,7 +564,7 @@ const addObsSVG = (obsName) => {
     if (svgList[obsName] !== undefined) {
         svgList[obsName].svg.remove();
     }
-    const svg = new SvgPlotterObs(obsName, svgContainer.offsetWidth);
+    const svg = new SmallLineChartObs(obsName, svgContainer.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'plot-all' + obsName;
     svgContainer.appendChild(svgNode);
@@ -604,7 +617,12 @@ const plotsSVGRedraw = () => {
             addObsSVG(globalVariables.checkedObs[key]);
         }
     } else if (plotsGroupSelection.value === 'HeatMapRobot') {
+        plotsLinkOptionName.textContent = 'Highlight Options:';
+        plotsRobotOptionName.textContent = 'Plot Robots:';
         globalVariables.groupByRobot = true;
+        for (const key in globalVariables.checkedRobots) {
+            addHeatMapRobotSVG(globalVariables.checkedRobots[key]);
+        }
         const firstOption = globalHeatmapSelection.options[0];
         globalHeatmapSelection.value = firstOption.value;
         changeGlobalPlot(firstOption.value, 'HeatMapRobot');

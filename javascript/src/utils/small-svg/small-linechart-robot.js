@@ -3,8 +3,9 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-import smallLineChartSVG from './small-svg.js';
-export default class SvgPlotterRobot extends smallLineChartSVG {
+import {SmallLineChartSVG} from './small-svg.js';
+
+export default class SmallLineChartRobot extends SmallLineChartSVG {
 
     constructor(robotNum, offsetWidth) {
         super(offsetWidth);

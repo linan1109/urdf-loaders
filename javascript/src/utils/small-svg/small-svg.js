@@ -4,7 +4,7 @@ import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
 
-export default class smallLineChartSVG {
+class smallSVG {
 
     constructor(offsetWidth) {
         this.offsetWidth = offsetWidth;
@@ -31,30 +31,18 @@ export default class smallLineChartSVG {
         this.yScale = null;
         this.xScale = null;
         this.current = globalTimer.current;
-
-        this.setup();
     }
 
     // functions to be implemented by child classes
     setup() {}
     updatePlotOnTime() {}
     pointermoved() {}
+    pointerentered() {}
+    pointerleft() {}
 
     // functions to be inherited
-    pointerentered() {
-        // this.path.style('mix-blend-mode', null).style('stroke', '#ddd');
-        this.dot.attr('display', null);
-    }
-
-    pointerleft() {
-        // this.path.style('mix-blend-mode', 'multiply').style('stroke', null);
-        this.dot.attr('display', 'none');
-        this.svg.node().value = null;
-        this.svg.dispatch('input', { bubbles: true });
-        this.currentMov = null;
-        if (!globalTimer.isRunning) {
-            this.updatePlotOnTime();
-        }
+    updateWindowSize(windowSize) {
+        this.windowSize = windowSize;
     }
 
     singleclicked(event) {
@@ -75,8 +63,89 @@ export default class smallLineChartSVG {
         }
     }
 
-    updateWindowSize(windowSize) {
-        this.windowSize = windowSize;
+}
+class SmallLineChartSVG extends smallSVG {
+
+    constructor(offsetWidth) {
+        super(offsetWidth);
+
+        this.setup();
+    }
+
+    // functions to be inherited
+    pointerentered() {
+        // this.path.style('mix-blend-mode', null).style('stroke', '#ddd');
+        this.dot.attr('display', null);
+    }
+
+    pointerleft() {
+        // this.path.style('mix-blend-mode', 'multiply').style('stroke', null);
+        this.dot.attr('display', 'none');
+        this.svg.node().value = null;
+        this.svg.dispatch('input', { bubbles: true });
+        this.currentMov = null;
+        if (!globalTimer.isRunning) {
+            this.updatePlotOnTime();
+        }
     }
 
 }
+
+class SmallHeatMapSVG extends smallSVG {
+
+    constructor(gridNum, offsetWidth) {
+        super(offsetWidth);
+        this.width = (75 / 100) * offsetWidth;
+        this.height = this.width * 0.4;
+        this.gridNum = gridNum;
+        this.gridWidth = this.width / gridNum;
+        this.yLabels = Object.values(globalVariables.nameObsMap);
+        this.gridHeight = this.height / this.yLabels.length;
+
+        this.colorScale = d3
+            .scaleSequential(d3.interpolateRdBu)
+            .domain([-3.14, 3.14]);
+        this.setup();
+    }
+
+    // functions to be inherited
+    pointermoved(event) {
+        if (!globalTimer.isRunning) {
+            const [xm, ym] = d3.pointer(event);
+            this.svg.selectAll('.vertical-line').remove();
+            this.lineX = this.svg
+                .append('g')
+                .append('line')
+                .attr('class', 'vertical-line')
+                .attr('y1', this.height)
+                .attr('y2', 0)
+                .attr('transform', `translate(${ xm },0)`)
+                .attr('stroke', 'black');
+            this.lineX.raise();
+        }
+    }
+
+    pointerleft() {
+        if (!globalTimer.isRunning) {
+            this.updatePlotOnTime();
+        }
+    }
+
+    drawLineX(x) {
+        // add the vertical line
+        const a = this.xScale(x);
+        this.svg.selectAll('.vertical-line').remove();
+        this.lineX = this.svg
+            .append('g')
+            .append('line')
+            .attr('class', 'vertical-line')
+            .attr('y1', this.height)
+            .attr('y2', 0)
+            .attr('transform', `translate(${ a },0)`)
+            .attr('stroke', 'black');
+        this.lineX.raise();
+    }
+
+}
+
+export { SmallLineChartSVG, SmallHeatMapSVG };
