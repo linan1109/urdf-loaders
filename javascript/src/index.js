@@ -50,12 +50,6 @@ const robotControlContainer = document.getElementById(
     'robot-control-container',
 );
 const addRobotButton = document.getElementById('add-robot-button');
-// const robotControls1 = document.getElementById('robot1-controls');
-// const robotControls2 = document.getElementById('robot2-controls');
-// const robotControls3 = document.getElementById('robot3-controls');
-// const robotControlsToggle1 = document.getElementById('robot1-toggle-controls');
-// const robotControlsToggle2 = document.getElementById('robot2-toggle-controls');
-// const robotControlsToggle3 = document.getElementById('robot3-toggle-controls');
 
 const globalHeatmapContainer = document.getElementById(
     'golbal-heatmap-container',
@@ -117,9 +111,9 @@ globalHeatmapSelection.addEventListener('change', (e) => {
         }
         return;
     }
-    const robotNum = parseInt(e.target.value);
     if (globalVariables.groupByRobot) {
-        updateGlobalRobotHeatmap(robotNum);
+        const robotNum = parseInt(e.target.value);
+        changeGlobalPlot(robotNum);
     }
 });
 
@@ -200,9 +194,7 @@ function createRobotControls(robotNumber) {
 
 const addNewRobotOptionToGlobalHeatmapSelection = (robotNum) => {
     // if already exists, return
-    if (globalHeatmapSelection.querySelector(
-        `option[value='${ robotNum }']`,
-    )) {
+    if (globalHeatmapSelection.querySelector(`option[value='${ robotNum }']`)) {
         return;
     }
     const option = document.createElement('option');
@@ -321,7 +313,7 @@ const addListenerToNewRobot = (robotNumber) => {
         } else {
             const selectedOption = globalHeatmapSelection.options[0];
             globalHeatmapSelection.value = selectedOption.value;
-            updateGlobalRobotHeatmap(selectedOption.value);
+            // changeGlobalPlot(selectedOption.value);
         }
 
         // For right plot part
@@ -486,7 +478,7 @@ const loadMovementFromCSV = (robotNum) => {
         // add global heatmap if group by robot and no global heatmap
         if (globalVariables.groupByRobot === true) {
             globalHeatmapSelection.value = robotNum;
-            updateGlobalRobotHeatmap(robotNum);
+            changeGlobalPlot(robotNum);
         }
 
         const fileName = file.name;
@@ -511,27 +503,48 @@ const addRobotSVG = (robotNum) => {
     svg.updatePlotOnTime();
 };
 
-const updateGlobalRobotHeatmap = (robotNum) => {
+const changeGlobalPlotToHeatmapRobot = (robotNum) => {
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
         globalHeatmapSvg = null;
     }
 
-    // const svg = new GlobalHeatmapRobot(
-    //     robotNum,
-    //     100,
-    //     globalHeatmapContainer.offsetWidth,
-    //     window.innerHeight * 0.2,
-    // );
+    const svg = new GlobalHeatmapRobot(
+        robotNum,
+        100,
+        globalHeatmapContainer.offsetWidth,
+        window.innerHeight * 0.2,
+    );
+    const svgNode = svg.svg.node();
+    globalHeatmapSvg = svg;
+    globalHeatmapContainer.appendChild(svgNode);
+};
 
+const changeGlobalPlotToLineRobot = (robotNum) => {
+    while (globalHeatmapContainer.firstChild) {
+        globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
+        globalHeatmapSvg = null;
+    }
     const svg = new GlobalLineChartRobot(
         robotNum,
         globalHeatmapContainer.offsetWidth,
         window.innerHeight * 0.2,
-    )
+    );
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;
     globalHeatmapContainer.appendChild(svgNode);
+};
+
+const changeGlobalPlot = (num, type = null) => {
+    if (type === null) {
+        type = plotsGroupSelection.value;
+        console.log('type', type);
+    }
+    if (type === 'HeatMapRobot') {
+        changeGlobalPlotToHeatmapRobot(num);
+    } else if (type === 'LineRobot') {
+        changeGlobalPlotToLineRobot(num);
+    }
 };
 
 const addObsSVG = (obsName) => {
@@ -578,6 +591,11 @@ const plotsSVGRedraw = () => {
         for (const key in globalVariables.checkedRobots) {
             addRobotSVG(globalVariables.checkedRobots[key]);
         }
+
+        // use the first robot to draw the global heatmap
+        const firstOption = globalHeatmapSelection.options[0];
+        globalHeatmapSelection.value = firstOption.value;
+        changeGlobalPlot(firstOption.value, 'LineRobot');
     } else if (plotsGroupSelection.value === 'LineLink') {
         plotsLinkOptionName.textContent = 'Plot Links:';
         plotsRobotOptionName.textContent = 'Highlight Robots:';
@@ -587,6 +605,9 @@ const plotsSVGRedraw = () => {
         }
     } else if (plotsGroupSelection.value === 'HeatMapRobot') {
         globalVariables.groupByRobot = true;
+        const firstOption = globalHeatmapSelection.options[0];
+        globalHeatmapSelection.value = firstOption.value;
+        changeGlobalPlot(firstOption.value, 'HeatMapRobot');
     } else if (plotsGroupSelection.value === 'HeatMapLink') {
         globalVariables.groupByRobot = false;
     }
