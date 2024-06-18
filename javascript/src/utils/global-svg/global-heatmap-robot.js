@@ -1,9 +1,9 @@
 import * as d3 from 'd3';
-import globalSVG from './global-svg.js';
+import {globalHeatMapSVG} from './global-svg.js';
 import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 
-export default class SVGHeatmapRobot extends globalSVG {
+export default class GlobalHeatmapRobot extends globalHeatMapSVG {
 
     constructor(robotNum, gridNum, offsetWidth, offsetHeight) {
         super(gridNum, offsetWidth, offsetHeight);
@@ -11,7 +11,7 @@ export default class SVGHeatmapRobot extends globalSVG {
         this.dataLength = this.data.length;
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
-        this.id = 'heatmap-robot' + robotNum;
+        this.id = 'global-heatmap-robot' + robotNum;
         this.createHeatmap();
     }
 

@@ -4,7 +4,7 @@ import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
 
-export default class smallSVG {
+export default class smallLineChartSVG {
 
     constructor(offsetWidth) {
         this.offsetWidth = offsetWidth;

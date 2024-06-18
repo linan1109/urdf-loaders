@@ -3,8 +3,8 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-import smallSVG from './small-svg.js';
-export default class SvgPlotterObs extends smallSVG {
+import smallLineChartSVG from './small-svg.js';
+export default class SvgPlotterObs extends smallLineChartSVG {
 
     constructor(obsName, offsetWidth) {
         super(offsetWidth);

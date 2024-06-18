@@ -3,8 +3,8 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-import smallSVG from './small-svg.js';
-export default class SvgPlotterRobot extends smallSVG {
+import smallLineChartSVG from './small-svg.js';
+export default class SvgPlotterRobot extends smallLineChartSVG {
 
     constructor(robotNum, offsetWidth) {
         super(offsetWidth);
@@ -105,12 +105,12 @@ export default class SvgPlotterRobot extends smallSVG {
             const textY = this.yScale.invert(y);
             this.path
                 .style('stroke', ({ z }) =>
-                    z === k
-                        ? globalVariables.lineColors.selection
+                    z === globalVariables.mouseOverObs
+                        ? globalVariables.lineColors.mouseOver
                         : globalVariables.checkedObs.includes(z)
                             ? globalVariables.lineColors.checked
-                            : z === globalVariables.mouseOverObs
-                                ? globalVariables.lineColors.mouseOver
+                            : z === this.currentObs
+                                ? globalVariables.lineColors.selection
                                 : globalVariables.lineColors.noSelection,
                 )
                 .filter(({ z }) => z === k)
@@ -324,12 +324,12 @@ export default class SvgPlotterRobot extends smallSVG {
         // keys in checkedObs are blue, others are grey
         this.path
             .style('stroke', ({ z }) =>
-                globalVariables.checkedObs.includes(z)
-                    ? globalVariables.lineColors.checked
-                    : z === this.currentObs
-                        ? globalVariables.lineColors.selection
-                        : z === globalVariables.mouseOverObs
-                            ? globalVariables.lineColors.mouseOver
+                z === globalVariables.mouseOverObs
+                    ? globalVariables.lineColors.mouseOver
+                    : globalVariables.checkedObs.includes(z)
+                        ? globalVariables.lineColors.checked
+                        : z === this.currentObs
+                            ? globalVariables.lineColors.selection
                             : globalVariables.lineColors.noSelection,
             )
             .filter(({ z }) => globalVariables.checkedObs.includes(z))

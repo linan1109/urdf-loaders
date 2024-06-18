@@ -12,7 +12,8 @@ import globalTimer from './utils/global-timer.js';
 import movementContainer from './utils/movement-container.js';
 import SvgPlotterObs from './utils/small-svg/svg-plotter-obs.js';
 import SvgPlotterRobot from './utils/small-svg/svg-plotter-robot.js';
-import SVGHeatmapRobot from './utils/global-svg/svg-heatmap-robot.js';
+import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
+import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
 
@@ -135,20 +136,14 @@ addRobotButton.addEventListener('click', () => {
 viewer.addEventListener('joint-mouseover', (event) => {
     globalVariables.mouseOverObs = event.detail;
     if (!globalTimer.isRunning) {
-        for (const key in svgList) {
-            const svg = svgList[key];
-            svg.updatePlotOnTime();
-        }
+        updateAllSVG();
     }
 });
 
 viewer.addEventListener('joint-mouseout', (event) => {
     globalVariables.mouseOverObs = null;
     if (!globalTimer.isRunning) {
-        for (const key in svgList) {
-            const svg = svgList[key];
-            svg.updatePlotOnTime();
-        }
+        updateAllSVG();
     }
 });
 
@@ -517,18 +512,23 @@ const addRobotSVG = (robotNum) => {
 };
 
 const updateGlobalRobotHeatmap = (robotNum) => {
-    console.log('updateGlobalRobotHeatmap', robotNum);
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
         globalHeatmapSvg = null;
     }
 
-    const svg = new SVGHeatmapRobot(
+    // const svg = new GlobalHeatmapRobot(
+    //     robotNum,
+    //     100,
+    //     globalHeatmapContainer.offsetWidth,
+    //     window.innerHeight * 0.2,
+    // );
+
+    const svg = new GlobalLineChartRobot(
         robotNum,
-        100,
         globalHeatmapContainer.offsetWidth,
         window.innerHeight * 0.2,
-    );
+    )
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;
     globalHeatmapContainer.appendChild(svgNode);
@@ -550,6 +550,9 @@ const updateAllSVG = () => {
     for (const key in svgList) {
         const svg = svgList[key];
         svg.updatePlotOnTime();
+    }
+    if (globalHeatmapSvg !== null) {
+        globalHeatmapSvg.updatePlotOnTime();
     }
 };
 
@@ -736,13 +739,7 @@ const getCurrentMovementTime = () => {
 };
 
 function timerD3Update() {
-    for (const key in svgList) {
-        const svg = svgList[key];
-        svg.updatePlotOnTime();
-    }
-    if (globalHeatmapSvg !== null) {
-        globalHeatmapSvg.updatePlotOnTime();
-    }
+    updateAllSVG();
     updateAnymal();
 }
 
