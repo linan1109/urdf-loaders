@@ -14,7 +14,7 @@ export default class SvgPlotterObs {
         this.marginRight = 20;
         this.marginBottom = 30;
         this.marginLeft = 30;
-        this.windowSize = 400;
+        this.windowSize = globalVariables.rightSvgWindowSize;
         this.voronoi = false;
 
         this.svg = null;
@@ -93,7 +93,9 @@ export default class SvgPlotterObs {
                                     this.yScale(
                                         parseFloat(
                                             movement[d][
-                                                globalVariables.nameObsMap[this.obsName]
+                                                globalVariables.nameObsMap[
+                                                    this.obsName
+                                                ]
                                             ],
                                         ),
                                     ),
@@ -187,7 +189,11 @@ export default class SvgPlotterObs {
                 this.all_x.map((d, i) => [
                     this.xScale(d),
                     this.yScale(
-                        parseFloat(movement[d][globalVariables.nameObsMap[this.obsName]]),
+                        parseFloat(
+                            movement[d][
+                                globalVariables.nameObsMap[this.obsName]
+                            ],
+                        ),
                     ),
                     key,
                 ]),
@@ -295,7 +301,10 @@ export default class SvgPlotterObs {
         if (this.current >= globalVariables.movementMinLen) {
             globalTimer.stop();
         }
-        if (this.current >= 0 && this.current < globalVariables.movementMinLen) {
+        if (
+            this.current >= 0 &&
+            this.current < globalVariables.movementMinLen
+        ) {
             if (this.all_x === null) {
                 this.initMovement();
             }
@@ -303,7 +312,10 @@ export default class SvgPlotterObs {
             // slice the window for the current time
             const x = this.all_x.slice(
                 Math.max(0, this.current - this.windowSize / 2),
-                Math.min(globalVariables.movementMinLen, this.current + this.windowSize / 2),
+                Math.min(
+                    globalVariables.movementMinLen,
+                    this.current + this.windowSize / 2,
+                ),
             );
 
             this.xScale = d3
@@ -319,7 +331,11 @@ export default class SvgPlotterObs {
                     x.map((d, i) => [
                         this.xScale(d),
                         this.yScale(
-                            parseFloat(movement[d][globalVariables.nameObsMap[this.obsName]]),
+                            parseFloat(
+                                movement[d][
+                                    globalVariables.nameObsMap[this.obsName]
+                                ],
+                            ),
                         ),
                         key,
                     ]),
@@ -415,6 +431,10 @@ export default class SvgPlotterObs {
 
         // remove the brush after drawing
         this.svg.select('.brush').call(this.brush.move, null);
+    }
+
+    updateWindowSize(windowSize) {
+        this.windowSize = windowSize;
     }
 
 }

@@ -25,6 +25,7 @@ export default class SVGHeatmapRobot {
         this.width = this.maxWidth;
         this.height = this.maxHeight;
         this.yLabels = Object.values(globalVariables.nameObsMap);
+        this.brushedWidth = 0;
 
         this.svg = null;
         this.initSvg();
@@ -45,7 +46,6 @@ export default class SVGHeatmapRobot {
 
     processData() {
         const dataLength = this.data.length;
-        // console.log('dataLength', dataLength);
         const eachGridDataLength = Math.floor(dataLength / this.gridNum);
         const processedData = [];
 
@@ -73,7 +73,7 @@ export default class SVGHeatmapRobot {
         const numXLables = Math.floor(this.gridNum / 10);
 
         const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
-            (d) => d * 10,
+            (d) => (d * this.dataLength) / numXLables,
         );
 
         const yLabels = this.yLabels;
@@ -152,10 +152,47 @@ export default class SVGHeatmapRobot {
             .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2); // Center text vertically within the rect
         legend.exit().remove();
 
+        // add brush
+        this.addBrush();
         this.svg
             .on('click', (event) => this.singleclicked(event))
             .on('pointermove', (event) => this.pointermoved(event))
             .on('pointerleave', (event) => this.pointerleft(event));
+    }
+
+    addBrush() {
+        this.brush = d3
+            .brushX()
+            .extent([
+                [0, 0],
+                [this.width, this.height],
+            ])
+            .on('end', (event) => this.brushed(event));
+        this.svg.append('g').attr('class', 'brush').call(this.brush);
+    }
+
+    brushed(event) {
+        if (event.selection) {
+            if (event.mode) {
+                let [x0, x1] = event.selection;
+                x0 = (x0 / this.width) * this.dataLength;
+                x1 = (x1 / this.width) * this.dataLength;
+                console.log('brushed', x0, x1);
+                this.brushedWidth = x1 - x0;
+
+                if (!globalTimer.isRunning) {
+                    globalTimer.setIgnoreFirst(x0 + this.brushedWidth / 2);
+                }
+                globalVariables.rightSvgWindowSize = Math.floor(x1 - x0);
+                // send event to update right svg
+                const brushedevent = new CustomEvent('global-map-brushed', {
+                    detail: { x0, x1 },
+                });
+                document.dispatchEvent(brushedevent);
+            }
+        } else {
+            this.brushedWidth = null;
+        }
     }
 
     updatePlotOnTime() {
@@ -163,6 +200,17 @@ export default class SVGHeatmapRobot {
         const current = globalTimer.getCurrent();
         const x = current / this.dataLength;
         this.drawlinebyx(x);
+
+        if (this.brushedWidth) {
+            const x0 = current - this.brushedWidth / 2;
+            const x1 = current + this.brushedWidth / 2;
+            this.svg
+                .selectAll('.brush')
+                .call(this.brush.move, [
+                    (x0 / this.dataLength) * this.width,
+                    (x1 / this.dataLength) * this.width,
+                ]);
+        }
     }
 
     drawlinebyx(x) {
@@ -189,7 +237,7 @@ export default class SVGHeatmapRobot {
             globalTimer.setIgnoreFirst(current);
             animationControl.check();
             globalTimer.start();
-            this.drawlinebyx();
+            this.drawlinebyx(x);
         }
     }
 
@@ -208,11 +256,10 @@ export default class SVGHeatmapRobot {
             return;
         }
         const [x, y] = d3.pointer(event);
-        console.log('x', x, 'y', y);
         if (x < 0 || x > this.width) {
             return;
         }
-        this.drawlinebyx(x / this.width);
+        this.drawlinebyx((1.5 + x) / this.width);
     }
 
 }

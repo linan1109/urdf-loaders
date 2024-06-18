@@ -39,6 +39,8 @@ const globalVariables = {
     mouseOverObs: null,
 
     addedRobotCount: 1,
+
+    rightSvgWindowSize: 400,
 };
 
 export default globalVariables;

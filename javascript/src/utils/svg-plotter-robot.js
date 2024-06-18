@@ -14,7 +14,7 @@ export default class SvgPlotterRobot {
         this.marginRight = 20;
         this.marginBottom = 30;
         this.marginLeft = 30;
-        this.windowSize = 400;
+        this.windowSize = globalVariables.rightSvgWindowSize;
         this.voronoi = false;
 
         this.svg = null;
@@ -399,6 +399,10 @@ export default class SvgPlotterRobot {
 
         // remove the brush after drawing
         this.svg.select('.brush').call(this.brush.move, null);
+    }
+
+    updateWindowSize(windowSize) {
+        this.windowSize = windowSize;
     }
 
 }

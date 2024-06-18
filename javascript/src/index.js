@@ -552,6 +552,15 @@ const updateAllSVG = () => {
     }
 };
 
+document.addEventListener('global-map-brushed', (e) => {
+    // const { start, end } = e.detail;
+    for (const key in svgList) {
+        const svg = svgList[key];
+        svg.updateWindowSize(globalVariables.rightSvgWindowSize);
+        svg.updatePlotOnTime();
+    }
+});
+
 upSelect.addEventListener('change', () => (viewer.up = upSelect.value));
 
 const plotsSVGRedraw = () => {
