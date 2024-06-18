@@ -11,7 +11,6 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
         // this.data = movementContainer.getMovement(robotNum);
         // this.dataLength = this.data.length;
         this.id = 'small-heatmap-obs' + obsName;
-        console.log(movementContainer.robotNums);
         this.yLabels = movementContainer.robotNums;
         this.gridHeight = this.height / this.yLabels.length;
         if (this.gridHeight > 2 * this.gridWidth) {
@@ -46,9 +45,6 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
                     sum += parseFloat(
                         data[start + j * eachGridDataLength + k][this.obsName],
                     );
-                    console.log(start + j * eachGridDataLength + k);
-                    console.log(data[start + j * eachGridDataLength + k]);
-                    console.log(data[start + j * eachGridDataLength + k][this.obsName]);
                 }
                 processedData.push({
                     x: j,
@@ -57,8 +53,6 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
                 });
             }
         }
-
-        console.log(processedData);
 
         this.all_xLabels = Array.from(
             { length: this.gridNum },

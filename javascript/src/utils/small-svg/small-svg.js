@@ -54,7 +54,6 @@ class smallSVG {
             animationControl.check();
             // get the click position
             const [xm] = d3.pointer(event);
-            console.log(this.xScale.invert(xm));
             const ignoreFirst = Math.floor(
                 this.xScale.invert(xm) - globalVariables.movementIndexStart,
             );
