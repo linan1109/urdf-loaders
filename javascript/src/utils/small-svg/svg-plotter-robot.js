@@ -3,36 +3,13 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-export default class SvgPlotterRobot {
+import smallSVG from './small-svg.js';
+export default class SvgPlotterRobot extends smallSVG {
 
     constructor(robotNum, offsetWidth) {
+        super(offsetWidth);
         this.movement = movementContainer.getMovement(robotNum);
         this.robotNum = robotNum;
-        this.width = (95 / 100) * offsetWidth;
-        this.height = this.width * 0.5;
-        this.marginTop = 20;
-        this.marginRight = 20;
-        this.marginBottom = 30;
-        this.marginLeft = 30;
-        this.windowSize = globalVariables.rightSvgWindowSize;
-        this.voronoi = false;
-
-        this.svg = null;
-        this.dot = null;
-        this.lineX = null;
-        this.path = null;
-        this.groups = null;
-        this.points = [];
-        this.brush = null;
-
-        this.all_x = null;
-        this.all_y = {};
-        this.yScale = null;
-        this.xScale = null;
-        this.current = null;
-        this.currentObs = null;
-
-        this.setup();
     }
 
     setup() {
@@ -91,7 +68,9 @@ export default class SvgPlotterRobot {
                                     this.xScale(d),
                                     this.yScale(
                                         parseFloat(
-                                            this.movement[d][globalVariables.nameObsMap[key]],
+                                            this.movement[d][
+                                                globalVariables.nameObsMap[key]
+                                            ],
                                         ),
                                     ),
                                     key,
@@ -112,11 +91,6 @@ export default class SvgPlotterRobot {
             .on('touchstart', (event) => event.preventDefault())
             .on('dblclick', (event) => this.dblclicked(event))
             .on('click', (event) => this.singleclicked(event));
-    }
-
-    pointerentered() {
-        // this.path.style('mix-blend-mode', null).style('stroke', '#ddd');
-        this.dot.attr('display', null);
     }
 
     pointermoved(event) {
@@ -158,17 +132,6 @@ export default class SvgPlotterRobot {
         }
     }
 
-    pointerleft() {
-        // this.path.style('mix-blend-mode', 'multiply').style('stroke', null);
-        this.dot.attr('display', 'none');
-        this.svg.node().value = null;
-        this.svg.dispatch('input', { bubbles: true });
-        this.currentObs = null;
-        if (!globalTimer.isRunning) {
-            this.updatePlotOnTime();
-        }
-    }
-
     dblclicked() {
         if (animationControl.isChecked()) {
             animationControl.uncheck();
@@ -184,31 +147,17 @@ export default class SvgPlotterRobot {
             this.points = this.points.concat(
                 this.all_x.map((d, i) => [
                     this.xScale(d),
-                    this.yScale(parseFloat(this.movement[d][globalVariables.nameObsMap[key]])),
+                    this.yScale(
+                        parseFloat(
+                            this.movement[d][globalVariables.nameObsMap[key]],
+                        ),
+                    ),
                     key,
                 ]),
             );
         }
 
         this.drawByX();
-    }
-
-    singleclicked(event) {
-        if (animationControl.isChecked()) {
-            animationControl.uncheck();
-            globalTimer.pause();
-        } else {
-            animationControl.check();
-            // get the click position
-            const [xm] = d3.pointer(event);
-            console.log(this.xScale.invert(xm));
-            const ignoreFirst = Math.floor(
-                this.xScale.invert(xm) - globalVariables.movementIndexStart,
-            );
-            globalTimer.setIgnoreFirst(ignoreFirst);
-            globalTimer.start();
-            animationControl.check();
-        }
     }
 
     initMovement() {
@@ -300,7 +249,11 @@ export default class SvgPlotterRobot {
                         x.map((d, i) => [
                             this.xScale(d),
                             this.yScale(
-                                parseFloat(this.movement[d][globalVariables.nameObsMap[key]]),
+                                parseFloat(
+                                    this.movement[d][
+                                        globalVariables.nameObsMap[key]
+                                    ],
+                                ),
                             ),
                             key,
                         ]),
@@ -399,10 +352,6 @@ export default class SvgPlotterRobot {
 
         // remove the brush after drawing
         this.svg.select('.brush').call(this.brush.move, null);
-    }
-
-    updateWindowSize(windowSize) {
-        this.windowSize = windowSize;
     }
 
 }
