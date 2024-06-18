@@ -33,4 +33,4 @@ jobs:
         with:
           add: '.'
           message: 'update builds'
-          push: 'origin HEAD:examples --force'
+          push: 'origin HEAD:bundle --force'
