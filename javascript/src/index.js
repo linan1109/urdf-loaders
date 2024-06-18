@@ -316,10 +316,12 @@ const addListenerToNewRobot = (robotNumber) => {
 
         // For the global heatmap
         // remove from global heatmap selection
-        const option = document.querySelector(
-            `#global-heatmap-selection option[value='${ robotNumber }']`,
-        );
-        option.remove();
+        if (globalVariables.groupByRobot) {
+            const option = document.querySelector(
+                `#global-heatmap-selection option[value='${ robotNumber }']`,
+            );
+            option.remove();
+        }
 
         // reset global heatmap selection
         if (globalHeatmapSelection.options.length === 0) {
