@@ -1,13 +1,13 @@
 import * as d3 from 'd3';
-import movementContainer from './movement-container.js';
-import globalTimer from './global-timer.js';
-import animationControl from './animation-control.js';
-import globalVariables from './global-variables.js';
-export default class SvgPlotterRobot {
+import movementContainer from '../movement-container.js';
+import globalTimer from '../global-timer.js';
+import animationControl from '../animation-control.js';
+import globalVariables from '../global-variables.js';
 
-    constructor(robotNum, offsetWidth) {
-        this.movement = movementContainer.getMovement(robotNum);
-        this.robotNum = robotNum;
+export default class SvgPlotterObs {
+
+    constructor(obsName, offsetWidth) {
+        this.obsName = obsName; // key in nameObsMap
         this.width = (95 / 100) * offsetWidth;
         this.height = this.width * 0.5;
         this.marginTop = 20;
@@ -30,7 +30,7 @@ export default class SvgPlotterRobot {
         this.yScale = null;
         this.xScale = null;
         this.current = null;
-        this.currentObs = null;
+        this.currentMov = null;
 
         this.setup();
     }
@@ -85,13 +85,18 @@ export default class SvgPlotterRobot {
                                 this.width - this.marginRight,
                             ]);
                         this.points = [];
-                        for (const key in globalVariables.nameObsMap) {
+                        for (const key of movementContainer.robotNums) {
+                            const movement = movementContainer.getMovement(key);
                             this.points = this.points.concat(
                                 x.map((d, i) => [
                                     this.xScale(d),
                                     this.yScale(
                                         parseFloat(
-                                            this.movement[d][globalVariables.nameObsMap[key]],
+                                            movement[d][
+                                                globalVariables.nameObsMap[
+                                                    this.obsName
+                                                ]
+                                            ],
                                         ),
                                     ),
                                     key,
@@ -126,17 +131,15 @@ export default class SvgPlotterRobot {
                 Math.hypot(x - xm, y - ym),
             );
             const [x, y, k] = this.points[i];
-            this.currentObs = k;
+            this.currentMov = k;
             const textY = this.yScale.invert(y);
             this.path
                 .style('stroke', ({ z }) =>
-                    z === k
-                        ? globalVariables.lineColors.selection
-                        : globalVariables.checkedObs.includes(z)
-                            ? globalVariables.lineColors.checked
-                            : z === globalVariables.mouseOverObs
-                                ? globalVariables.lineColors.mouseOver
-                                : globalVariables.lineColors.noSelection,
+                    globalVariables.checkedRobots.includes(z)
+                        ? globalVariables.lineColors.checked
+                        : z === this.currentMov
+                            ? globalVariables.lineColors.selection
+                            : globalVariables.lineColors.noSelection,
                 )
                 .filter(({ z }) => z === k)
                 .raise();
@@ -154,7 +157,7 @@ export default class SvgPlotterRobot {
                 Math.hypot(x - xm, y - ym),
             );
             const [, , k] = this.points[i];
-            this.currentObs = k;
+            this.currentMov = k;
         }
     }
 
@@ -163,7 +166,7 @@ export default class SvgPlotterRobot {
         this.dot.attr('display', 'none');
         this.svg.node().value = null;
         this.svg.dispatch('input', { bubbles: true });
-        this.currentObs = null;
+        this.currentMov = null;
         if (!globalTimer.isRunning) {
             this.updatePlotOnTime();
         }
@@ -180,11 +183,18 @@ export default class SvgPlotterRobot {
             .domain(d3.extent(this.all_x))
             .range([this.marginLeft, this.width - this.marginRight]);
         this.points = [];
-        for (const key in globalVariables.nameObsMap) {
+        for (const key of movementContainer.robotNums) {
+            const movement = movementContainer.getMovement(key);
             this.points = this.points.concat(
                 this.all_x.map((d, i) => [
                     this.xScale(d),
-                    this.yScale(parseFloat(this.movement[d][globalVariables.nameObsMap[key]])),
+                    this.yScale(
+                        parseFloat(
+                            movement[d][
+                                globalVariables.nameObsMap[this.obsName]
+                            ],
+                        ),
+                    ),
                     key,
                 ]),
             );
@@ -212,18 +222,36 @@ export default class SvgPlotterRobot {
     }
 
     initMovement() {
-        this.all_x = d3.range(this.movement.length - 1);
-
+        this.all_x = d3.range(globalVariables.movementMinLen - 1);
         // y min and max
-
-        for (const key in globalVariables.nameObsMap) {
-            this.all_y[key] = this.movement.map((d) =>
-                parseFloat(d[globalVariables.nameObsMap[key]]),
+        // if (movement1 !== null) {
+        //     this.all_y[1] = movement1.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+        // if (movement2 !== null) {
+        //     this.all_y[2] = movement2.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+        // if (movement3 !== null) {
+        //     this.all_y[3] = movement3.map((d) =>
+        //         parseFloat(d[nameObsMap[this.obsName]]),
+        //     );
+        // }
+        for (const rbtnum of movementContainer.robotNums) {
+            const movement = movementContainer.getMovement(rbtnum);
+            this.all_y[rbtnum] = movement.map((d) =>
+                parseFloat(d[globalVariables.nameObsMap[this.obsName]]),
             );
         }
+
         const yMin = d3.min(Object.values(this.all_y).flat());
         const yMax = d3.max(Object.values(this.all_y).flat());
 
+        // remove old axis
+        this.svg.selectAll('.yaxis').remove();
+        // update the y scale
         this.yScale = d3
             .scaleLinear()
             .domain([yMin, yMax])
@@ -261,53 +289,59 @@ export default class SvgPlotterRobot {
                     .append('text')
                     .attr('x', -this.marginLeft)
                     .attr('y', 10)
-                    .attr('fill', 'black')
                     .attr('text-anchor', 'start')
-                    .text('Robot ' + this.robotNum),
+                    .attr('fill', 'black')
+                    .text(this.obsName),
             )
             .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
     }
 
     updatePlotOnTime() {
-        if (this.movement !== null) {
-            this.current = globalTimer.getCurrent();
-            if (this.current >= this.movement.length) {
-                globalTimer.stop();
+        this.current = globalTimer.getCurrent();
+        if (this.current >= globalVariables.movementMinLen) {
+            globalTimer.stop();
+        }
+        if (
+            this.current >= 0 &&
+            this.current < globalVariables.movementMinLen
+        ) {
+            if (this.all_x === null) {
+                this.initMovement();
             }
-            if (this.current >= 0 && this.current < this.movement.length) {
-                if (this.all_x === null) {
-                    this.initMovement();
-                }
 
-                // slice the window for the current time
-                const x = this.all_x.slice(
-                    Math.max(0, this.current - this.windowSize / 2),
-                    Math.min(
-                        this.movement.length,
-                        this.current + this.windowSize / 2,
-                    ),
-                );
+            // slice the window for the current time
+            const x = this.all_x.slice(
+                Math.max(0, this.current - this.windowSize / 2),
+                Math.min(
+                    globalVariables.movementMinLen,
+                    this.current + this.windowSize / 2,
+                ),
+            );
 
-                this.xScale = d3
-                    .scaleLinear()
-                    .domain(d3.extent(x))
-                    .range([this.marginLeft, this.width - this.marginRight]);
+            this.xScale = d3
+                .scaleLinear()
+                .domain(d3.extent(x))
+                .range([this.marginLeft, this.width - this.marginRight]);
 
-                // Compute the points in pixel space as [x, y, z], where z is the name of the series.
-                this.points = [];
-                for (const key in globalVariables.nameObsMap) {
-                    this.points = this.points.concat(
-                        x.map((d, i) => [
-                            this.xScale(d),
-                            this.yScale(
-                                parseFloat(this.movement[d][globalVariables.nameObsMap[key]]),
+            // Compute the points in pixel space as [x, y, z], where z is the name of the series.
+            this.points = [];
+            for (const key of movementContainer.robotNums) {
+                const movement = movementContainer.getMovement(key);
+                this.points = this.points.concat(
+                    x.map((d, i) => [
+                        this.xScale(d),
+                        this.yScale(
+                            parseFloat(
+                                movement[d][
+                                    globalVariables.nameObsMap[this.obsName]
+                                ],
                             ),
-                            key,
-                        ]),
-                    );
-                }
-                this.drawByX();
+                        ),
+                        key,
+                    ]),
+                );
             }
+            this.drawByX();
         }
     }
 
@@ -367,30 +401,28 @@ export default class SvgPlotterRobot {
                     .x((d) => d[0])
                     .y((d) => d[1]),
             );
-        // keys in checkedObs are blue, others are grey
+
         this.path
             .style('stroke', ({ z }) =>
-                globalVariables.checkedObs.includes(z)
+                globalVariables.checkedRobots.includes(z)
                     ? globalVariables.lineColors.checked
-                    : z === this.currentObs
+                    : z === this.currentMov
                         ? globalVariables.lineColors.selection
-                        : z === globalVariables.mouseOverObs
-                            ? globalVariables.lineColors.mouseOver
-                            : globalVariables.lineColors.noSelection,
+                        : globalVariables.lineColors.noSelection,
             )
-            .filter(({ z }) => globalVariables.checkedObs.includes(z))
+            .filter(({ z }) => z === this.currentMov)
             .raise();
 
         // update the vertical line and the dot
         const a = this.xScale(this.current);
         this.lineX
             .attr('transform', `translate(${ a },0)`)
-            // .attr('stroke', '#ddd');
             .attr('stroke', 'black');
 
-        if (this.currentObs !== null) {
+        if (this.currentMov !== null) {
+            const mov = movementContainer.getMovement(this.currentMov);
             const textY = parseFloat(
-                this.movement[this.current][this.currentObs],
+                mov[this.current][globalVariables.nameObsMap[this.obsName]],
             );
             const y = this.yScale(textY);
             this.dot.attr('transform', `translate(${ a },${ y })`);

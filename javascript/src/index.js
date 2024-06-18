@@ -10,9 +10,9 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import URDFManipulator from './urdf-manipulator-element.js';
 import globalTimer from './utils/global-timer.js';
 import movementContainer from './utils/movement-container.js';
-import SvgPlotterObs from './utils/svg-plotter-obs.js';
-import SvgPlotterRobot from './utils/svg-plotter-robot.js';
-import SVGHeatmapRobot from './utils/svg-heatmap-robot.js';
+import SvgPlotterObs from './utils/small-svg/svg-plotter-obs.js';
+import SvgPlotterRobot from './utils/small-svg/svg-plotter-robot.js';
+import SVGHeatmapRobot from './utils/global-svg/svg-heatmap-robot.js';
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
 

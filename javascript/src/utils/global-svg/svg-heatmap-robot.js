@@ -1,47 +1,18 @@
 import * as d3 from 'd3';
-import movementContainer from './movement-container.js';
-import globalVariables from './global-variables.js';
-import globalTimer from './global-timer.js';
-import animationControl from './animation-control.js';
+import globalSVG from './global-svg.js';
+import movementContainer from '../movement-container.js';
+import globalTimer from '../global-timer.js';
 
-export default class SVGHeatmapRobot {
+export default class SVGHeatmapRobot extends globalSVG {
 
     constructor(robotNum, gridNum, offsetWidth, offsetHeight) {
+        super(gridNum, offsetWidth, offsetHeight);
         this.data = movementContainer.getMovement(robotNum);
         this.dataLength = this.data.length;
-        this.gridNum = gridNum;
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
         this.id = 'heatmap-robot' + robotNum;
-        this.margin = { top: 20, right: 20, bottom: 0, left: 30 };
-        this.maxWidth =
-            0.85 * (offsetWidth - this.margin.left - this.margin.right);
-        this.maxHeight =
-            0.85 * (offsetHeight - this.margin.top - this.margin.bottom);
-        this.gridWidth = this.maxWidth / this.gridNum;
-        this.gridHeight = this.maxHeight / 12;
-        // this.width = this.gridSize * this.gridNum;
-        // this.height = this.gridSize * 12;
-        this.width = this.maxWidth;
-        this.height = this.maxHeight;
-        this.yLabels = Object.values(globalVariables.nameObsMap);
-        this.brushedWidth = 0;
-
-        this.svg = null;
-        this.initSvg();
         this.createHeatmap();
-    }
-
-    initSvg() {
-        this.svg = d3
-            .create('svg')
-            .attr('width', this.width)
-            .attr('height', this.height)
-            .attr('viewBox', [0, 0, this.width, this.height])
-            .attr(
-                'style',
-                'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;',
-            );
     }
 
     processData() {
@@ -153,14 +124,6 @@ export default class SVGHeatmapRobot {
         legend.exit().remove();
 
         // add brush
-        this.addBrush();
-        this.svg
-            .on('click', (event) => this.singleclicked(event))
-            .on('pointermove', (event) => this.pointermoved(event))
-            .on('pointerleave', (event) => this.pointerleft(event));
-    }
-
-    addBrush() {
         this.brush = d3
             .brushX()
             .extent([
@@ -169,30 +132,12 @@ export default class SVGHeatmapRobot {
             ])
             .on('end', (event) => this.brushed(event));
         this.svg.append('g').attr('class', 'brush').call(this.brush);
-    }
 
-    brushed(event) {
-        if (event.selection) {
-            if (event.mode) {
-                let [x0, x1] = event.selection;
-                x0 = (x0 / this.width) * this.dataLength;
-                x1 = (x1 / this.width) * this.dataLength;
-                console.log('brushed', x0, x1);
-                this.brushedWidth = x1 - x0;
-
-                if (!globalTimer.isRunning) {
-                    globalTimer.setIgnoreFirst(x0 + this.brushedWidth / 2);
-                }
-                globalVariables.rightSvgWindowSize = Math.floor(x1 - x0);
-                // send event to update right svg
-                const brushedevent = new CustomEvent('global-map-brushed', {
-                    detail: { x0, x1 },
-                });
-                document.dispatchEvent(brushedevent);
-            }
-        } else {
-            this.brushedWidth = null;
-        }
+        // bind events
+        this.svg
+            .on('click', (event) => this.singleclicked(event))
+            .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointerleave', (event) => this.pointerleft(event));
     }
 
     updatePlotOnTime() {
@@ -211,55 +156,6 @@ export default class SVGHeatmapRobot {
                     (x1 / this.dataLength) * this.width,
                 ]);
         }
-    }
-
-    drawlinebyx(x) {
-        this.svg.selectAll('.vertical-line').remove();
-        this.svg
-            .append('line')
-            .attr('class', 'vertical-line')
-            .attr('x1', x * this.width)
-            .attr('y1', 0)
-            .attr('x2', x * this.width)
-            .attr('y2', this.height)
-            .style('stroke', 'black')
-            .style('stroke-width', 1);
-    }
-
-    singleclicked(event) {
-        if (globalTimer.isRunning) {
-            animationControl.uncheck();
-        } else {
-            console.log('singleclicked', event);
-            const [xw, y] = d3.pointer(event);
-            const x = xw / this.width;
-            const current = x * this.dataLength;
-            globalTimer.setIgnoreFirst(current);
-            animationControl.check();
-            globalTimer.start();
-            this.drawlinebyx(x);
-        }
-    }
-
-    pointerleft(event) {
-        // if amimation is running, do nothing
-        if (globalTimer.isRunning) {
-            return;
-        }
-        const current = globalTimer.getCurrent();
-        this.drawlinebyx(current / this.dataLength);
-    }
-
-    pointermoved(event) {
-        // if amimation is running, do nothing
-        if (globalTimer.isRunning) {
-            return;
-        }
-        const [x, y] = d3.pointer(event);
-        if (x < 0 || x > this.width) {
-            return;
-        }
-        this.drawlinebyx((1.5 + x) / this.width);
     }
 
 }
