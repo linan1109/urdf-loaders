@@ -512,7 +512,7 @@ const addHeatMapRobotSVG = (robotNum) => {
     if (svgList[robotNum] !== undefined) {
         svgList[robotNum].svg.remove();
     }
-    const svg = new SmallHeatmapRobot(robotNum, 25, svgContainer.offsetWidth);
+    const svg = new SmallHeatmapRobot(robotNum, globalVariables.smallHeatMapGridNum, svgContainer.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'heatmap-' + robotNum;
     svgContainer.appendChild(svgNode);
@@ -528,7 +528,7 @@ const changeGlobalPlotToHeatmapRobot = (robotNum) => {
 
     const svg = new GlobalHeatmapRobot(
         robotNum,
-        100,
+        globalVariables.globalHeatMapGridNum,
         globalHeatmapContainer.offsetWidth,
         window.innerHeight * 0.2,
     );
@@ -559,7 +559,7 @@ const changeGlobalPlotToHeatmapObs = (obsName) => {
     }
     const svg = new GlobalHeatmapObs(
         obsName,
-        100,
+        globalVariables.globalHeatMapGridNum,
         globalHeatmapContainer.offsetWidth,
         window.innerHeight * 0.2,
     );
@@ -614,7 +614,7 @@ const addHeatMapObsSVG = (obsName) => {
     if (svgList[obsName] !== undefined) {
         svgList[obsName].svg.remove();
     }
-    const svg = new SmallHeatMapObs(obsName, 25, svgContainer.offsetWidth);
+    const svg = new SmallHeatMapObs(obsName, globalVariables.smallHeatMapGridNum, svgContainer.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'heatmap-' + obsName;
     svgContainer.appendChild(svgNode);

@@ -48,14 +48,6 @@ export default class GlobalHeatmapRobot extends globalHeatMapSVG {
         );
 
         const yLabels = this.yLabels;
-        const colorScale = d3
-            // .scaleSequential(d3.interpolateViridis)
-            .scaleSequential(d3.interpolateRdBu)
-            .domain([
-                // d3.min(data, (d) => d.value),
-                // d3.max(data, (d) => d.value),
-                -3.14, 3.14,
-            ]);
 
         this.svg
             .selectAll('.xLabel')
@@ -90,18 +82,18 @@ export default class GlobalHeatmapRobot extends globalHeatMapSVG {
             .append('rect')
             .attr('x', (d) => d.x * this.gridWidth)
             .attr('y', (d) => d.y * this.gridHeight)
-            .attr('rx', 4)
-            .attr('ry', 4)
+            // .attr('rx', 4)
+            // .attr('ry', 4)
             .attr('class', 'hour bordered')
             .attr('width', this.gridWidth)
             .attr('height', this.gridHeight)
             .merge(cards)
             .transition()
             .duration(1000)
-            .style('fill', (d) => colorScale(d.value));
+            .style('fill', (d) => this.colorScale(d.value));
 
         cards.exit().remove();
-        const legends = [-3, -2, -1, 0, 1, 2, 3];
+        const legends = [3, 2, 1, 0, -1, -2, -3];
         const legend = this.svg.selectAll('.legend').data(legends);
 
         const legendEnter = legend.enter().append('g').attr('class', 'legend');
@@ -113,7 +105,7 @@ export default class GlobalHeatmapRobot extends globalHeatMapSVG {
             .attr('y', (d, i) => this.gridHeight * i) // Adjust vertical position based on index
             .attr('width', this.gridWidth * 1.5)
             .attr('height', this.gridHeight / 2)
-            .style('fill', (d, i) => colorScale(legends[i]));
+            .style('fill', (d, i) => this.colorScale(legends[i]));
 
         legendEnter
             .append('text')

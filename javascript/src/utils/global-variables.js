@@ -1,5 +1,7 @@
+import * as d3 from 'd3';
 const globalVariables = {
-    nameObsMap: { // Name to the obs column name mapping
+    nameObsMap: {
+        // Name to the obs column name mapping
         LF_HAA: 'LF_HAA',
         LF_HFE: 'LF_HFE',
         LF_KFE: 'LF_KFE',
@@ -43,6 +45,12 @@ const globalVariables = {
     onlyMoveOneObs: null,
 
     rightSvgWindowSize: 400,
+    globalHeatMapGridNum: 300,
+    smallHeatMapGridNum: 30,
+
+    HeatmapColorScale: d3
+        .scaleSequential((t) => d3.interpolateRdBu(1 - t))
+        .domain([-3.14, 3.14]),
 };
 
 export default globalVariables;

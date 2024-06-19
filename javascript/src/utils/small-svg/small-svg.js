@@ -100,9 +100,7 @@ class SmallHeatMapSVG extends smallSVG {
         this.gridNum = gridNum;
         this.gridWidth = this.width / gridNum;
 
-        this.colorScale = d3
-            .scaleSequential(d3.interpolateRdBu)
-            .domain([-3.14, 3.14]);
+        this.colorScale = globalVariables.HeatmapColorScale;
         this.setup();
     }
 

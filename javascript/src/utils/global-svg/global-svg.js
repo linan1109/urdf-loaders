@@ -128,6 +128,8 @@ class globalHeatMapSVG extends globalPlotSVG {
         // variables to set in child class
         this.dataLength = 0;
         this.brushedWidth = null;
+        
+        this.colorScale = globalVariables.HeatmapColorScale;
 
         this.initSvg();
     }
