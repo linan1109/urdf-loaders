@@ -63,6 +63,8 @@ const globalHeatmapSelection = document.getElementById(
     'global-heatmap-selection',
 );
 
+const onlyObsSelect = document.getElementById('only-obs-select');
+
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
@@ -863,8 +865,26 @@ const updateAnymal = () => {
             }
             return;
         }
-        for (let i = 0; i < names.length; i++) {
-            viewer.setJointValue(robotNum, names[i], parseFloat(mov[names[i]]));
+        if (globalVariables.onlyMoveOneObs === null) {
+            for (let i = 0; i < names.length; i++) {
+                viewer.setJointValue(
+                    robotNum,
+                    names[i],
+                    parseFloat(mov[names[i]]),
+                );
+            }
+        } else {
+            for (let i = 0; i < names.length; i++) {
+                if (names[i] === globalVariables.onlyMoveOneObs) {
+                    viewer.setJointValue(
+                        robotNum,
+                        names[i],
+                        parseFloat(mov[names[i]]),
+                    );
+                } else {
+                    viewer.setJointValue(robotNum, names[i], 0);
+                }
+            }
         }
 
         viewer.setRobotPosition(robotNum, {
@@ -880,6 +900,15 @@ const updateAnymal = () => {
         });
     }
 };
+
+onlyObsSelect.addEventListener('change', () => {
+    const obsName = onlyObsSelect.value;
+    if (obsName === 'all') {
+        globalVariables.onlyMoveOneObs = null;
+    } else {
+        globalVariables.onlyMoveOneObs = obsName;
+    }
+});
 
 const getCurrentMovementTime = () => {
     return globalTimer.getCurrent();

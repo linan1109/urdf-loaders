@@ -40,6 +40,8 @@ const globalVariables = {
 
     addedRobotCount: 1,
 
+    onlyMoveOneObs: null,
+
     rightSvgWindowSize: 400,
 };
 

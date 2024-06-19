@@ -164,10 +164,10 @@ input:focus {
     opacity: 1;
 }
 
-#up-select {
+/* #up-select {
     width: 70px;
     margin: 0 20px;
-}
+} */
 
 #menu {
     position: absolute;

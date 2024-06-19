@@ -36,7 +36,39 @@
                 <div id="controls" class="hidden">
                     &nbsp;ANYmal&nbsp;&nbsp;
                     <div id="toggle-controls"></div>
+                    
                     <button id="add-robot-button" class="beautful-button">Add a robot</button>
+                    <label>
+                        Up Axis:&nbsp;
+                        <select id="up-select">
+                            <option value="+X">+X</option>
+                            <option value="-X">-X</option>
+                            <option value="+Y">+Y</option>
+                            <option value="-Y">-Y</option>
+                            <option value="+Z" selected>+Z</option>
+                            <option value="-Z">-Z</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Move Only:&nbsp;
+                        <select id="only-obs-select">
+                            <option value="all" selected>All</option>
+                            <option value="LF_HAA">LF_HAA</option>
+                            <option value="LF_HFE">LF_HFE</option>
+                            <option value="LF_KFE">LF_KFE</option>
+                            <option value="RF_HAA">RF_HAA</option>
+                            <option value="RF_HFE">RF_HFE</option>
+                            <option value="RF_KFE">RF_KFE</option>
+                            <option value="LH_HAA">LH_HAA</option>
+                            <option value="LH_HFE">LH_HFE</option>
+                            <option value="LH_KFE">LH_KFE</option>
+                            <option value="RH_HAA">RH_HAA</option>
+                            <option value="RH_HFE">RH_HFE</option>
+                            <option value="RH_KFE">RH_KFE</option>
+                        </select>
+                    </label>
+
                     <!-- <div>Drag and drop URDF files or folders! <br /> (Chrome Only)</div> -->
                     <div id="ignore-joint-limits" class="toggle">
                         Ignore Joint Limits
@@ -52,17 +84,7 @@
                     </div>
                     <div id="do-animate" class="toggle">Show Movement</div>
 
-                    <label>
-                        Up Axis
-                        <select id="up-select">
-                            <option value="+X">+X</option>
-                            <option value="-X">-X</option>
-                            <option value="+Y">+Y</option>
-                            <option value="-Y">-Y</option>
-                            <option value="+Z" selected>+Z</option>
-                            <option value="-Z">-Z</option>
-                        </select>
-                    </label>
+
                     
                 </div>
                 <div
