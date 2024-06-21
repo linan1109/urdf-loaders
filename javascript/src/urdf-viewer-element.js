@@ -151,9 +151,7 @@ export default class URDFViewer extends HTMLElement {
 
         // Init Robots
         this.robotNames = [0];
-        this.initialPositions = [
-            [0, 0, 0],
-        ];
+        this.initialPositions = [[0, 0, 0]];
         // colors for highlighting
         this.robotColors = this.robotNames.reduce((acc, name) => {
             acc[name] = {};
@@ -203,12 +201,45 @@ export default class URDFViewer extends HTMLElement {
         scene.add(world);
 
         // Add a stationary object
-        const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const boxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
+        const cube = new THREE.Mesh(boxGeometry, material);
         scene.add(cube);
 
-        const plane = new THREE.Mesh(
+        // Add the grid
+        const imageCanvas = document.createElement('canvas');
+        const context = imageCanvas.getContext('2d');
+
+        imageCanvas.width = imageCanvas.height = 128;
+
+        context.fillStyle = '#444';
+        context.fillRect(0, 0, 128, 128);
+
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, 64, 64);
+        context.fillRect(64, 64, 64, 64);
+
+        const textureCanvas = new THREE.CanvasTexture(imageCanvas);
+        textureCanvas.colorSpace = THREE.SRGBColorSpace;
+        textureCanvas.repeat.set(200, 200);
+        textureCanvas.wrapS = THREE.RepeatWrapping;
+        textureCanvas.wrapT = THREE.RepeatWrapping;
+
+        const materialCanvas = new THREE.MeshBasicMaterial({
+            map: textureCanvas,
+        });
+
+        const geometry = new THREE.PlaneGeometry(40, 40);
+
+        const meshCanvas = new THREE.Mesh(geometry, materialCanvas);
+        meshCanvas.rotation.x = -Math.PI / 2;
+        meshCanvas.scale.set(10, 10, 10);
+        meshCanvas.receiveShadow = true;
+        meshCanvas.position.y = -0.5;
+        scene.add(meshCanvas);
+
+        // Add a plane to catch shadows
+        const shadowPlane = new THREE.Mesh(
             new THREE.PlaneBufferGeometry(40, 40),
             new THREE.ShadowMaterial({
                 side: THREE.DoubleSide,
@@ -216,11 +247,11 @@ export default class URDFViewer extends HTMLElement {
                 opacity: 0.5,
             }),
         );
-        plane.rotation.x = -Math.PI / 2;
-        plane.position.y = -0.5;
-        plane.receiveShadow = true;
-        plane.scale.set(10, 10, 10);
-        scene.add(plane);
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = -0.5;
+        shadowPlane.receiveShadow = true;
+        shadowPlane.scale.set(10, 10, 10);
+        scene.add(shadowPlane);
 
         // Controls setup
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -238,7 +269,9 @@ export default class URDFViewer extends HTMLElement {
         this.renderer = renderer;
         this.camera = camera;
         this.controls = controls;
-        this.plane = plane;
+        this.plane = meshCanvas;
+        this.shadowPlane = shadowPlane;
+        this.meshCanvas = meshCanvas;
         this.directionalLight = dirLight;
         this.ambientLight = ambientLight;
 
@@ -406,7 +439,6 @@ export default class URDFViewer extends HTMLElement {
         //     }),
         // );
         // this.recenter();
-
     }
 
     // Set the joint with jointName to
@@ -571,6 +603,11 @@ export default class URDFViewer extends HTMLElement {
         );
     }
 
+    showMeshPlane(show) {
+        this.meshCanvas.visible = show;
+        this.redraw();
+    }
+
     /* Private Functions */
     // Updates the position of the plane to be at the
     // lowest point below the robot and focuses the
@@ -594,6 +631,7 @@ export default class URDFViewer extends HTMLElement {
             const center = bbox.getCenter(new THREE.Vector3());
             this.controls.target.y = center.y;
             this.plane.position.y = bbox.min.y - 1e-3;
+            this.shadowPlane.position.y = this.plane.position.y;
 
             const dirLight = this.directionalLight;
             dirLight.castShadow = this.displayShadow;
@@ -826,8 +864,12 @@ export default class URDFViewer extends HTMLElement {
 
         const PI = Math.PI;
         const HALFPI = PI / 2;
-        if (axis === 'X') { this.world.rotation.set(0, 0, sign === '+' ? HALFPI : -HALFPI); }
-        if (axis === 'Z') { this.world.rotation.set(sign === '+' ? -HALFPI : HALFPI, 0, 0); }
+        if (axis === 'X') {
+            this.world.rotation.set(0, 0, sign === '+' ? HALFPI : -HALFPI);
+        }
+        if (axis === 'Z') {
+            this.world.rotation.set(sign === '+' ? -HALFPI : HALFPI, 0, 0);
+        }
         if (axis === 'Y') this.world.rotation.set(sign === '+' ? 0 : PI, 0, 0);
     }
 

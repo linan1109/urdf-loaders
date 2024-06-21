@@ -29,10 +29,11 @@ customElements.define('urdf-viewer', URDFManipulator);
 // TODO: Remove this once modules or parcel is being used
 const viewer = document.querySelector('urdf-viewer');
 
-const limitsToggle = document.getElementById('ignore-joint-limits');
+// const limitsToggle = document.getElementById('ignore-joint-limits');
 const collisionToggle = document.getElementById('collision-toggle');
-const radiansToggle = document.getElementById('radians-toggle');
-const autocenterToggle = document.getElementById('autocenter-toggle');
+const showGridTextureToggle = document.getElementById('show-grid-texture-toggle');
+// const radiansToggle = document.getElementById('radians-toggle');
+// const autocenterToggle = document.getElementById('autocenter-toggle');
 const upSelect = document.getElementById('up-select');
 // const sliderList = document.querySelector('#controls ul');
 const controlsel = document.getElementById('controls');
@@ -83,25 +84,30 @@ const setColor = (color) => {
 
 // Events
 // toggle checkbox
-limitsToggle.addEventListener('click', () => {
-    limitsToggle.classList.toggle('checked');
-    viewer.ignoreLimits = limitsToggle.classList.contains('checked');
-});
+// limitsToggle.addEventListener('click', () => {
+//     limitsToggle.classList.toggle('checked');
+//     viewer.ignoreLimits = limitsToggle.classList.contains('checked');
+// });
 
-radiansToggle.addEventListener('click', () => {
-    radiansToggle.classList.toggle('checked');
-    Object.values(sliders).forEach((sl) => sl.update());
-});
+// radiansToggle.addEventListener('click', () => {
+//     radiansToggle.classList.toggle('checked');
+//     Object.values(sliders).forEach((sl) => sl.update());
+// });
 
 collisionToggle.addEventListener('click', () => {
     collisionToggle.classList.toggle('checked');
     viewer.showCollision = collisionToggle.classList.contains('checked');
 });
 
-autocenterToggle.addEventListener('click', () => {
-    autocenterToggle.classList.toggle('checked');
-    viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
+showGridTextureToggle.addEventListener('click', () => {
+    showGridTextureToggle.classList.toggle('checked');
+    viewer.showMeshPlane(showGridTextureToggle.classList.contains('checked'));
 });
+
+// autocenterToggle.addEventListener('click', () => {
+//     autocenterToggle.classList.toggle('checked');
+//     viewer.noAutoRecenter = !autocenterToggle.classList.contains('checked');
+// });
 
 togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
