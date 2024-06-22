@@ -18,7 +18,7 @@ export default class SnapShotDiv {
         this.topText.style.borderBottom = '1px solid black';
 
         this.img = document.createElement('img');
-        this.img.src = imgSrc; 
+        this.img.src = imgSrc;
         this.img.style.height = '100%';
         this.img.style.objectFit = 'cover';
 

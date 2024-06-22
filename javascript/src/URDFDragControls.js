@@ -21,10 +21,27 @@ function findNearestJoint(child) {
         curr = curr.parent;
 
     }
-
     return curr;
 
 };
+
+function findNearestRobot(child) {
+
+    let curr = child;
+    while (curr) {
+
+        if (curr.isURDFRobot) {
+
+            return curr;
+
+        }
+
+        curr = curr.parent;
+
+    }
+    return curr;
+
+}
 
 const prevHitPoint = new Vector3();
 const newHitPoint = new Vector3();
@@ -46,6 +63,7 @@ export class URDFDragControls {
         this.hitDistance = -1;
         this.hovered = null;
         this.manipulating = null;
+        this.hoveredRobot = null;
 
     }
 
@@ -56,6 +74,7 @@ export class URDFDragControls {
             hovered,
             manipulating,
             scene,
+            hoveredRobot,
         } = this;
 
         if (manipulating) {
@@ -65,21 +84,24 @@ export class URDFDragControls {
         }
 
         let hoveredJoint = null;
+        let newhoveredRobot = null;
         const intersections = raycaster.intersectObject(scene, true);
         if (intersections.length !== 0) {
 
             const hit = intersections[0];
             this.hitDistance = hit.distance;
             hoveredJoint = findNearestJoint(hit.object);
+            newhoveredRobot = findNearestRobot(hit.object);
             this.initialGrabPoint.copy(hit.point);
 
         }
 
+        this.hoveredRobot = newhoveredRobot;
         if (hoveredJoint !== hovered) {
 
             if (hovered) {
 
-                this.onUnhover(hovered);
+                this.onUnhover(hovered, hoveredRobot);
 
             }
 
@@ -87,7 +109,7 @@ export class URDFDragControls {
 
             if (hoveredJoint) {
 
-                this.onHover(hoveredJoint);
+                this.onHover(hoveredJoint, newhoveredRobot);
 
             }
 
@@ -95,25 +117,25 @@ export class URDFDragControls {
 
     }
 
-    updateJoint(joint, angle) {
+    updateJoint(joint, angle, robot) {
 
         joint.setJointValue(angle);
 
     }
 
-    onDragStart(joint) {
+    onDragStart(joint, robot) {
 
     }
 
-    onDragEnd(joint) {
+    onDragEnd(joint, robot) {
 
     }
 
-    onHover(joint) {
+    onHover(joint, robot) {
 
     }
 
-    onUnhover(joint) {
+    onUnhover(joint, robot) {
 
     }
 
@@ -181,7 +203,7 @@ export class URDFDragControls {
 
             if (delta) {
 
-                this.updateJoint(manipulating, manipulating.angle + delta);
+                this.updateJoint(manipulating, manipulating.angle + delta, this.hoveredRobot);
 
             }
 
@@ -205,7 +227,7 @@ export class URDFDragControls {
             }
 
             this.manipulating = hovered;
-            this.onDragStart(hovered);
+            this.onDragStart(hovered, this.hoveredRobot);
 
         } else {
 
@@ -213,7 +235,7 @@ export class URDFDragControls {
                 return;
             }
 
-            this.onDragEnd(this.manipulating);
+            this.onDragEnd(this.manipulating, this.hoveredRobot);
             this.manipulating = null;
             this.update();
 
@@ -235,7 +257,6 @@ export class PointerURDFDragControls extends URDFDragControls {
         const mouse = new Vector2();
 
         function updateMouse(e) {
-
             mouse.x = ((e.pageX - domElement.offsetLeft) / domElement.offsetWidth) * 2 - 1;
             mouse.y = -((e.pageY - domElement.offsetTop) / domElement.offsetHeight) * 2 + 1;
 

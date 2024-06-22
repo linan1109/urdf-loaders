@@ -318,7 +318,6 @@ export default class URDFViewer extends HTMLElement {
                     if (!this.noAutoRecenter) {
                         this._updateEnvironment();
                     }
-
                     this.renderer.render(scene, camera);
                     this._dirty = false;
                 }
@@ -654,6 +653,18 @@ export default class URDFViewer extends HTMLElement {
         a.click();
         return img;
     }
+
+    findRobotByUUID(uuid) {
+        let index = -1;
+        for (index = 0; index < this.robots.length; index++) {
+            if (this.robots[index].uuid === uuid) {
+                console.log('findRobotByUUID', index);
+                return index;
+            }
+        }
+        return index;
+    }
+
 
     /* Private Functions */
     // Updates the position of the plane to be at the
