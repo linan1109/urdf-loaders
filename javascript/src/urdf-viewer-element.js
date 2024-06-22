@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from './URDFLoader.js';
-import { index, timeout } from 'd3';
+// import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
 const emptyRaycast = () => {};
@@ -30,6 +30,7 @@ export default class URDFViewer extends HTMLElement {
             'ambient-color',
             'ignore-limits',
             'show-collision',
+            'show-grid',
         ];
     }
 
@@ -106,6 +107,16 @@ export default class URDFViewer extends HTMLElement {
         val
             ? this.setAttribute('show-collision', true)
             : this.removeAttribute('show-collision');
+    }
+
+    get showGrid() {
+        // default to false
+        return this.hasAttribute('show-grid') || false;
+    }
+    set showGrid(val) {
+        val
+            ? this.setAttribute('show-grid', true)
+            : this.removeAttribute('show-grid');
     }
 
     // get jointValues() {
@@ -237,6 +248,7 @@ export default class URDFViewer extends HTMLElement {
         meshCanvas.receiveShadow = true;
         meshCanvas.position.y = -0.5;
         scene.add(meshCanvas);
+        if (!this.showGrid) meshCanvas.visible = false;
 
         // Add a plane to catch shadows
         const shadowPlane = new THREE.Mesh(
@@ -604,6 +616,7 @@ export default class URDFViewer extends HTMLElement {
     }
 
     showMeshPlane(show) {
+        this.showGrid = show;
         this.meshCanvas.visible = show;
         this.redraw();
     }
@@ -777,7 +790,9 @@ export default class URDFViewer extends HTMLElement {
                 let robot = null;
                 const manager = new THREE.LoadingManager();
                 manager.onLoad = () => {
-                    if (0) {
+                    // If another request has come in to load a new
+                    // robot, then ignore this one
+                    if (this._requestId !== requestId) {
                         robot.traverse((c) => c.dispose && c.dispose());
                         return;
                     }
