@@ -31,6 +31,7 @@ export default class URDFViewer extends HTMLElement {
             'ignore-limits',
             'show-collision',
             'show-grid',
+            'use-wireframe',
         ];
     }
 
@@ -117,6 +118,15 @@ export default class URDFViewer extends HTMLElement {
         val
             ? this.setAttribute('show-grid', true)
             : this.removeAttribute('show-grid');
+    }
+
+    get useWireframe() {
+        return this.hasAttribute('use-wireframe') || false;
+    }
+    set useWireframe(val) {
+        val
+            ? this.setAttribute('use-wireframe', true)
+            : this.removeAttribute('use-wireframe');
     }
 
     // get jointValues() {
@@ -621,11 +631,26 @@ export default class URDFViewer extends HTMLElement {
         this.redraw();
     }
 
+    changeWireframe(show) {
+        this.useWireframe = show;
+        for (const robot in this.robots) {
+            if (this.robots[robot]) {
+                this.robots[robot].traverse((c) => {
+                    if (c.isMesh) {
+                        c.material.wireframe = show;
+                    }
+                });
+            }
+        }
+        this.redraw();
+    }
+
     /* Private Functions */
     // Updates the position of the plane to be at the
     // lowest point below the robot and focuses the
     // camera on the center of the scene
     _updateEnvironment() {
+        // need to update to select one robot to focus on
         const bbox = new THREE.Box3();
         bbox.makeEmpty();
         // for (const robot of this.robots) {
@@ -762,10 +787,12 @@ export default class URDFViewer extends HTMLElement {
                                 ).map((m) => {
                                     if (m instanceof THREE.MeshBasicMaterial) {
                                         m = new THREE.MeshPhongMaterial();
+                                        console.log('m is MeshBasicMaterial');
                                     }
                                     if (m.map) {
                                         m.map.colorSpace = THREE.SRGBColorSpace;
                                     }
+                                    m.wireframe = this.useWireframe;
                                     return m;
                                 });
                                 c.material = mats.length === 1 ? mats[0] : mats;

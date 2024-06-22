@@ -32,6 +32,7 @@ const viewer = document.querySelector('urdf-viewer');
 // const limitsToggle = document.getElementById('ignore-joint-limits');
 const collisionToggle = document.getElementById('collision-toggle');
 const showGridTextureToggle = document.getElementById('show-grid-texture-toggle');
+const wireframeToggle = document.getElementById('wireframe-toggle');
 // const radiansToggle = document.getElementById('radians-toggle');
 // const autocenterToggle = document.getElementById('autocenter-toggle');
 const upSelect = document.getElementById('up-select');
@@ -102,6 +103,11 @@ collisionToggle.addEventListener('click', () => {
 showGridTextureToggle.addEventListener('click', () => {
     showGridTextureToggle.classList.toggle('checked');
     viewer.showMeshPlane(showGridTextureToggle.classList.contains('checked'));
+});
+
+wireframeToggle.addEventListener('click', () => {
+    wireframeToggle.classList.toggle('checked');
+    viewer.changeWireframe(wireframeToggle.classList.contains('checked'));
 });
 
 // autocenterToggle.addEventListener('click', () => {
@@ -681,7 +687,7 @@ const plotsSVGRedraw = () => {
         globalHeatmapSelection.value = firstOption.value;
         changeGlobalPlot(firstOption.value, 'LineRobot');
     } else if (plotsGroupSelection.value === 'LineLink') {
-        plotsLinkOptionName.textContent = 'Plot Links:';
+        plotsLinkOptionName.textContent = 'Plot Joints:';
         plotsRobotOptionName.textContent = 'Highlight Robots:';
         globalVariables.groupByRobot = false;
         for (const key in globalVariables.checkedObs) {
@@ -726,7 +732,7 @@ const plotsSVGRedraw = () => {
         changeGlobalPlot(firstOption.value, 'HeatMapRobot');
     } else if (plotsGroupSelection.value === 'HeatMapLink') {
         globalVariables.groupByRobot = false;
-        plotsLinkOptionName.textContent = 'Plot Links:';
+        plotsLinkOptionName.textContent = 'Plot Joints:';
         plotsRobotOptionName.textContent = 'Highlight Robots:';
         for (const key in globalVariables.checkedObs) {
             addHeatMapObsSVG(globalVariables.checkedObs[key]);

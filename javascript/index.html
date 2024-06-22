@@ -36,8 +36,10 @@
                 <div id="controls" class="hidden">
                     &nbsp;ANYmal&nbsp;&nbsp;
                     <div id="toggle-controls"></div>
-                    
-                    <button id="add-robot-button" class="beautful-button">Add a robot</button>
+
+                    <button id="add-robot-button" class="beautful-button">
+                        Add a robot
+                    </button>
                     <label>
                         Up Axis:&nbsp;
                         <select id="up-select">
@@ -85,10 +87,10 @@
                     <div id="collision-toggle" class="toggle">
                         Show Collision
                     </div>
+                    <div id="wireframe-toggle" class="toggle">
+                        Show Wireframe
+                    </div>
                     <div id="do-animate" class="toggle">Show Movement</div>
-
-
-                    
                 </div>
                 <div
                     style="flex-direction: row"
@@ -102,10 +104,16 @@
                     <label>
                         Plots Option:
                         <select id="plots-group-selection">
-                            <option value="LineRobot" selected>Line Plot by Robot</option>
-                            <option value="LineLink">Line Plot by Link</option>
-                            <option value="HeatMapRobot">Heat Map by Robot</option>
-                            <option value="HeatMapLink">Heat Map by Link</option>
+                            <option value="LineRobot" selected>
+                                Line Plot by Robot
+                            </option>
+                            <option value="LineLink">Line Plot by Joint</option>
+                            <option value="HeatMapRobot">
+                                Heat Map by Robot
+                            </option>
+                            <option value="HeatMapLink">
+                                Heat Map by Joint
+                            </option>
                         </select>
                     </label>
                     <div id="plots-link-option-name"></div>
@@ -131,7 +139,7 @@
                 </label>
                 <select id="global-heatmap-selection"></select>
             </div>
-            <div id="golbal-heatmap-container" ></div>
+            <div id="golbal-heatmap-container"></div>
         </global-heatmap-part>
         <script src="./src/index.js"></script>
     </body>
