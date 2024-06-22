@@ -656,15 +656,14 @@ export default class URDFViewer extends HTMLElement {
 
     findRobotByUUID(uuid) {
         let index = -1;
-        for (index = 0; index < this.robots.length; index++) {
-            if (this.robots[index].uuid === uuid) {
-                console.log('findRobotByUUID', index);
-                return index;
+        for (const robot in this.robots) {
+            index++;
+            if (this.robots[robot].uuid === uuid) {
+                break;
             }
         }
         return index;
     }
-
 
     /* Private Functions */
     // Updates the position of the plane to be at the
