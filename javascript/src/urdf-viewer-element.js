@@ -645,6 +645,16 @@ export default class URDFViewer extends HTMLElement {
         this.redraw();
     }
 
+    snapShot() {
+        this.renderer.render(this.scene, this.camera);
+        const img = this.renderer.domElement.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = img;
+        a.download = 'urdf-viewer-snapshot.png';
+        a.click();
+        return img;
+    }
+
     /* Private Functions */
     // Updates the position of the plane to be at the
     // lowest point below the robot and focuses the

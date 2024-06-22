@@ -18,6 +18,7 @@ import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
 import GlobalHeatmapObs from './utils/global-svg/global-heatmap-obs.js';
+import SnapShotDiv from './utils/snap-shot.js';
 
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
@@ -33,6 +34,8 @@ const viewer = document.querySelector('urdf-viewer');
 const collisionToggle = document.getElementById('collision-toggle');
 const showGridTextureToggle = document.getElementById('show-grid-texture-toggle');
 const wireframeToggle = document.getElementById('wireframe-toggle');
+const snapShotButton = document.getElementById('snap-shot-button');
+const snapShotImg = document.getElementById('snap-shot-img');
 // const radiansToggle = document.getElementById('radians-toggle');
 // const autocenterToggle = document.getElementById('autocenter-toggle');
 const upSelect = document.getElementById('up-select');
@@ -117,6 +120,13 @@ wireframeToggle.addEventListener('click', () => {
 
 togglePlotsControls.addEventListener('click', () => {
     plotsControls.classList.toggle('hidden');
+});
+
+snapShotButton.addEventListener('click', () => {
+    const img = viewer.snapShot();
+    while (snapShotImg.firstChild) snapShotImg.removeChild(snapShotImg.firstChild);
+    const snapShot = new SnapShotDiv(img, globalTimer.getCurrent());
+    snapShotImg.appendChild(snapShot.snapShotDiv);
 });
 
 globalHeatmapSelection.addEventListener('change', (e) => {
