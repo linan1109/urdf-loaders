@@ -44,7 +44,7 @@ export default class GlobalHeatmapRobot extends globalHeatMapSVG {
         const numXLables = Math.floor(this.gridNum / 10);
 
         const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
-            (d) => (d * this.dataLength) / numXLables,
+            (d) => Math.floor((d * this.dataLength) / numXLables),
         );
 
         const yLabels = this.yLabels;

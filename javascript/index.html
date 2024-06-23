@@ -99,9 +99,7 @@
                     style="flex-direction: row"
                     id="robot-control-container"
                 ></div>
-            <div id="snap-shot-img">
-                
-            </div>
+                <div id="snap-shot-img"></div>
             </div>
 
             <plots-part>
@@ -139,11 +137,22 @@
             <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>
         </div>
         <global-heatmap-part>
-            <div>
-                <label for="global-heatmap-selection">
-                    Global Plot: &nbsp;&nbsp;
+            <div id="global-plots-controls">
+                <label>
+                    Plots Option:&nbsp;&nbsp;
+                    <select id="global-group-selection">
+                        <option value="LineRobot" selected>
+                            Line Plot by Robot
+                        </option>
+                        <option value="LineLink">Line Plot by Joint</option>
+                        <option value="HeatMapRobot">Heat Map by Robot</option>
+                        <option value="HeatMapLink">Heat Map by Joint</option>
+                    </select>
                 </label>
-                <select id="global-heatmap-selection"></select>
+                <label for="global-heatmap-selection">
+                    Select One: &nbsp;&nbsp;
+                    <select id="global-heatmap-selection"></select>
+                </label>
             </div>
             <div id="golbal-heatmap-container"></div>
         </global-heatmap-part>
