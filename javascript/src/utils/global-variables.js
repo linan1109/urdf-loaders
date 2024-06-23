@@ -51,6 +51,8 @@ const globalVariables = {
     HeatmapColorScale: d3
         .scaleSequential((t) => d3.interpolateRdBu(1 - t))
         .domain([-3.14, 3.14]),
+
+    colorForPointTrajectory: 0x0000ff,
 };
 
 export default globalVariables;

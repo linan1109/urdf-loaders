@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import URDFLoader from './URDFLoader.js';
+import globalVariables from './utils/global-variables.js';
 // import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
@@ -297,6 +298,14 @@ export default class URDFViewer extends HTMLElement {
         this.directionalLight = dirLight;
         this.ambientLight = ambientLight;
 
+        this.trajectoryList = [];
+        this.PointForTrajectory = null;
+        this.JointForTrajectory = null;
+        const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(this.trajectoryList);
+        this.trajectoryMaterial = new THREE.LineBasicMaterial({ color: globalVariables.colorForPointTrajectory, transparent: true, opacity: 1 });
+        this.trajectoryLine = new THREE.Line(trajectoryGeometry, this.trajectoryMaterial);
+        scene.add(this.trajectoryLine);
+
         this._setUp(this.up);
 
         this._collisionMaterial = new MeshPhongMaterial({
@@ -318,6 +327,7 @@ export default class URDFViewer extends HTMLElement {
                     if (!this.noAutoRecenter) {
                         this._updateEnvironment();
                     }
+
                     this.renderer.render(scene, camera);
                     this._dirty = false;
                 }
@@ -411,6 +421,24 @@ export default class URDFViewer extends HTMLElement {
 
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
+
+        this.updateTrajectory();
+    }
+
+    updateTrajectory() {
+        if (this.PointForTrajectory === null) return;
+        const point = this.PointForTrajectory;
+        const joint = this.JointForTrajectory;
+        const pointWorldPos = point.clone().applyMatrix4(joint.matrixWorld);
+        this.trajectoryList.push(pointWorldPos);
+        if (this.trajectoryList.length > 100) {
+            this.trajectoryList.shift();
+        }
+        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
+        // this.trajectoryMaterial.opacity *= 0.99;
+        // if (this.trajectoryMaterial.opacity < 0.01) {
+        //     this.trajectoryMaterial.opacity = 1;
+        // }
     }
 
     redraw() {

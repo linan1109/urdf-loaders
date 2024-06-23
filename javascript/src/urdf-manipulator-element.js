@@ -146,12 +146,17 @@ export default class URDFManipulator extends URDFViewer {
             this.redraw();
         };
 
+        dragControls.onClick = (joint, robot, point) => {
+            this.updateSelectedPoint(joint, robot, point);
+        };
+
         this.dragControls = dragControls;
     }
 
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this.dragControls.dispose();
+    updateSelectedPoint(joint, robot, point) {
+        this.JointForTrajectory = joint;
+        this.PointForTrajectory = point;
+        this.robotForTrajectory = robot;
     }
 
     attributeChangedCallback(attr, oldval, newval) {
