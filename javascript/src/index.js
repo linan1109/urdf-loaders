@@ -18,7 +18,7 @@ import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
 import GlobalHeatmapObs from './utils/global-svg/global-heatmap-obs.js';
-import SnapShotDiv from './utils/snap-shot.js';
+import SnapShotDiv from './utils/snapshot.js';
 
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
