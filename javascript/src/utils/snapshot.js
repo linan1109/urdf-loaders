@@ -10,7 +10,7 @@ export default class SnapShotDiv {
         this.snapShotDiv.style.border = '1px solid black';
 
         this.topText = document.createElement('div');
-        this.topText.innerHTML = 'Snap Shot ' + current;
+        this.topText.innerHTML = 'Snapshot ' + current;
         this.topText.style.position = 'absolute';
         this.topText.style.top = '0';
         this.topText.style.left = '0';
