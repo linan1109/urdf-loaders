@@ -45,6 +45,7 @@ const globalVariables = {
     onlyMoveOneObs: null,
 
     rightSvgWindowSize: 400,
+
     globalHeatMapGridNum: 300,
     smallHeatMapGridNum: 30,
 
@@ -53,6 +54,8 @@ const globalVariables = {
         .domain([-3.14, 3.14]),
 
     colorForPointTrajectory: 0x0000ff,
+
+    useOffset: false,
 };
 
 export default globalVariables;

@@ -128,7 +128,9 @@ togglePlotsControls.addEventListener('click', () => {
 
 snapShotButton.addEventListener('click', () => {
     const img = viewer.snapShot();
-    while (snapShotImg.firstChild) { snapShotImg.removeChild(snapShotImg.firstChild); }
+    while (snapShotImg.firstChild) {
+        snapShotImg.removeChild(snapShotImg.firstChild);
+    }
     const snapShot = new SnapShotDiv(img, globalTimer.getCurrent());
     snapShotImg.appendChild(snapShot.snapShotDiv);
 });
@@ -466,6 +468,21 @@ const loadMovementFromCSV = (robotNum) => {
         console.log('Length:' + movementLength);
         console.log('Start index:' + globalVariables.movementIndexStart);
 
+        // use the first movement as offset, decuct the offset from all the movements
+
+        console.log('Offset:');
+        console.log(movement[0]);
+        if (globalVariables.useOffset) {
+            const offset = movement[0];
+            console.log('Offset:');
+            console.log(offset);
+            for (let i = 0; i < movementLength; i++) {
+                for (const key in movement[i]) {
+                    movement[i][key] -= offset[key];
+                }
+            }
+        }
+
         if (movementContainer.hasMovement(robotNum)) {
             movementContainer.removeMovement(robotNum);
         }
@@ -502,7 +519,10 @@ const loadMovementFromCSV = (robotNum) => {
         }
 
         // add new robot option to global heatmap selection
-        if (globalHeatmapGroupBySelection.value === 'LineRobot' || globalHeatmapGroupBySelection.value === 'HeatMapRobot') {
+        if (
+            globalHeatmapGroupBySelection.value === 'LineRobot' ||
+            globalHeatmapGroupBySelection.value === 'HeatMapRobot'
+        ) {
             addNewRobotOptionToGlobalHeatmapSelection(robotNum);
         }
 

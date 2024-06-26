@@ -301,9 +301,18 @@ export default class URDFViewer extends HTMLElement {
         this.trajectoryList = [];
         this.PointForTrajectory = null;
         this.JointForTrajectory = null;
-        const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(this.trajectoryList);
-        this.trajectoryMaterial = new THREE.LineBasicMaterial({ color: globalVariables.colorForPointTrajectory, transparent: true, opacity: 1 });
-        this.trajectoryLine = new THREE.Line(trajectoryGeometry, this.trajectoryMaterial);
+        const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(
+            this.trajectoryList,
+        );
+        this.trajectoryMaterial = new THREE.LineBasicMaterial({
+            color: globalVariables.colorForPointTrajectory,
+            transparent: true,
+            opacity: 1,
+        });
+        this.trajectoryLine = new THREE.Line(
+            trajectoryGeometry,
+            this.trajectoryMaterial,
+        );
         scene.add(this.trajectoryLine);
 
         this._setUp(this.up);
@@ -609,7 +618,7 @@ export default class URDFViewer extends HTMLElement {
     setRobotVisibility(robot, visibility) {
         if (!this.robots[robot]) return;
         this.robots[robot].traverse((c) => {
-            if (c.isMesh) {
+            if (c.isMesh && !c.parent.isURDFCollider) {
                 c.visible = visibility;
             }
         });
@@ -917,6 +926,8 @@ export default class URDFViewer extends HTMLElement {
     }
 
     _updateCollisionVisibility() {
+        console.log('update collision visibility');
+        console.log(this.showCollision);
         const showCollision = this.showCollision;
         const collisionMaterial = this._collisionMaterial;
         const colliders = [];
