@@ -760,6 +760,16 @@ const plotsSVGRedraw = () => {
     if (plotsGroupSelection.value === 'LineRobot') {
         plotsLinkOptionName.textContent = 'Highlight Options:';
         plotsRobotOptionName.textContent = 'Plot Robots:';
+        plotsLinkOptionName.hidden = false;
+        plotsRobotOptionName.hidden = false;
+        plotsRobotControlsContainer.hidden = false;
+        plotsLinkControlsContainer.hidden = false;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = false;
+        }
         globalVariables.groupByRobot = true;
         for (const key in globalVariables.checkedRobots) {
             addRobotSVG(globalVariables.checkedRobots[key]);
@@ -767,21 +777,51 @@ const plotsSVGRedraw = () => {
     } else if (plotsGroupSelection.value === 'LineLink') {
         plotsLinkOptionName.textContent = 'Plot Joints:';
         plotsRobotOptionName.textContent = 'Highlight Robots:';
+
+        plotsLinkOptionName.hidden = false;
+        plotsRobotOptionName.hidden = false;
+        plotsRobotControlsContainer.hidden = false;
+        plotsLinkControlsContainer.hidden = false;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = false;
+        }
+
         globalVariables.groupByRobot = false;
         for (const key in globalVariables.checkedObs) {
             addObsSVG(globalVariables.checkedObs[key]);
         }
     } else if (plotsGroupSelection.value === 'HeatMapRobot') {
-        plotsLinkOptionName.textContent = 'Highlight Options:';
         plotsRobotOptionName.textContent = 'Plot Robots:';
+        plotsLinkOptionName.hidden = true;
+        plotsRobotOptionName.hidden = false;
+        plotsRobotControlsContainer.hidden = false;
+        plotsLinkControlsContainer.hidden = true;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = true;
+        }
         globalVariables.groupByRobot = true;
         for (const key in globalVariables.checkedRobots) {
             addHeatMapRobotSVG(globalVariables.checkedRobots[key]);
         }
     } else if (plotsGroupSelection.value === 'HeatMapLink') {
-        globalVariables.groupByRobot = false;
         plotsLinkOptionName.textContent = 'Plot Joints:';
-        plotsRobotOptionName.textContent = 'Highlight Robots:';
+        globalVariables.groupByRobot = false;
+        plotsLinkOptionName.hidden = false;
+        plotsRobotOptionName.hidden = true;
+        plotsRobotControlsContainer.hidden = true;
+        plotsLinkControlsContainer.hidden = false;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = true;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = false;
+        }
         for (const key in globalVariables.checkedObs) {
             addHeatMapObsSVG(globalVariables.checkedObs[key]);
         }
