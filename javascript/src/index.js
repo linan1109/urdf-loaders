@@ -629,8 +629,8 @@ const changeGlobalPlotToHeatmapRobot = (robotNum) => {
     const svg = new GlobalHeatmapRobot(
         robotNum,
         globalVariables.globalHeatMapGridNum,
-        globalHeatmapContainer.offsetWidth,
-        window.innerHeight * 0.2,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
     );
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;
@@ -644,8 +644,8 @@ const changeGlobalPlotToLineRobot = (robotNum) => {
     }
     const svg = new GlobalLineChartRobot(
         robotNum,
-        globalHeatmapContainer.offsetWidth,
-        window.innerHeight * 0.2,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
     );
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;
@@ -660,8 +660,8 @@ const changeGlobalPlotToHeatmapObs = (obsName) => {
     const svg = new GlobalHeatmapObs(
         obsName,
         globalVariables.globalHeatMapGridNum,
-        globalHeatmapContainer.offsetWidth,
-        window.innerHeight * 0.2,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
     );
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;
@@ -675,8 +675,8 @@ const changeGlobalPlotToLineObs = (obsName) => {
     }
     const svg = new GlobalLineChartObs(
         obsName,
-        globalHeatmapContainer.offsetWidth,
-        window.innerHeight * 0.2,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
     );
     const svgNode = svg.svg.node();
     globalHeatmapSvg = svg;

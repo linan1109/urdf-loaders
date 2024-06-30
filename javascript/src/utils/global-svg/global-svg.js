@@ -2,16 +2,15 @@ import globalVariables from '../global-variables.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import * as d3 from 'd3';
-import { or } from 'three/examples/jsm/nodes/Nodes.js';
 
 class globalPlotSVG {
 
     constructor(offsetWidth, offsetHeight) {
         this.offsetWidth = offsetWidth;
         this.offsetHeight = offsetHeight;
-        this.margin = { top: 20, right: 20, bottom: 0, left: 30 };
+        this.margin = { top: 20, right: 10, bottom: 40, left: 10 };
         this.maxWidth =
-            0.85 * (offsetWidth - this.margin.left - this.margin.right);
+            0.90 * (offsetWidth - this.margin.left - this.margin.right);
         this.maxHeight =
             0.85 * (offsetHeight - this.margin.top - this.margin.bottom);
 
@@ -119,11 +118,12 @@ class globalHeatMapSVG extends globalPlotSVG {
         this.gridNum = gridNum;
 
         this.gridWidth = this.maxWidth / this.gridNum;
-        this.gridHeight = this.maxHeight / 12;
+        this.maxGridHeight = this.gridWidth * 2;
+        this.gridHeight = Math.min(this.maxGridHeight, this.maxHeight / 12);
         // this.width = this.gridSize * this.gridNum;
         // this.height = this.gridSize * 12;
         this.width = this.maxWidth;
-        this.height = this.maxHeight;
+        this.height = this.gridHeight * 12;
         this.yLabels = Object.values(globalVariables.nameObsMap);
 
         // variables to set in child class
@@ -215,6 +215,38 @@ class globalHeatMapSVG extends globalPlotSVG {
             d3.select(nodes[i]).node().appendChild(smallHeatmap);
         });
 
+        const arcLegend = d3.range(-3.1, 3.14, 0.1);
+        const arclegentWidth = this.maxWidth / arcLegend.length;
+        for (let i = 0; i < arcLegend.length; i++) {
+            const legend = arcLegend[i];
+            const arc = d3
+                .arc()
+                .innerRadius(5)
+                .outerRadius(10)
+                .startAngle(0);
+
+            // add background full circle
+            this.svg
+                .append('path')
+                .datum({endAngle: 2 * Math.PI })
+                .attr('d', arc)
+                .attr('transform', `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`)
+                .style('fill', 'lightgray');
+
+            this.svg
+                .append('path')
+                .datum({endAngle: legend })
+                .attr('d', arc)
+                .attr('transform', `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`)
+                .style('fill', this.colorScale(legend));
+
+            this.svg
+                .append('text')
+                .text(`${ legend.toFixed(1) }`)
+                .attr('x', i * arclegentWidth + 15)
+                .attr('y', this.height + 35)
+                .style('text-anchor', 'middle');
+        }
         const legends = [3, 2, 1, 0, -1, -2, -3];
         const legend = this.svg.selectAll('.legend').data(legends);
 

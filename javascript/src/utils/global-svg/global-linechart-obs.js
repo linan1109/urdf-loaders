@@ -22,16 +22,18 @@ export default class GlobalLineChartObs extends GlobalLineChartSVG {
                 parseFloat(d[globalVariables.nameObsMap[this.obsName]]),
             );
         }
-        const yMin = d3.min(Object.values(this.all_y).flat());
-        const yMax = d3.max(Object.values(this.all_y).flat());
+        // const yMin = d3.min(Object.values(this.all_y).flat());
+        // const yMax = d3.max(Object.values(this.all_y).flat());
+        const yMin = -4;
+        const yMax = 4;
         this.yScale = d3
             .scaleLinear()
             .domain([yMin, yMax])
-            .range([this.height - this.margin.bottom, this.margin.top]);
+            .range([this.height, 0]);
         this.xScale = d3
             .scaleLinear()
             .domain(d3.extent(this.all_x))
-            .range([this.margin.left, this.width - this.margin.right]);
+            .range([0, this.width]);
 
         this.points = [];
         for (const key of movementContainer.robotNums) {
@@ -65,7 +67,7 @@ export default class GlobalLineChartObs extends GlobalLineChartSVG {
             .append('g')
             .attr(
                 'transform',
-                `translate(0,${ this.height - this.margin.bottom })`,
+                `translate(0,${ this.height })`,
             )
             .attr('class', 'xaxis')
             .call(
@@ -96,7 +98,7 @@ export default class GlobalLineChartObs extends GlobalLineChartSVG {
         // add y axis
         this.svg
             .append('g')
-            .attr('transform', `translate(${ this.margin.left },0)`)
+            .attr('transform', `translate(${ 0 },0)`)
             .attr('class', 'yaxis')
             .call(d3.axisLeft(this.yScale))
             .call((g) => g.select('.domain').remove())
@@ -112,18 +114,9 @@ export default class GlobalLineChartObs extends GlobalLineChartSVG {
                     .clone()
                     .attr(
                         'x2',
-                        this.width - this.margin.left - this.margin.right,
+                        this.width,
                     )
                     .attr('stroke-opacity', 0.1),
-            )
-            .call((g) =>
-                g
-                    .append('text')
-                    .attr('x', -this.margin.left)
-                    .attr('y', 10)
-                    .attr('fill', 'black')
-                    .attr('text-anchor', 'start')
-                    .text(this.obsName),
             )
             .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
 

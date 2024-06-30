@@ -569,7 +569,7 @@ global-heatmap-part > div {
 .beautiful-slider {
     position: absolute;
     background-color: #f32121;
-    opacity: 0.7;
+    opacity: 0;
 }
 
 #slider-plots-part {

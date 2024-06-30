@@ -10,7 +10,7 @@ export default class GlobalHeatmapObs extends globalHeatMapSVG {
         this.yLabels = movementContainer.robotNums.map(
             (robotNum) => 'Robot ' + robotNum,
         );
-        this.gridHeight = this.height / Math.max(this.yLabels.length, 12);
+        this.gridHeight = Math.min(this.height / Math.max(this.yLabels.length, 12), this.maxGridHeight);
         this.height = this.gridHeight * this.yLabels.length;
 
         this.initSvg();

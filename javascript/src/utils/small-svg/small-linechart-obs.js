@@ -192,8 +192,10 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
             );
         }
 
-        const yMin = d3.min(Object.values(this.all_y).flat());
-        const yMax = d3.max(Object.values(this.all_y).flat());
+        // const yMin = d3.min(Object.values(this.all_y).flat());
+        // const yMax = d3.max(Object.values(this.all_y).flat());
+        const yMin = -4;
+        const yMax = 4;
 
         // remove old axis
         this.svg.selectAll('.yaxis').remove();
