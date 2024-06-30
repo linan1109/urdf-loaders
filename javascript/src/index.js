@@ -37,7 +37,7 @@ const showGridTextureToggle = document.getElementById(
 );
 const wireframeToggle = document.getElementById('wireframe-toggle');
 const snapShotButton = document.getElementById('snap-shot-button');
-const snapShotImg = document.getElementById('snap-shot-img');
+const snapshotContainer = document.getElementById('snapshot-container');
 // const radiansToggle = document.getElementById('radians-toggle');
 // const autocenterToggle = document.getElementById('autocenter-toggle');
 const upSelect = document.getElementById('up-select');
@@ -84,6 +84,7 @@ const TopPart = document.getElementById('top-part');
 let sliders = {};
 const svgList = {};
 let globalHeatmapSvg = null;
+let snapShotDiv = null;
 
 // Global Functions
 const setColor = (color) => {
@@ -132,12 +133,16 @@ togglePlotsControls.addEventListener('click', () => {
 });
 
 snapShotButton.addEventListener('click', () => {
-    const img = viewer.snapShot();
-    while (snapShotImg.firstChild) {
-        snapShotImg.removeChild(snapShotImg.firstChild);
+    viewer.snapShot();
+});
+
+viewer.addEventListener('snapshot', (e) => {
+    const img = e.detail;
+    if (snapShotDiv === null) {
+        snapShotDiv = new SnapShotDiv(PlotsPart.offsetWidth);
+        snapshotContainer.appendChild(snapShotDiv.div);
     }
-    const snapShot = new SnapShotDiv(img, globalTimer.getCurrent());
-    snapShotImg.appendChild(snapShot.snapShotDiv);
+    snapShotDiv.addImage(img);
 });
 
 globalHeatmapSelection.addEventListener('change', (e) => {
@@ -405,6 +410,7 @@ sliderPlotsPart.addEventListener('pointerdown', (e) => {
 sliderPlotsPart.addEventListener('pointerup', (e) => {
     window.removeEventListener('pointermove', plotsPartOnPointMove);
     plotsSVGRedraw();
+    snapShotDiv.resize(PlotsPart.offsetWidth, PlotsPart.offsetHeight);
 });
 
 const globalPlotPartOnPointMove = (e) => {
@@ -416,8 +422,8 @@ const globalPlotPartOnPointMove = (e) => {
             0,
         );
         globalPlotPart.style.height = newHeightPercent + '%';
-        TopPart.style.height = (100 - newHeightPercent) + '%';
-        PlotsPart.style.height = (100 - newHeightPercent) + '%';
+        TopPart.style.height = 100 - newHeightPercent + '%';
+        PlotsPart.style.height = 100 - newHeightPercent + '%';
     }
 };
 

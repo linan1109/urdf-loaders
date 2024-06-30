@@ -1,63 +1,106 @@
 export default class SnapShotDiv {
 
-    constructor(imgSrc, current) {
-        this.snapShotDiv = document.createElement('div');
-        this.snapShotDiv.classList.add('snap-shot');
-        const height = window.innerHeight * 0.2;
-        this.snapShotDiv.style.height = height + 'px';
-        this.snapShotDiv.style.position = 'fixed';
-        this.snapShotDiv.style.left = '0';
-        this.snapShotDiv.style.border = '1px solid black';
+    constructor(offsetWidth, offsetHeight) {
+        this.offsetWidth = offsetWidth;
+        this.offsetHeight = offsetHeight;
 
-        this.topText = document.createElement('div');
-        this.topText.innerHTML = 'Snapshot ' + current;
-        this.topText.style.position = 'absolute';
-        this.topText.style.top = '0';
-        this.topText.style.left = '0';
-        this.topText.style.width = '100%';
-        this.topText.style.borderBottom = '1px solid black';
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
 
-        this.img = document.createElement('img');
-        this.img.src = imgSrc;
-        this.img.style.height = '100%';
-        this.img.style.objectFit = 'cover';
+        this.canvas.width = this.offsetWidth * 0.95;
+        this.maxWidth = this.canvas.width;
+        this.maxHeight = this.maxWidth * 0.6;
+        this.images = [];
+        this.IMAGE = null;
+        this.div = document.createElement('div');
+        this.div.className = 'snapshot-div';
+        this.imageDiv = document.createElement('div');
+        this.buttonDiv = document.createElement('div');
 
-        this.closeButton = document.createElement('div');
-        this.closeButton.innerHTML = 'X';
-        // this.closeButton.classList.add('beautful-button');
-        this.closeButton.addEventListener('click', () => {
-            this.snapShotDiv.remove();
+        const a = document.createElement('button');
+        a.className = 'beautful-button';
+        a.innerHTML = 'Download';
+        a.onclick = () => {
+            const link = document.createElement('a');
+            link.href = this.fullImage.src;
+            link.download = 'snapshot.png';
+            link.click();
+        };
+        a.style.marginRight = '10px';
+        this.buttonDiv.appendChild(a);
+
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = 'Close';
+        closeButton.className = 'beautful-button';
+        closeButton.onclick = () => {
+            this.clear();
+        };
+        this.buttonDiv.appendChild(closeButton);
+
+        this.div.appendChild(this.imageDiv);
+        this.div.appendChild(this.buttonDiv);
+
+        this.fullImage = null;
+        this.fullCanvas = document.createElement('canvas');
+        this.fullCtx = this.fullCanvas.getContext('2d');
+    }
+
+    update() {
+        if (this.images.length === 0) {
+            this.div.hidden = true;
+            return;
+        }
+        this.div.hidden = false;
+        const totalWidth = this.images.reduce((sum, img) => sum + img.width, 0);
+        const maxHeight = Math.max(...this.images.map((img) => img.height));
+        this.fullCanvas.width = totalWidth;
+        this.fullCanvas.height = maxHeight;
+        let x = 0;
+        this.images.forEach((img) => {
+            this.fullCtx.drawImage(img, x, 0, img.width, img.height);
+            x += img.width;
         });
-        this.closeButton.style.position = 'absolute';
-        this.closeButton.style.top = '0';
-        this.closeButton.style.right = '0';
-        this.closeButton.style.cursor = 'pointer';
-        this.closeButton.style.paddingRight = '5px';
+        this.fullImage = new Image();
+        this.fullImage.src = this.fullCanvas.toDataURL();
 
-        this.topText.appendChild(this.closeButton);
-        this.snapShotDiv.appendChild(this.topText);
-        this.snapShotDiv.appendChild(this.img);
+        const newimg = new Image();
+        newimg.src = this.fullImage.src;
+        // make image fit the canvas
+        const ratio = this.canvas.width / totalWidth;
+        newimg.width = this.canvas.width;
+        newimg.height = maxHeight * ratio;
+        if (newimg.height >= this.maxHeight) {
+            newimg.width = (this.maxHeight / newimg.height) * newimg.width;
+            newimg.height = this.maxHeight;
+        }
+        this.canvas.height = newimg.height;
 
-        this.isDragging = false;
-        this.offsetX = 0;
-        this.offsetY = 0;
+        newimg.onload = () => {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(newimg, 0, 0, newimg.width, newimg.height);
+            this.IMAGE = newimg;
+            this.imageDiv.innerHTML = '';
+            this.imageDiv.appendChild(this.canvas);
+        };
+    }
 
-        this.topText.addEventListener('mousedown', (e) => {
-            this.isDragging = true;
-            this.offsetX = e.offsetX;
-            this.offsetY = e.offsetY;
-        });
+    addImage(image) {
+        this.images.push(image);
+        this.update();
+    }
 
-        this.topText.addEventListener('mouseup', () => {
-            this.isDragging = false;
-        });
+    clear() {
+        this.images = [];
+        this.update();
+    }
 
-        this.snapShotDiv.addEventListener('mousemove', (e) => {
-            if (this.isDragging) {
-                this.snapShotDiv.style.left = e.clientX - this.offsetX + 'px';
-                this.snapShotDiv.style.top = e.clientY - this.offsetY + 'px';
-            }
-        });
+    resize(offsetWidth, offsetHeight) {
+        this.offsetWidth = offsetWidth;
+        this.offsetHeight = offsetHeight;
+        this.canvas.width = this.offsetWidth * 0.95;
+        this.maxWidth = this.canvas.width;
+        this.maxHeight = this.maxWidth * 0.7;
+        this.update();
     }
 
 }

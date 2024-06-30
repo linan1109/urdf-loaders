@@ -683,12 +683,75 @@ export default class URDFViewer extends HTMLElement {
 
     snapShot() {
         this.renderer.render(this.scene, this.camera);
-        const img = this.renderer.domElement.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = img;
-        a.download = 'urdf-viewer-snapshot.png';
-        a.click();
-        return img;
+        const imgDataURL = this.renderer.domElement.toDataURL('image/png');
+
+        const img = new Image();
+        img.src = imgDataURL;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+
+            let top = canvas.height;
+            let bottom = 0;
+            let left = canvas.width;
+            let right = 0;
+
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const index = (y * canvas.width + x) * 4;
+                    const alpha = data[index + 3];
+                    if (alpha > 0) {
+                        if (y < top) top = y;
+                        if (y > bottom) bottom = y;
+                        if (x < left) left = x;
+                        if (x > right) right = x;
+                    }
+                }
+            }
+
+            const width = right - left + 1;
+            const height = bottom - top + 1;
+
+            const newCanvas = document.createElement('canvas');
+            const newCtx = newCanvas.getContext('2d');
+
+            newCanvas.width = width;
+            newCanvas.height = height;
+
+            newCtx.drawImage(
+                canvas,
+                left,
+                top,
+                width,
+                height,
+                0,
+                0,
+                width,
+                height,
+            );
+
+            const newImg = new Image();
+            newImg.src = newCanvas.toDataURL('image/png');
+            newImg.onload = () => {
+                this.dispatchEvent(
+                    new CustomEvent('snapshot', {
+                        bubbles: true,
+                        cancelable: true,
+                        composed: true,
+                        detail: newImg,
+                    }),
+                );
+            };
+        };
     }
 
     findRobotByUUID(uuid) {
