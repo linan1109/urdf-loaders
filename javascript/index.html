@@ -21,7 +21,7 @@
     </head>
 
     <body tabindex="0" style="flex-direction: row">
-        <div style="width: 100%; height: 80%">
+        <div style="width: 100%; height: 80%" id="top-part">
             <div id="menu">
                 <ul id="urdf-options">
                     <li
@@ -137,7 +137,8 @@
 
             <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>
         </div>
-        <global-heatmap-part>
+        <global-heatmap-part id="global-heatmap-part">
+            <div id="slider-global-plots-part" class="beautiful-slider"></div>
             <div id="global-plots-controls">
                 <label>
                     Plots Option:&nbsp;&nbsp;

@@ -50,6 +50,7 @@ global-heatmap-part {
     position: absolute;
     float: center;
     flex-direction: row;
+    bottom: 0;
 }
 
 body {
@@ -567,13 +568,20 @@ global-heatmap-part > div {
 
 .beautiful-slider {
     position: absolute;
-    cursor: ew-resize;
     background-color: #f32121;
     opacity: 0.7;
 }
 
 #slider-plots-part {
+    cursor: ew-resize;
     width: 2px;
     height: 100%;
     left: 0;
+}
+
+#slider-global-plots-part {
+    cursor: ns-resize;
+    width: 100%;
+    height: 2px;
+    top: 0;
 }

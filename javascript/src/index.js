@@ -75,6 +75,10 @@ const globalHeatmapGroupBySelection = document.getElementById(
 const onlyObsSelect = document.getElementById('only-obs-select');
 const sliderPlotsPart = document.getElementById('slider-plots-part');
 const PlotsPart = document.getElementById('plots-part');
+const globalPlotPart = document.getElementById('global-heatmap-part');
+const sliderGlbalPlotPart = document.getElementById('slider-global-plots-part');
+const TopPart = document.getElementById('top-part');
+
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
@@ -381,6 +385,7 @@ const addListenerToNewRobot = (robotNumber) => {
     });
 };
 
+// slider part
 const plotsPartOnPointMove = (e) => {
     if (e.isPrimary) {
         const sliderPos = e.clientX;
@@ -401,6 +406,31 @@ sliderPlotsPart.addEventListener('pointerup', (e) => {
     window.removeEventListener('pointermove', plotsPartOnPointMove);
     plotsSVGRedraw();
 });
+
+const globalPlotPartOnPointMove = (e) => {
+    if (e.isPrimary) {
+        const sliderPos = e.clientY;
+        const newHeight = window.innerHeight - sliderPos;
+        const newHeightPercent = Math.max(
+            Math.min((newHeight / window.innerHeight) * 100, 100),
+            0,
+        );
+        globalPlotPart.style.height = newHeightPercent + '%';
+        TopPart.style.height = (100 - newHeightPercent) + '%';
+        PlotsPart.style.height = (100 - newHeightPercent) + '%';
+    }
+};
+
+sliderGlbalPlotPart.addEventListener('pointerdown', (e) => {
+    window.addEventListener('pointermove', globalPlotPartOnPointMove);
+});
+
+sliderGlbalPlotPart.addEventListener('pointerup', (e) => {
+    window.removeEventListener('pointermove', globalPlotPartOnPointMove);
+    globalHeatmapRedraw();
+});
+
+// end of slider part
 
 const addObsSelectToggles = () => {
     // ADD right bar selection
