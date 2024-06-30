@@ -844,7 +844,6 @@ export default class URDFViewer extends HTMLElement {
                                 ).map((m) => {
                                     if (m instanceof THREE.MeshBasicMaterial) {
                                         m = new THREE.MeshPhongMaterial();
-                                        console.log('m is MeshBasicMaterial');
                                     }
                                     if (m.map) {
                                         m.map.colorSpace = THREE.SRGBColorSpace;
@@ -926,8 +925,6 @@ export default class URDFViewer extends HTMLElement {
     }
 
     _updateCollisionVisibility() {
-        console.log('update collision visibility');
-        console.log(this.showCollision);
         const showCollision = this.showCollision;
         const collisionMaterial = this._collisionMaterial;
         const colliders = [];

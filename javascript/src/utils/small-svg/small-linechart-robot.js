@@ -12,6 +12,8 @@ export default class SmallLineChartRobot extends SmallLineChartSVG {
         this.movement = movementContainer.getMovement(robotNum);
         this.robotNum = robotNum;
         this.currentObs = null;
+
+        this.setup();
     }
 
     setup() {

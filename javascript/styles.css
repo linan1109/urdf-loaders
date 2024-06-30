@@ -563,3 +563,17 @@ global-heatmap-part > div {
     display: flex;
     
 }
+
+
+.beautiful-slider {
+    position: absolute;
+    cursor: ew-resize;
+    background-color: #f32121;
+    opacity: 0.7;
+}
+
+#slider-plots-part {
+    width: 2px;
+    height: 100%;
+    left: 0;
+}

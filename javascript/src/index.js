@@ -73,7 +73,8 @@ const globalHeatmapGroupBySelection = document.getElementById(
     'global-group-selection',
 );
 const onlyObsSelect = document.getElementById('only-obs-select');
-
+const sliderPlotsPart = document.getElementById('slider-plots-part');
+const PlotsPart = document.getElementById('plots-part');
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
@@ -379,6 +380,27 @@ const addListenerToNewRobot = (robotNumber) => {
         });
     });
 };
+
+const plotsPartOnPointMove = (e) => {
+    if (e.isPrimary) {
+        const sliderPos = e.clientX;
+        const newWidth = window.innerWidth - sliderPos;
+        const newWidthPercent = Math.max(
+            Math.min((newWidth / window.innerWidth) * 100, 100),
+            0,
+        );
+        PlotsPart.style.width = newWidthPercent + '%';
+    }
+};
+
+sliderPlotsPart.addEventListener('pointerdown', (e) => {
+    window.addEventListener('pointermove', plotsPartOnPointMove);
+});
+
+sliderPlotsPart.addEventListener('pointerup', (e) => {
+    window.removeEventListener('pointermove', plotsPartOnPointMove);
+    plotsSVGRedraw();
+});
 
 const addObsSelectToggles = () => {
     // ADD right bar selection

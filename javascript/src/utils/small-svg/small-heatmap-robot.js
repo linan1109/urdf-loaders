@@ -8,15 +8,20 @@ export default class SmallHeatmapRobot extends SmallHeatMapSVG {
 
     constructor(robotNum, gridNum, offsetWidth) {
         super(gridNum, offsetWidth);
-
+        this.robotNum = robotNum;
         this.data = movementContainer.getMovement(robotNum);
         this.dataLength = this.data.length;
         this.id = 'small-heatmap-robot' + robotNum;
+
+        this.setup();
+    }
+
+    setup() {
         this.yLabels = Object.values(globalVariables.nameObsMap);
         this.gridHeight = this.height / this.yLabels.length;
 
         this.createHeatmap();
-        
+
         this.svg.call((g) =>
             g
                 .append('text')
@@ -24,7 +29,7 @@ export default class SmallHeatmapRobot extends SmallHeatMapSVG {
                 .attr('y', -10)
                 .attr('text-anchor', 'middle')
                 .attr('font-size', 12)
-                .text('Robot ' + robotNum),
+                .text('Robot ' + this.robotNum),
         );
     }
 
@@ -58,7 +63,5 @@ export default class SmallHeatmapRobot extends SmallHeatMapSVG {
 
         return processedData;
     }
-
-
 
 }

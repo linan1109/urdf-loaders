@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import movementContainer from '../movement-container.js';
+// import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
@@ -42,6 +42,7 @@ class smallSVG {
     initMovement() {}
 
     // functions to be inherited
+
     updateWindowSize(windowSize) {
         this.windowSize = windowSize;
     }
@@ -66,11 +67,10 @@ class smallSVG {
 }
 class SmallLineChartSVG extends smallSVG {
 
-    constructor(offsetWidth) {
-        super(offsetWidth);
+    // constructor(offsetWidth) {
+    //     super(offsetWidth);
 
-        this.setup();
-    }
+    // }
 
     // functions to be inherited
     pointerentered() {
@@ -101,7 +101,6 @@ class SmallHeatMapSVG extends smallSVG {
         this.gridWidth = this.width / gridNum;
 
         this.colorScale = globalVariables.HeatmapColorScale;
-        this.setup();
     }
 
     createHeatmap() {

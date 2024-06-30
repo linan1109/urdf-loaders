@@ -12,12 +12,17 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
         // this.dataLength = this.data.length;
         this.id = 'small-heatmap-obs' + obsName;
         this.yLabels = movementContainer.robotNums;
+        this.obsName = obsName;
+
+        this.setup();
+    }
+
+    setup() {
         this.gridHeight = this.height / this.yLabels.length;
         if (this.gridHeight > 2 * this.gridWidth) {
             this.gridHeight = this.gridWidth;
             this.height = this.gridHeight * this.yLabels.length;
         }
-        this.obsName = obsName;
 
         this.createHeatmap();
         this.svg.call((g) =>
@@ -27,7 +32,7 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
                 .attr('y', -10)
                 .attr('text-anchor', 'middle')
                 .attr('font-size', 12)
-                .text(obsName),
+                .text(this.obsName),
         );
     }
 

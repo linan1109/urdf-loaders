@@ -11,6 +11,8 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
         super(offsetWidth);
         this.obsName = obsName; // key in nameObsMap
         this.currentMov = null;
+
+        this.setup();
     }
 
     setup() {
