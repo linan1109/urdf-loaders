@@ -172,8 +172,12 @@ export default class PositionSVG extends SmallLineChartSVG {
                     `translate(0,${ this.height - this.marginBottom })`,
                 )
                 .attr('class', 'xaxis')
-                .call(d3.axisBottom(this.xScale).ticks(5))
-                .call((g) => g.select('.domain').remove())
+                .call(
+                    d3
+                        .axisBottom(this.xScale)
+                        .ticks(this.width / 80)
+                        .tickSizeOuter(0),
+                )
                 .call((g) =>
                     g
                         .selectAll('.tick line')
@@ -182,22 +186,9 @@ export default class PositionSVG extends SmallLineChartSVG {
                 )
                 .call((g) =>
                     g
-                        .selectAll('.tick line')
-                        .clone()
-                        .attr(
-                            'y2',
-                            -this.height + this.marginTop + this.marginBottom,
-                        )
-                        .attr('stroke-opacity', 0.1),
-                )
-                .call((g) =>
-                    g
-                        .append('text')
-                        .attr('x', this.width - this.marginRight)
-                        .attr('y', 10)
-                        .attr('fill', 'black')
-                        .attr('text-anchor', 'end')
-                        .text('Time'),
+                        .select('.domain')
+                        .attr('stroke', 'black')
+                        .attr('stroke-width', 0.5),
                 )
                 .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
 
