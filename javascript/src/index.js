@@ -29,7 +29,7 @@ customElements.define('urdf-viewer', URDFManipulator);
 // Hack to make the build work with webpack for now.
 // TODO: Remove this once modules or parcel is being used
 const viewer = document.querySelector('urdf-viewer');
-
+const menuDiv = document.getElementById('menu');
 // const limitsToggle = document.getElementById('ignore-joint-limits');
 const collisionToggle = document.getElementById('collision-toggle');
 const showGridTextureToggle = document.getElementById(
@@ -400,6 +400,8 @@ const plotsPartOnPointMove = (e) => {
             0,
         );
         PlotsPart.style.width = newWidthPercent + '%';
+        viewer.style.width = 100 - newWidthPercent + '%';
+        menuDiv.style.width = 100 - newWidthPercent + '%';
     }
 };
 
