@@ -240,6 +240,10 @@ export default class PositionSVG extends SmallLineChartSVG {
 
     addPosition(time, value) {
         if (value) {
+            if (this.lastTime && time < this.lastTime) {
+                this.clear();
+            }
+
             // value will be {x: x, y: y, z: z}
             this.positions[time] = value;
             this.all_time.push(time);
