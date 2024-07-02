@@ -103,37 +103,57 @@
 
             <plots-part id="plots-part">
                 <div id="slider-plots-part" class="beautiful-slider"></div>
-                <div id="plots-controls" class="hidden">
-                    <div id="toggle-plots-controls"></div>
-                    <label>
-                        Plots Option:
-                        <select id="plots-group-selection">
-                            <option value="LineRobot" selected>
-                                Line Plot by Robot
-                            </option>
-                            <option value="LineLink">Line Plot by Joint</option>
-                            <option value="HeatMapRobot">
-                                Heat Map by Robot
-                            </option>
-                            <option value="HeatMapLink">
-                                Heat Map by Joint
-                            </option>
-                        </select>
-                    </label>
-                    <div id="plots-link-option-name"></div>
-                    <div
-                        id="plots-link-controls-container"
-                        class="plots-controls-container"
-                    ></div>
-                    <div id="plots-robot-option-name"></div>
-                    <div
-                        id="plots-robot-controls-container"
-                        class="plots-controls-container"
-                    ></div>
+
+                <div class="a-part-of-right">
+                    <div id="svg-container-toggle" class="xxx-container-toggle">
+                        Hide SVG
+                    </div>
+                    <div id="plots-controls-container" class="xxx-container">
+                        <div id="plots-controls" class="hidden">
+                            <div id="toggle-plots-controls"></div>
+                            <label>
+                                Plots Option:
+                                <select id="plots-group-selection">
+                                    <option value="LineRobot" selected>
+                                        Line Plot by Robot
+                                    </option>
+                                    <option value="LineLink">
+                                        Line Plot by Joint
+                                    </option>
+                                    <option value="HeatMapRobot">
+                                        Heat Map by Robot
+                                    </option>
+                                    <option value="HeatMapLink">
+                                        Heat Map by Joint
+                                    </option>
+                                </select>
+                            </label>
+                            <div id="plots-link-option-name"></div>
+                            <div
+                                id="plots-link-controls-container"
+                                class="plots-controls-container"
+                            ></div>
+                            <div id="plots-robot-option-name"></div>
+                            <div
+                                id="plots-robot-controls-container"
+                                class="plots-controls-container"
+                            ></div>
+                        </div>
+                    </div>
+                    <div id="svg-container" class="xxx-container"></div>
                 </div>
-                <div id="svg-container"></div>
-                <div id="snapshot-container"></div>
-                <div id="position-svg-container"></div>
+                <div class="a-part-of-right">
+                    <div id="snapshot-svg-container-toggle" class="xxx-container-toggle">
+                        Hide Snapshot
+                    </div>
+                    <div id="snapshot-container" class="xxx-container"></div>
+                </div>
+                <div class="a-part-of-right">
+                    <div id="position-svg-container-toggle" class="xxx-container-toggle">
+                        Hide Position
+                    </div>
+                    <div id="position-svg-container" class="xxx-container" ></div>
+                </div>
             </plots-part>
 
             <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>

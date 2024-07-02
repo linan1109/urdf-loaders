@@ -202,7 +202,9 @@ input:focus {
     flex-wrap: wrap;
     align-items: left;
     justify-content: left; 
-    margin: 20px;
+    margin-left: 20px;
+    margin-top: 5px;
+    margin-right: 20px;
 }
 
 #plots-controls > * {
@@ -226,7 +228,7 @@ input:focus {
 #plots-controls #toggle-plots-controls {
     width: 100%;
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 3px;
     text-align: left;
     transition: 0.1s opacity linear;
     border-bottom: 1px solid var(--main-text-color);
@@ -586,19 +588,38 @@ global-heatmap-part > div {
     top: 0;
 }
 .snapshot-div{
-    border-top: var(--main-text-color) 1px dashed;
-    border-bottom: var(--main-text-color) 1px dashed;
     padding: 5px;
     flex-direction: row;
 }
 
 #position-svg-container {
-    border-top: var(--main-text-color) 1px dashed;
-    border-bottom: var(--main-text-color) 1px dashed;
     padding: 5px 0;
 }
 
 #position-svg-container > svg {
     margin-left: 2.5%;
     background-color: var(--plot-background-color);
+}
+
+.xxx-container {
+}
+
+.xxx-container.hidden {
+    display: none;
+}
+
+.xxx-container-toggle {
+    cursor: pointer;
+    text-align: left;
+    color: var(--main-text-color);
+    margin: 5px;
+    font-family: var(--main-font-family);
+}
+
+.xxx-container-toggle:hover {
+    text-decoration: underline;
+}
+
+.a-part-of-right {
+    border-top: var(--main-text-color) 1px dashed;
 }

@@ -81,6 +81,18 @@ const sliderGlbalPlotPart = document.getElementById('slider-global-plots-part');
 const TopPart = document.getElementById('top-part');
 const positionSvgContainer = document.getElementById('position-svg-container');
 
+const plotsControlsContainer = document.getElementById(
+    'plots-controls-container',
+);
+const svgContainerToggle = document.getElementById('svg-container-toggle');
+
+const snapshotSvgContainerToggle = document.getElementById(
+    'snapshot-svg-container-toggle',
+);
+const positionSvgContainerToggle = document.getElementById(
+    'position-svg-container-toggle',
+);
+
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
@@ -196,7 +208,7 @@ viewer.addEventListener('trajectory-update', (e) => {
         while (positionSvgContainer.firstChild) {
             positionSvgContainer.removeChild(positionSvgContainer.firstChild);
         }
-        const svg = new PositionSVG(svgContainer.offsetWidth);
+        const svg = new PositionSVG(PlotsPart.offsetWidth);
         const svgNode = svg.svg.node();
         positionSVG = svg;
         positionSvgContainer.appendChild(svgNode);
@@ -209,6 +221,37 @@ viewer.addEventListener('joint-click', (e) => {
         positionSVG.clear();
     }
 });
+
+// hiders
+svgContainerToggle.addEventListener('click', () => {
+    svgContainer.classList.toggle('hidden');
+    plotsControlsContainer.classList.toggle('hidden');
+
+    if (svgContainer.classList.contains('hidden')) {
+        svgContainerToggle.textContent = 'Show Plots';
+    } else {
+        svgContainerToggle.textContent = 'Hide Plots';
+    }
+});
+
+snapshotSvgContainerToggle.addEventListener('click', () => {
+    snapshotContainer.classList.toggle('hidden');
+    if (snapshotContainer.classList.contains('hidden')) {
+        snapshotSvgContainerToggle.textContent = 'Show Snapshots';
+    } else {
+        snapshotSvgContainerToggle.textContent = 'Hide Snapshots';
+    }
+});
+
+positionSvgContainerToggle.addEventListener('click', () => {
+    positionSvgContainer.classList.toggle('hidden');
+    if (positionSvgContainer.classList.contains('hidden')) {
+        positionSvgContainerToggle.textContent = 'Show Position';
+    } else {
+        positionSvgContainerToggle.textContent = 'Hide Position';
+    }
+});
+// end of hiders
 
 function createRobotControls(robotNumber) {
     // Create a container div
@@ -637,7 +680,7 @@ const addRobotSVG = (robotNum) => {
         svgList[robotNum].svg.remove();
     }
     // const movement = movementContainer.movementDict[robotNum];
-    const svg = new SmallLineChartRobot(robotNum, svgContainer.offsetWidth);
+    const svg = new SmallLineChartRobot(robotNum, PlotsPart.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'plot-all' + robotNum;
     svgContainer.appendChild(svgNode);
@@ -652,7 +695,7 @@ const addHeatMapRobotSVG = (robotNum) => {
     const svg = new SmallHeatmapRobot(
         robotNum,
         globalVariables.smallHeatMapGridNum,
-        svgContainer.offsetWidth,
+        PlotsPart.offsetWidth,
     );
     const svgNode = svg.svg.node();
     svgNode.id = 'heatmap-' + robotNum;
@@ -743,7 +786,7 @@ const addObsSVG = (obsName) => {
     if (svgList[obsName] !== undefined) {
         svgList[obsName].svg.remove();
     }
-    const svg = new SmallLineChartObs(obsName, svgContainer.offsetWidth);
+    const svg = new SmallLineChartObs(obsName, PlotsPart.offsetWidth);
     const svgNode = svg.svg.node();
     svgNode.id = 'plot-all' + obsName;
     svgContainer.appendChild(svgNode);
@@ -758,7 +801,7 @@ const addHeatMapObsSVG = (obsName) => {
     const svg = new SmallHeatMapObs(
         obsName,
         globalVariables.smallHeatMapGridNum,
-        svgContainer.offsetWidth,
+        PlotsPart.offsetWidth,
     );
     const svgNode = svg.svg.node();
     svgNode.id = 'heatmap-' + obsName;
