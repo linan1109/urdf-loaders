@@ -14,6 +14,7 @@ import SmallLineChartObs from './utils/small-svg/small-linechart-obs.js';
 import SmallLineChartRobot from './utils/small-svg/small-linechart-robot.js';
 import SmallHeatmapRobot from './utils/small-svg/small-heatmap-robot.js';
 import SmallHeatMapObs from './utils/small-svg/small-heatmap-obs.js';
+import PositionSVG from './utils/small-svg/position-svg.js';
 import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
@@ -78,6 +79,7 @@ const PlotsPart = document.getElementById('plots-part');
 const globalPlotPart = document.getElementById('global-heatmap-part');
 const sliderGlbalPlotPart = document.getElementById('slider-global-plots-part');
 const TopPart = document.getElementById('top-part');
+const positionSvgContainer = document.getElementById('position-svg-container');
 
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
@@ -85,6 +87,7 @@ let sliders = {};
 const svgList = {};
 let globalHeatmapSvg = null;
 let snapShotDiv = null;
+let positionSVG = null;
 
 // Global Functions
 const setColor = (color) => {
@@ -180,6 +183,30 @@ viewer.addEventListener('joint-mouseout', (event) => {
     globalVariables.mouseOverObs = null;
     if (!globalTimer.isRunning) {
         updateAllSVG();
+    }
+});
+
+document.addEventListener('animationControl', (e) => {
+    const checked = e.detail.checked;
+    viewer.showTrajectory = checked;
+});
+
+viewer.addEventListener('trajectory-update', (e) => {
+    if (positionSVG === null) {
+        while (positionSvgContainer.firstChild) {
+            positionSvgContainer.removeChild(positionSvgContainer.firstChild);
+        }
+        const svg = new PositionSVG(svgContainer.offsetWidth);
+        const svgNode = svg.svg.node();
+        positionSVG = svg;
+        positionSvgContainer.appendChild(svgNode);
+    }
+    positionSVG.addPosition(globalTimer.getCurrent(), e.detail);
+});
+
+viewer.addEventListener('joint-click', (e) => {
+    if (positionSVG !== null) {
+        positionSVG.clear();
     }
 });
 
@@ -412,7 +439,13 @@ sliderPlotsPart.addEventListener('pointerdown', (e) => {
 sliderPlotsPart.addEventListener('pointerup', (e) => {
     window.removeEventListener('pointermove', plotsPartOnPointMove);
     plotsSVGRedraw();
-    snapShotDiv.resize(PlotsPart.offsetWidth, PlotsPart.offsetHeight);
+    if (snapShotDiv !== null) {
+        snapShotDiv.resize(PlotsPart.offsetWidth, PlotsPart.offsetHeight);
+    }
+    // resize the position svg
+    if (positionSVG !== null) {
+        positionSVG.resize(PlotsPart.offsetWidth);
+    }
 });
 
 const globalPlotPartOnPointMove = (e) => {
@@ -747,6 +780,9 @@ const updateAllSVG = () => {
             globalHeatmapSelection.value = firstOption.value;
             changeGlobalPlot(firstOption.value);
         }
+    }
+    if (positionSVG !== null) {
+        positionSVG.updatePlotOnTime();
     }
 };
 

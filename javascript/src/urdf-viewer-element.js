@@ -33,6 +33,7 @@ export default class URDFViewer extends HTMLElement {
             'show-collision',
             'show-grid',
             'use-wireframe',
+            'show-trajectory',
         ];
     }
 
@@ -128,6 +129,15 @@ export default class URDFViewer extends HTMLElement {
         val
             ? this.setAttribute('use-wireframe', true)
             : this.removeAttribute('use-wireframe');
+    }
+
+    get showTrajectory() {
+        return this.hasAttribute('show-trajectory') || false;
+    }
+    set showTrajectory(val) {
+        val
+            ? this.setAttribute('show-trajectory', true)
+            : this.removeAttribute('show-trajectory');
     }
 
     // get jointValues() {
@@ -340,7 +350,8 @@ export default class URDFViewer extends HTMLElement {
                     this.renderer.render(scene, camera);
                     this._dirty = false;
                 }
-
+                // update trajectory
+                this.updateTrajectory();
                 // update controls after the environment in
                 // case the controls are retargeted
                 this.controls.update();
@@ -430,11 +441,15 @@ export default class URDFViewer extends HTMLElement {
 
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
+    }
 
-        this.updateTrajectory();
+    clearTrajectory() {
+        this.trajectoryList = [];
+        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
     }
 
     updateTrajectory() {
+        if (this.showTrajectory === false) return;
         if (this.PointForTrajectory === null) return;
         const point = this.PointForTrajectory;
         const joint = this.JointForTrajectory;
@@ -448,6 +463,16 @@ export default class URDFViewer extends HTMLElement {
         // if (this.trajectoryMaterial.opacity < 0.01) {
         //     this.trajectoryMaterial.opacity = 1;
         // }
+
+        // new event
+        this.dispatchEvent(
+            new CustomEvent('trajectory-update', {
+                bubbles: true,
+                cancelable: true,
+                composed: true,
+                detail: pointWorldPos,
+            }),
+        );
     }
 
     redraw() {

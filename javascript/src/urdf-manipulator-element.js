@@ -148,6 +148,13 @@ export default class URDFManipulator extends URDFViewer {
 
         dragControls.onClick = (joint, robot, point) => {
             this.updateSelectedPoint(joint, robot, point);
+            this.clearTrajectory();
+
+            const event = new CustomEvent('joint-click', {
+                bubbles: true,
+                cancelable: true,
+            });
+            this.dispatchEvent(event);
         };
 
         this.dragControls = dragControls;

@@ -7,8 +7,18 @@ class AnimationControl {
         });
     }
 
+    sendEvent() {
+        const event = new CustomEvent('animationControl', {
+            detail: {
+                checked: this.isChecked(),
+            },
+        });
+        document.dispatchEvent(event);
+    }
+
     uncheck() {
         this.animToggle.classList.remove('checked');
+        this.sendEvent();
     }
 
     isChecked() {
@@ -17,10 +27,12 @@ class AnimationControl {
 
     toggle() {
         this.animToggle.classList.toggle('checked');
+        this.sendEvent();
     }
 
     check() {
         this.animToggle.classList.add('checked');
+        this.sendEvent();
     }
 
 }

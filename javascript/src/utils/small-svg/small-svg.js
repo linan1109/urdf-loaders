@@ -84,6 +84,7 @@ class SmallLineChartSVG extends smallSVG {
         this.svg.node().value = null;
         this.svg.dispatch('input', { bubbles: true });
         this.currentMov = null;
+        this.currentObs = null;
         if (!globalTimer.isRunning) {
             this.updatePlotOnTime();
         }

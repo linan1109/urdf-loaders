@@ -591,3 +591,14 @@ global-heatmap-part > div {
     padding: 5px;
     flex-direction: row;
 }
+
+#position-svg-container {
+    border-top: var(--main-text-color) 1px dashed;
+    border-bottom: var(--main-text-color) 1px dashed;
+    padding: 5px 0;
+}
+
+#position-svg-container > svg {
+    margin-left: 2.5%;
+    background-color: var(--plot-background-color);
+}
