@@ -448,6 +448,12 @@ export default class URDFViewer extends HTMLElement {
         this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
     }
 
+    cancelTrajectory() {
+        this.PointForTrajectory = null;
+        this.JointForTrajectory = null;
+        this.clearTrajectory();
+    }
+
     updateTrajectory() {
         if (this.showTrajectory === false) return;
         if (this.PointForTrajectory === null) return;

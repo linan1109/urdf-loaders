@@ -212,6 +212,19 @@ viewer.addEventListener('trajectory-update', (e) => {
         const svgNode = svg.svg.node();
         positionSVG = svg;
         positionSvgContainer.appendChild(svgNode);
+
+        const button = document.createElement('button');
+        button.textContent = 'Clear';
+        button.className = 'beautful-button';
+        button.style.margin = '5px';
+        button.addEventListener('click', () => {
+            viewer.cancelTrajectory();
+            while (positionSvgContainer.firstChild) {
+                positionSvgContainer.removeChild(positionSvgContainer.firstChild);
+            }
+            positionSVG = null;
+        });
+        positionSvgContainer.appendChild(button);
     }
     positionSVG.addPosition(globalTimer.getCurrent(), e.detail);
 });
