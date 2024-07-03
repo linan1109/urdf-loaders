@@ -714,8 +714,13 @@ export default class URDFViewer extends HTMLElement {
     }
 
     snapShot() {
+        //  not have trajectory in the snapshot
+        this.trajectoryLine.visible = false;
+        this.redraw();
         this.renderer.render(this.scene, this.camera);
         const imgDataURL = this.renderer.domElement.toDataURL('image/png');
+        this.trajectoryLine.visible = true;
+        this.redraw();
 
         const img = new Image();
         img.src = imgDataURL;
