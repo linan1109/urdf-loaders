@@ -621,5 +621,5 @@ global-heatmap-part > div {
 }
 
 .a-part-of-right {
-    border-top: var(--main-text-color) 1px dashed;
+    border-bottom: var(--main-text-color) 1px dashed;
 }
