@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MeshPhongMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { AxesScene } from './three-related/axes-scene.js';
 import URDFLoader from './URDFLoader.js';
 import globalVariables from './utils/global-variables.js';
 // import { index, timeout } from 'd3';
@@ -192,7 +193,6 @@ export default class URDFViewer extends HTMLElement {
 
         // Scene setup
         const scene = new THREE.Scene();
-
         const ambientLight = new THREE.HemisphereLight(
             this.ambientColor,
             '#000',
@@ -233,10 +233,10 @@ export default class URDFViewer extends HTMLElement {
         scene.add(world);
 
         // Add a stationary object
-        const boxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(boxGeometry, material);
-        scene.add(cube);
+        // const boxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // const cube = new THREE.Mesh(boxGeometry, material);
+        // scene.add(cube);
 
         // Add the grid
         const imageCanvas = document.createElement('canvas');
@@ -338,6 +338,23 @@ export default class URDFViewer extends HTMLElement {
             polygonOffsetUnits: -1,
         });
 
+        // Add a new scene the axis
+        this.axesScene = new AxesScene(this.renderer);
+        this.renderer.domElement.addEventListener('axis-hover', () => {
+            this.redraw();
+        });
+        this.renderer.domElement.addEventListener('axis-click', (e) => {
+            if (e.detail === 'xAxis') {
+                this.changeCameraPosition(2, 0, 0);
+            }
+            if (e.detail === 'yAxis') {
+                this.changeCameraPosition(0, 2, 0);
+            }
+            if (e.detail === 'zAxis') {
+                this.changeCameraPosition(0, 0, 2);
+            }
+        });
+
         const _renderLoop = () => {
             if (this.parentNode) {
                 this.updateSize();
@@ -348,6 +365,10 @@ export default class URDFViewer extends HTMLElement {
                     }
 
                     this.renderer.render(scene, camera);
+
+                    // render the axes scene
+                    this.axesScene.render(camera);
+
                     this._dirty = false;
                 }
                 // update trajectory
@@ -384,6 +405,11 @@ export default class URDFViewer extends HTMLElement {
 
         this.updateSize();
         requestAnimationFrame(() => this.updateSize());
+    }
+
+    changeCameraPosition(x, y, z) {
+        this.camera.position.set(x, y, z);
+        this.redraw();
     }
 
     disconnectedCallback() {
