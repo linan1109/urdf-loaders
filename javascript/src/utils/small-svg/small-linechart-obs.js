@@ -3,7 +3,7 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-import {SmallLineChartSVG} from './small-svg.js';
+import { SmallLineChartSVG } from './small-svg.js';
 
 export default class SmallLineChartObs extends SmallLineChartSVG {
 
@@ -119,7 +119,9 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
                 .filter(({ z }) => z === k)
                 .raise();
             this.dot.attr('transform', `translate(${ x },${ y })`);
-            this.dot.select('text').text(k + ': ' + textY.toFixed(3));
+            this.dot
+                .select('text')
+                .text('Robot ' + k + ': ' + textY.toFixed(3));
             this.lineX.attr('transform', `translate(${ x },0)`);
 
             const value = this.yScale.invert(ym);
@@ -374,7 +376,9 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
             );
             const y = this.yScale(textY);
             this.dot.attr('transform', `translate(${ a },${ y })`);
-            this.dot.select('text').text(this.currentMov + ': ' + textY.toFixed(3));
+            this.dot
+                .select('text')
+                .text('Robot' + this.currentMov + ': ' + textY.toFixed(3));
         }
 
         // remove the brush after drawing

@@ -100,7 +100,7 @@ class SmallHeatMapSVG extends smallSVG {
         this.height = this.width * 0.4;
         this.gridNum = gridNum;
         this.gridWidth = this.width / gridNum;
-
+        this.lastUpateTime = -11;
         this.colorScale = globalVariables.HeatmapColorScale;
     }
 
@@ -112,7 +112,7 @@ class SmallHeatMapSVG extends smallSVG {
             .attr('viewBox', [0, 0, this.width, this.height])
             .attr(
                 'style',
-                'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif; margin-left: 50px; margin-bottom:25px;',
+                'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif; margin-left: 50px; margin-bottom:25px; margin-top: 20px;',
             );
 
         const yLabels = this.yLabels;
@@ -151,15 +151,23 @@ class SmallHeatMapSVG extends smallSVG {
         //     .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2);
         // legend.exit().remove();
 
+        this.dot = this.svg.append('g').attr('display', 'none');
+        this.dot.append('circle').attr('r', 2.5);
+        this.dot.append('text').attr('text-anchor', 'middle').attr('y', -8);
         // bind events
         this.svg
             .on('click', (event) => this.singleclicked(event))
             .on('pointermove', (event) => this.pointermoved(event))
+            .on('pointerenter', (event) => this.pointerentered(event))
             .on('pointerleave', (event) => this.pointerleft(event));
     }
 
     updatePlotOnTime() {
         const current = globalTimer.getCurrent();
+        if (Math.abs(current - this.lastUpateTime) < 10) {
+            return;
+        }
+        this.lastUpateTime = current;
 
         let xStart = current - this.windowSize / 2;
         let xEnd = current + this.windowSize / 2;
@@ -219,6 +227,7 @@ class SmallHeatMapSVG extends smallSVG {
             .style('fill', (d) => this.colorScale(d.value));
 
         cards.exit().remove();
+        this.data = data;
 
         this.drawLineX(current);
     }
@@ -237,13 +246,36 @@ class SmallHeatMapSVG extends smallSVG {
                 .attr('transform', `translate(${ xm },0)`)
                 .attr('stroke', 'black');
             this.lineX.raise();
+
+            // get value from card
+            const x = Math.floor(xm / this.gridWidth);
+            const y = Math.floor(ym / this.gridHeight);
+            if (x >= 0 && y >= 0) {
+                const value = this.data.find(
+                    (d) => d.x === x && d.y === y,
+                ).value;
+                // show the value
+                this.dot.attr(
+                    'transform',
+                    `translate(${ (x + 0.5) * this.gridWidth },${ (y + 0.5) * this.gridHeight })`,
+                );
+                this.dot.select('text').text('AVG: ' + value.toFixed(3));
+                this.dot.raise();
+            }
         }
+    }
+
+    // functions to be inherited
+    pointerentered() {
+        // this.path.style('mix-blend-mode', null).style('stroke', '#ddd');
+        this.dot.attr('display', null);
     }
 
     pointerleft() {
         if (!globalTimer.isRunning) {
             this.updatePlotOnTime();
         }
+        this.dot.attr('display', 'none');
     }
 
     drawLineX(x) {

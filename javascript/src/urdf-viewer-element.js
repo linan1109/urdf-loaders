@@ -451,6 +451,7 @@ export default class URDFViewer extends HTMLElement {
     cancelTrajectory() {
         this.PointForTrajectory = null;
         this.JointForTrajectory = null;
+        this.robotForTrajectory = null;
         this.clearTrajectory();
     }
 
