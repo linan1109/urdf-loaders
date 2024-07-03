@@ -119,7 +119,7 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
                 .filter(({ z }) => z === k)
                 .raise();
             this.dot.attr('transform', `translate(${ x },${ y })`);
-            this.dot.select('text').text(textY);
+            this.dot.select('text').text(k + ': ' + textY.toFixed(3));
             this.lineX.attr('transform', `translate(${ x },0)`);
 
             const value = this.yScale.invert(ym);
@@ -374,7 +374,7 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
             );
             const y = this.yScale(textY);
             this.dot.attr('transform', `translate(${ a },${ y })`);
-            this.dot.select('text').text(textY);
+            this.dot.select('text').text(this.currentMov + ': ' + textY.toFixed(3));
         }
 
         // remove the brush after drawing

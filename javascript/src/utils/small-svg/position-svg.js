@@ -54,7 +54,7 @@ export default class PositionSVG extends SmallLineChartSVG {
             );
             const [x, y, k] = this.points[i];
             this.currentObs = k;
-            const textY = this.yScale.invert(y);
+            const textY = k + ': ' + this.yScale.invert(y).toFixed(3);
             this.path
                 .style('stroke', ({ z }) =>
                     z === this.currentObs
@@ -233,7 +233,7 @@ export default class PositionSVG extends SmallLineChartSVG {
                 const y = this.positions[nearestTime][this.currentObs];
                 const scaledY = this.yScale(y);
                 this.dot.attr('transform', `translate(${ x },${ scaledY })`);
-                this.dot.select('text').text(y);
+                this.dot.select('text').text(this.currentObs + ': ' + y.toFixed(3));
             }
         }
     }
