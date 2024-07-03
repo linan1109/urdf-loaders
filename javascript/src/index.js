@@ -24,6 +24,8 @@ import SnapShotDiv from './utils/snapshot.js';
 import animationControl from './utils/animation-control.js';
 import globalVariables from './utils/global-variables.js';
 
+import penIco from './assets/pen.ico';
+
 customElements.define('urdf-viewer', URDFManipulator);
 
 // declare these globally for the sake of the example.
@@ -220,7 +222,9 @@ viewer.addEventListener('trajectory-update', (e) => {
         button.addEventListener('click', () => {
             viewer.cancelTrajectory();
             while (positionSvgContainer.firstChild) {
-                positionSvgContainer.removeChild(positionSvgContainer.firstChild);
+                positionSvgContainer.removeChild(
+                    positionSvgContainer.firstChild,
+                );
             }
             positionSVG = null;
         });
@@ -994,23 +998,17 @@ viewer.addEventListener('angle-change', (e) => {
 });
 
 viewer.addEventListener('joint-mouseover', (e) => {
-    const j = document.querySelector(`li[joint-name='${ e.detail }']`);
-    if (j) j.setAttribute('robot-hovered', true);
+    // change cursor to pen
+    viewer.style.cursor = `url(${ penIco }), auto`;
 });
 
 viewer.addEventListener('joint-mouseout', (e) => {
-    const j = document.querySelector(`li[joint-name='${ e.detail }']`);
-    if (j) j.removeAttribute('robot-hovered');
+    // change cursor
+    viewer.style.cursor = 'auto';
 });
 
 let originalNoAutoRecenter;
 viewer.addEventListener('manipulate-start', (e) => {
-    const j = document.querySelector(`li[joint-name='${ e.detail }']`);
-    if (j) {
-        j.scrollIntoView({ block: 'nearest' });
-        window.scrollTo(0, 0);
-    }
-
     originalNoAutoRecenter = viewer.noAutoRecenter;
     viewer.noAutoRecenter = true;
 });
