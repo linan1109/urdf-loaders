@@ -3,7 +3,7 @@ import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import animationControl from '../animation-control.js';
 import globalVariables from '../global-variables.js';
-import {SmallLineChartSVG} from './small-svg.js';
+import { SmallLineChartSVG } from './small-svg.js';
 
 export default class SmallLineChartRobot extends SmallLineChartSVG {
 
@@ -55,7 +55,6 @@ export default class SmallLineChartRobot extends SmallLineChartSVG {
                     let [x0, x1] = event.selection.map(this.xScale.invert);
                     x0 = Math.floor(x0);
                     x1 = Math.ceil(x1);
-                    console.log(x0, x1);
                     if (x1 - x0 > 1) {
                         const x = d3.range(x0, x1);
                         this.xScale = d3
@@ -233,15 +232,20 @@ export default class SmallLineChartRobot extends SmallLineChartSVG {
                 if (this.all_x === null) {
                     this.initMovement();
                 }
+                let x0 = Math.max(0, this.current - this.windowSize / 2);
+                let x1 = Math.min(
+                    this.movement.length,
+                    this.current + this.windowSize / 2,
+                );
+                if (globalVariables.lockBrush) {
+                    x0 = Math.floor(globalVariables.brushStart);
+                    x1 =
+                        Math.floor(globalVariables.brushStart +
+                            globalVariables.rightSvgWindowSize);
+                }
 
                 // slice the window for the current time
-                const x = this.all_x.slice(
-                    Math.max(0, this.current - this.windowSize / 2),
-                    Math.min(
-                        this.movement.length,
-                        this.current + this.windowSize / 2,
-                    ),
-                );
+                const x = this.all_x.slice(x0, x1);
 
                 this.xScale = d3
                     .scaleLinear()
@@ -354,7 +358,9 @@ export default class SmallLineChartRobot extends SmallLineChartSVG {
 
             const y = this.yScale(textY);
             this.dot.attr('transform', `translate(${ a },${ y })`);
-            this.dot.select('text').text(this.currentObs + ': ' + textY.toFixed(3));
+            this.dot
+                .select('text')
+                .text(this.currentObs + ': ' + textY.toFixed(3));
         }
 
         // remove the brush after drawing

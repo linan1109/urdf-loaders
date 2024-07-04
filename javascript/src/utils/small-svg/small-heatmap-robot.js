@@ -9,8 +9,8 @@ export default class SmallHeatmapRobot extends SmallHeatMapSVG {
     constructor(robotNum, gridNum, offsetWidth) {
         super(gridNum, offsetWidth);
         this.robotNum = robotNum;
-        this.data = movementContainer.getMovement(robotNum);
-        this.dataLength = this.data.length;
+        this.originalData = movementContainer.getMovement(robotNum);
+        this.dataLength = this.originalData.length;
         this.id = 'small-heatmap-robot' + robotNum;
 
         this.setup();
@@ -43,7 +43,7 @@ export default class SmallHeatmapRobot extends SmallHeatMapSVG {
                 let sum = 0;
                 for (let k = 0; k < eachGridDataLength; k++) {
                     sum += parseFloat(
-                        this.data[start + j * eachGridDataLength + k][
+                        this.originalData[start + j * eachGridDataLength + k][
                             measurement
                         ],
                     );

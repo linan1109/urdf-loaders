@@ -165,10 +165,12 @@ class SmallHeatMapSVG extends smallSVG {
     updatePlotOnTime() {
         const current = globalTimer.getCurrent();
         if (Math.abs(current - this.lastUpateTime) < 10) {
+            if (globalVariables.lockBrush) {
+                this.drawLineX(current);
+            }
             return;
         }
         this.lastUpateTime = current;
-
         let xStart = current - this.windowSize / 2;
         let xEnd = current + this.windowSize / 2;
         if (xStart < 0) {
@@ -178,6 +180,12 @@ class SmallHeatMapSVG extends smallSVG {
         if (xEnd > this.dataLength) {
             xEnd = this.dataLength;
             xStart = xEnd - this.windowSize;
+        }
+        if (globalVariables.lockBrush) {
+            xStart = Math.floor(globalVariables.brushStart);
+            xEnd =
+                Math.floor(globalVariables.brushStart +
+                    globalVariables.rightSvgWindowSize);
         }
         this.xScale = d3
             .scaleLinear()

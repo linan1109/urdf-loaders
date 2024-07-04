@@ -54,7 +54,6 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
                     let [x0, x1] = event.selection.map(this.xScale.invert);
                     x0 = Math.floor(x0);
                     x1 = Math.ceil(x1);
-                    console.log(x0, x1);
                     if (x1 - x0 > 1) {
                         const x = d3.range(x0, x1);
                         this.xScale = d3
@@ -259,14 +258,20 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
                 this.initMovement();
             }
 
-            // slice the window for the current time
-            const x = this.all_x.slice(
-                Math.max(0, this.current - this.windowSize / 2),
-                Math.min(
-                    globalVariables.movementMinLen,
-                    this.current + this.windowSize / 2,
-                ),
+            let x0 = Math.max(0, this.current - this.windowSize / 2);
+            let x1 = Math.min(
+                this.movement.length,
+                this.current + this.windowSize / 2,
             );
+            if (globalVariables.lockBrush) {
+                x0 = Math.floor(globalVariables.brushStart);
+                x1 =
+                    Math.floor(globalVariables.brushStart +
+                        globalVariables.rightSvgWindowSize);
+            }
+
+            // slice the window for the current time
+            const x = this.all_x.slice(x0, x1);
 
             this.xScale = d3
                 .scaleLinear()

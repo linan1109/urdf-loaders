@@ -91,6 +91,11 @@ class globalPlotSVG {
                 let [x0, x1] = event.selection;
                 x0 = (x0 / this.width) * this.dataLength;
                 x1 = (x1 / this.width) * this.dataLength;
+                if (x1 - x0 < 3) {
+                    // as sigal click
+                    this.singleclicked(event);
+                    return;
+                }
                 console.log('brushed', x0, x1);
                 this.brushedWidth = x1 - x0;
                 this.brushStart = x0;
@@ -225,9 +230,6 @@ class globalHeatMapSVG extends globalPlotSVG {
                         this.yLabels.splice(d.index, 1);
                         // insert the yLabel to the newYIndex
                         this.yLabels.splice(newYIndex, 0, selectedLabel);
-
-                        console.log('yLabels', this.yLabels);
-
                         this.updateHeatmap();
                     }),
             );
@@ -361,9 +363,6 @@ class globalHeatMapSVG extends globalPlotSVG {
     }
 
     updateHeatmap() {
-        console.log('updateHeatmap');
-        console.log('yLabels', this.yLabels);
-
         // update yLabel
         this.yLabelGroups = this.labelContainer
             .selectAll('.yLabelGroup')
