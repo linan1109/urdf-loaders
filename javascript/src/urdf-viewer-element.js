@@ -496,6 +496,8 @@ export default class URDFViewer extends HTMLElement {
         this.robotNames.splice(index, 1);
         this.initialPositions.splice(index, 1);
 
+        this.pointTrajectory.updateRobots(this.robots);
+
         this.redraw();
     }
 
@@ -894,6 +896,7 @@ export default class URDFViewer extends HTMLElement {
                 this._loadScheduled = false;
                 this._updateCollisionVisibility();
                 this._storeRobotColors();
+                this.pointTrajectory.updateRobots(this.robots);
                 this.dispatchEvent(
                     new CustomEvent(`urdf-processed`, {
                         bubbles: true,

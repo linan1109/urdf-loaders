@@ -239,7 +239,8 @@ viewer.addEventListener('trajectory-update', (e) => {
         });
         positionSvgContainer.appendChild(button);
     }
-    positionSVG.addPosition(globalTimer.getCurrent(), e.detail);
+    const positionList = e.detail;
+    positionSVG.addPosition(globalTimer.getCurrent(), positionList[0]);
 });
 
 viewer.addEventListener('joint-click', (e) => {

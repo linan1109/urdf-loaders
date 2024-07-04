@@ -147,9 +147,7 @@ export default class URDFManipulator extends URDFViewer {
         };
 
         dragControls.onClick = (joint, robot, point) => {
-            this.updateSelectedPoint(joint, robot, point);
-            this.clearTrajectory();
-
+            this.pointTrajectory.updateSelectedPoint(joint, robot, point);
             const event = new CustomEvent('joint-click', {
                 bubbles: true,
                 cancelable: true,
@@ -160,11 +158,7 @@ export default class URDFManipulator extends URDFViewer {
         this.dragControls = dragControls;
     }
 
-    updateSelectedPoint(joint, robot, point) {
-        this.pointTrajectory.JointForTrajectory = joint;
-        this.pointTrajectory.PointForTrajectory = point;
-        this.pointTrajectory.robotForTrajectory = robot;
-    }
+
 
     attributeChangedCallback(attr, oldval, newval) {
         super.attributeChangedCallback(attr, oldval, newval);

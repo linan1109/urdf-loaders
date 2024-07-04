@@ -5,52 +5,85 @@ export class PointTrajectory {
     constructor(scene, camera) {
         this.scene = scene;
         this.camera = camera;
-
-        this.trajectoryList = [];
         this.PointForTrajectory = null;
         this.JointForTrajectory = null;
-        const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(
-            this.trajectoryList,
-        );
+
+        this.robots = {};
+        this.joints = {};
+        this.jointName = null;
+        this.trajectory = {};
+        this.trajectoryLine = {};
+
         this.trajectoryMaterial = new THREE.LineBasicMaterial({
             color: globalVariables.colorForPointTrajectory,
             transparent: true,
             opacity: 1,
         });
-        this.trajectoryLine = new THREE.Line(
-            trajectoryGeometry,
-            this.trajectoryMaterial,
-        );
-        scene.add(this.trajectoryLine);
     }
 
     clearTrajectory() {
-        this.trajectoryList = [];
-        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
+        for (const key in this.trajectory) {
+            this.scene.remove(this.trajectoryLine[key]);
+            this.trajectoryLine[key].geometry.dispose();
+            this.trajectoryLine[key].material.dispose();
+            delete this.trajectoryLine[key];
+            delete this.trajectory[key];
+        }
     }
 
     cancelTrajectory() {
         this.PointForTrajectory = null;
         this.JointForTrajectory = null;
-        this.robotForTrajectory = null;
         this.clearTrajectory();
     }
 
     updateTrajectory() {
         if (this.PointForTrajectory === null) return;
         const point = this.PointForTrajectory;
-        const joint = this.JointForTrajectory;
-        const pointWorldPos = point.clone().applyMatrix4(joint.matrixWorld);
-        this.trajectoryList.push(pointWorldPos);
-        if (this.trajectoryList.length > 100) {
-            this.trajectoryList.shift();
+        const pointWorldPosList = {};
+        for (const key in this.trajectory) {
+            const joint = this.joints[key];
+            const pointWorldPos = point.clone().applyMatrix4(joint.matrixWorld);
+            this.trajectory[key].push(pointWorldPos);
+            if (this.trajectory[key].length > 100) {
+                this.trajectory[key].shift();
+            }
+            this.trajectoryLine[key].geometry.setFromPoints(this.trajectory[key]);
+            pointWorldPosList[key] = pointWorldPos;
         }
-        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
-        return pointWorldPos;
+        return pointWorldPosList;
     }
 
-    hasTrajectory() {
-        return this.trajectoryList.length > 0;
+    updateRobots(Robots) {
+        // clear all old trajectory
+        this.clearTrajectory();
+        this.robots = Robots;
+        for (const key in Robots) {
+            const robot = Robots[key];
+            this.trajectory[key] = [];
+            this.trajectoryLine[key] = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(
+                    this.trajectory[key],
+                ),
+                this.trajectoryMaterial,
+            );
+
+            // find the joint for this robot
+            robot.traverse((child) => {
+                if (child.name === this.jointName) {
+                    this.joints[key] = child;
+                }
+            });
+            this.scene.add(this.trajectoryLine[key]);
+        }
+    }
+
+    updateSelectedPoint(joint, robot, point) {
+        this.PointForTrajectory = point;
+        this.clearTrajectory();
+
+        this.jointName = joint.name;
+        this.updateRobots(this.robots);
     }
 
     hasPointSelected() {
@@ -58,11 +91,15 @@ export class PointTrajectory {
     }
 
     hide() {
-        this.trajectoryLine.visible = false;
+        for (const key in this.trajectory) {
+            this.trajectoryLine[key].visible = false;
+        }
     }
 
     show() {
-        this.trajectoryLine.visible = true;
+        for (const key in this.trajectory) {
+            this.trajectoryLine[key].visible = true;
+        }
     }
 
 }
