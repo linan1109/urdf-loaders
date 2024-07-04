@@ -94,6 +94,7 @@ const snapshotSvgContainerToggle = document.getElementById(
 const positionSvgContainerToggle = document.getElementById(
     'position-svg-container-toggle',
 );
+const brushLockToggle = document.getElementById('brush-lock-toggle');
 
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
@@ -138,6 +139,14 @@ showGridTextureToggle.addEventListener('click', () => {
 wireframeToggle.addEventListener('click', () => {
     wireframeToggle.classList.toggle('checked');
     viewer.changeWireframe(wireframeToggle.classList.contains('checked'));
+});
+
+brushLockToggle.addEventListener('click', () => {
+    brushLockToggle.classList.toggle('checked');
+    globalVariables.lockBrush = brushLockToggle.classList.contains('checked');
+    if (globalHeatmapSvg !== null) {
+        globalHeatmapSvg.setByLockBrush();
+    }
 });
 
 // autocenterToggle.addEventListener('click', () => {

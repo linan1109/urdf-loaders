@@ -10,14 +10,16 @@ class globalPlotSVG {
         this.offsetHeight = offsetHeight;
         this.margin = { top: 20, right: 10, bottom: 40, left: 10 };
         this.maxWidth =
-            0.90 * (offsetWidth - this.margin.left - this.margin.right);
+            0.9 * (offsetWidth - this.margin.left - this.margin.right);
         this.maxHeight =
             0.85 * (offsetHeight - this.margin.top - this.margin.bottom);
 
         this.width = this.maxWidth;
         this.height = this.maxHeight;
 
-        this.brushedWidth = 0;
+        this.brushedWidth = globalVariables.rightSvgWindowSize;
+        this.brushLocked = globalVariables.lockBrush;
+        this.brushStart = globalVariables.brushStart;
         this.svg = null;
     }
 
@@ -91,9 +93,18 @@ class globalPlotSVG {
                 x1 = (x1 / this.width) * this.dataLength;
                 console.log('brushed', x0, x1);
                 this.brushedWidth = x1 - x0;
-
+                this.brushStart = x0;
+                globalVariables.brushStart = x0;
                 if (!globalTimer.isRunning) {
                     globalTimer.setIgnoreFirst(x0 + this.brushedWidth / 2);
+                }
+                this.brushLocked = globalVariables.lockBrush;
+                if (globalVariables.lockBrush) {
+                    globalTimer.setRestartFrom(x0);
+                    globalTimer.setEndAt(x1);
+                } else {
+                    globalTimer.setRestartFrom(0);
+                    globalTimer.setEndAt(-1);
                 }
                 globalVariables.rightSvgWindowSize = Math.floor(x1 - x0);
                 // send event to update right svg
@@ -104,6 +115,27 @@ class globalPlotSVG {
             }
         } else {
             this.brushedWidth = null;
+        }
+    }
+
+    setByLockBrush() {
+        this.brushLocked = globalVariables.lockBrush;
+        if (this.brushLocked === false) {
+            globalTimer.setRestartFrom(0);
+            globalTimer.setEndAt(-1);
+            return;
+        }
+        if (globalTimer.isRunning) {
+            const current = globalTimer.getCurrent();
+            const x0 = current - this.brushedWidth / 2;
+            const x1 = current + this.brushedWidth / 2;
+            globalTimer.setRestartFrom(x0);
+            globalTimer.setEndAt(x1);
+        } else {
+            const x0 = this.brushStart;
+            const x1 = this.brushStart + this.brushedWidth;
+            globalTimer.setRestartFrom(x0);
+            globalTimer.setEndAt(x1);
         }
     }
     // functions to set in child class
@@ -128,7 +160,6 @@ class globalHeatMapSVG extends globalPlotSVG {
 
         // variables to set in child class
         this.dataLength = 0;
-        this.brushedWidth = null;
 
         this.colorScale = globalVariables.HeatmapColorScale;
 
@@ -219,25 +250,27 @@ class globalHeatMapSVG extends globalPlotSVG {
         const arclegentWidth = this.maxWidth / arcLegend.length;
         for (let i = 0; i < arcLegend.length; i++) {
             const legend = arcLegend[i];
-            const arc = d3
-                .arc()
-                .innerRadius(5)
-                .outerRadius(10)
-                .startAngle(0);
+            const arc = d3.arc().innerRadius(5).outerRadius(10).startAngle(0);
 
             // add background full circle
             this.svg
                 .append('path')
-                .datum({endAngle: 2 * Math.PI })
+                .datum({ endAngle: 2 * Math.PI })
                 .attr('d', arc)
-                .attr('transform', `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`)
+                .attr(
+                    'transform',
+                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
+                )
                 .style('fill', 'lightgray');
 
             this.svg
                 .append('path')
-                .datum({endAngle: legend })
+                .datum({ endAngle: legend })
                 .attr('d', arc)
-                .attr('transform', `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`)
+                .attr(
+                    'transform',
+                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
+                )
                 .style('fill', this.colorScale(legend));
 
             this.svg
@@ -278,6 +311,16 @@ class globalHeatMapSVG extends globalPlotSVG {
             ])
             .on('end', (event) => this.brushed(event));
         this.svg.append('g').attr('class', 'brush').call(this.brush);
+        if (this.brushedWidth > 0) {
+            const x0 = this.brushStart;
+            const x1 = this.brushStart + this.brushedWidth;
+            this.svg
+                .selectAll('.brush')
+                .call(this.brush.move, [
+                    (x0 / this.dataLength) * this.width,
+                    (x1 / this.dataLength) * this.width,
+                ]);
+        }
 
         // bind events
         this.svg
@@ -350,14 +393,18 @@ class globalHeatMapSVG extends globalPlotSVG {
         this.drawlinebyx(x);
 
         if (this.brushedWidth) {
-            const x0 = current - this.brushedWidth / 2;
-            const x1 = current + this.brushedWidth / 2;
-            this.svg
-                .selectAll('.brush')
-                .call(this.brush.move, [
-                    (x0 / this.dataLength) * this.width,
-                    (x1 / this.dataLength) * this.width,
-                ]);
+            if (!this.brushLocked) {
+                const x0 = current - this.brushedWidth / 2;
+                const x1 = current + this.brushedWidth / 2;
+                this.brushStart = x0;
+                globalVariables.brushStart = x0;
+                this.svg
+                    .selectAll('.brush')
+                    .call(this.brush.move, [
+                        (x0 / this.dataLength) * this.width,
+                        (x1 / this.dataLength) * this.width,
+                    ]);
+            }
         }
     }
 

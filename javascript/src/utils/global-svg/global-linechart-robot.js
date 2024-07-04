@@ -63,10 +63,7 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
         // add x axis
         this.svg
             .append('g')
-            .attr(
-                'transform',
-                `translate(0,${ this.height })`,
-            )
+            .attr('transform', `translate(0,${ this.height })`)
             .attr('class', 'xaxis')
             .call(
                 d3
@@ -110,10 +107,7 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
                 g
                     .selectAll('.tick line')
                     .clone()
-                    .attr(
-                        'x2',
-                        this.width,
-                    )
+                    .attr('x2', this.width)
                     .attr('stroke-opacity', 0.1),
             )
             .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
@@ -157,7 +151,16 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
             ])
             .on('end', (event) => this.brushed(event));
         this.svg.append('g').attr('class', 'brush').call(this.brush);
-
+        if (this.brushedWidth > 0) {
+            const x0 = this.brushStart;
+            const x1 = this.brushStart + this.brushedWidth;
+            this.svg
+                .selectAll('.brush')
+                .call(this.brush.move, [
+                    (x0 / this.dataLength) * this.width,
+                    (x1 / this.dataLength) * this.width,
+                ]);
+        }
         // bind events
         this.svg
             .on('click', (event) => this.singleclicked(event))
@@ -168,20 +171,24 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
     updatePlotOnTime() {
         // add the vertical line for current time
         const current = globalTimer.getCurrent();
-        const x = current / this.dataLength;
-        this.drawlinebyx(x);
 
         if (this.brushedWidth) {
-            const x0 = current - this.brushedWidth / 2;
-            const x1 = current + this.brushedWidth / 2;
-            this.svg
-                .selectAll('.brush')
-                .call(this.brush.move, [
-                    (x0 / this.dataLength) * this.width,
-                    (x1 / this.dataLength) * this.width,
-                ]);
+            if (!this.brushLocked) {
+                const x0 = current - this.brushedWidth / 2;
+                const x1 = current + this.brushedWidth / 2;
+                this.brushStart = x0;
+                globalVariables.brushStart = x0;
+                this.svg
+                    .selectAll('.brush')
+                    .call(this.brush.move, [
+                        (x0 / this.dataLength) * this.width,
+                        (x1 / this.dataLength) * this.width,
+                    ]);
+            }
         }
 
+        const x = current / this.dataLength;
+        this.drawlinebyx(x);
         // update the color of the lines
         this.path
             .style('stroke', ({ z }) =>
