@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { AxesScene } from './three-related/axes-scene.js';
 import URDFLoader from './URDFLoader.js';
 import globalVariables from './utils/global-variables.js';
+import { PointTrajectory } from './three-related/trajectory.js';
 // import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
@@ -308,23 +309,7 @@ export default class URDFViewer extends HTMLElement {
         this.directionalLight = dirLight;
         this.ambientLight = ambientLight;
 
-        this.trajectoryList = [];
-        this.PointForTrajectory = null;
-        this.JointForTrajectory = null;
-        const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(
-            this.trajectoryList,
-        );
-        this.trajectoryMaterial = new THREE.LineBasicMaterial({
-            color: globalVariables.colorForPointTrajectory,
-            transparent: true,
-            opacity: 1,
-        });
-        this.trajectoryLine = new THREE.Line(
-            trajectoryGeometry,
-            this.trajectoryMaterial,
-        );
-        scene.add(this.trajectoryLine);
-
+        this.pointTrajectory = new PointTrajectory(scene, camera);
         this._setUp(this.up);
 
         this._collisionMaterial = new MeshPhongMaterial({
@@ -470,33 +455,17 @@ export default class URDFViewer extends HTMLElement {
     }
 
     clearTrajectory() {
-        this.trajectoryList = [];
-        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
+        this.pointTrajectory.clearTrajectory();
     }
 
     cancelTrajectory() {
-        this.PointForTrajectory = null;
-        this.JointForTrajectory = null;
-        this.robotForTrajectory = null;
-        this.clearTrajectory();
+        this.pointTrajectory.cancelTrajectory();
     }
 
     updateTrajectory() {
         if (this.showTrajectory === false) return;
-        if (this.PointForTrajectory === null) return;
-        const point = this.PointForTrajectory;
-        const joint = this.JointForTrajectory;
-        const pointWorldPos = point.clone().applyMatrix4(joint.matrixWorld);
-        this.trajectoryList.push(pointWorldPos);
-        if (this.trajectoryList.length > 100) {
-            this.trajectoryList.shift();
-        }
-        this.trajectoryLine.geometry.setFromPoints(this.trajectoryList);
-        // this.trajectoryMaterial.opacity *= 0.99;
-        // if (this.trajectoryMaterial.opacity < 0.01) {
-        //     this.trajectoryMaterial.opacity = 1;
-        // }
-
+        if (!this.pointTrajectory.hasPointSelected()) return;
+        const pointWorldPos = this.pointTrajectory.updateTrajectory();
         // new event
         this.dispatchEvent(
             new CustomEvent('trajectory-update', {
@@ -741,11 +710,11 @@ export default class URDFViewer extends HTMLElement {
 
     snapShot() {
         //  not have trajectory in the snapshot
-        this.trajectoryLine.visible = false;
+        this.pointTrajectory.hide();
         this.redraw();
         this.renderer.render(this.scene, this.camera);
         const imgDataURL = this.renderer.domElement.toDataURL('image/png');
-        this.trajectoryLine.visible = true;
+        this.pointTrajectory.show();
         this.redraw();
 
         const img = new Image();

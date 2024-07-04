@@ -161,9 +161,9 @@ export default class URDFManipulator extends URDFViewer {
     }
 
     updateSelectedPoint(joint, robot, point) {
-        this.JointForTrajectory = joint;
-        this.PointForTrajectory = point;
-        this.robotForTrajectory = robot;
+        this.pointTrajectory.JointForTrajectory = joint;
+        this.pointTrajectory.PointForTrajectory = point;
+        this.pointTrajectory.robotForTrajectory = robot;
     }
 
     attributeChangedCallback(attr, oldval, newval) {

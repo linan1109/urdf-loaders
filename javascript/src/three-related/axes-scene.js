@@ -115,7 +115,6 @@ export class AxesScene {
         if (intersects.length > 0) {
             const intersect = intersects[0];
             this.hoveredAxis = intersect.object.name;
-            console.log(this.hoveredAxis);
             // make the hovered axis thicker
             if (this.hoveredAxis === 'xAxis') {
                 this.xAxis.material.color = new THREE.Color(0xffffff);
