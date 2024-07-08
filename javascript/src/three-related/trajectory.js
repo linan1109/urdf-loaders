@@ -13,12 +13,6 @@ export class PointTrajectory {
         this.jointName = null;
         this.trajectory = {};
         this.trajectoryLine = {};
-
-        this.trajectoryMaterial = new THREE.LineBasicMaterial({
-            color: globalVariables.colorForPointTrajectory,
-            transparent: true,
-            opacity: 1,
-        });
     }
 
     clearTrajectory() {
@@ -65,7 +59,11 @@ export class PointTrajectory {
                 new THREE.BufferGeometry().setFromPoints(
                     this.trajectory[key],
                 ),
-                this.trajectoryMaterial,
+                new THREE.LineBasicMaterial({
+                    color: globalVariables.colorForPointTrajectory[key],
+                    transparent: true,
+                    opacity: 1,
+                }),
             );
 
             // find the joint for this robot

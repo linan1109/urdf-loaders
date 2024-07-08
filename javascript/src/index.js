@@ -14,7 +14,8 @@ import SmallLineChartObs from './utils/small-svg/small-linechart-obs.js';
 import SmallLineChartRobot from './utils/small-svg/small-linechart-robot.js';
 import SmallHeatmapRobot from './utils/small-svg/small-heatmap-robot.js';
 import SmallHeatMapObs from './utils/small-svg/small-heatmap-obs.js';
-import PositionSVG from './utils/small-svg/position-svg.js';
+import PositionSVG from './utils/realtime-svg/position-svg.js';
+import XYZ3D from './utils/realtime-svg/xyz-3d.js';
 import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
@@ -219,10 +220,18 @@ viewer.addEventListener('trajectory-update', (e) => {
         while (positionSvgContainer.firstChild) {
             positionSvgContainer.removeChild(positionSvgContainer.firstChild);
         }
-        const svg = new PositionSVG(PlotsPart.offsetWidth);
-        const svgNode = svg.svg.node();
-        positionSVG = svg;
-        positionSvgContainer.appendChild(svgNode);
+        // const svg = new PositionSVG(PlotsPart.offsetWidth);
+        // const svgNode = svg.svg.node();
+        // positionSVG = svg;
+        // positionSvgContainer.appendChild(svgNode);
+
+        const xyz3d = new XYZ3D(PlotsPart.offsetWidth);
+        const div = document.createElement('div');
+        div.style.width = '100%';
+        div.style.marginLeft = '8%';
+        div.appendChild(xyz3d.getDomElement());
+        positionSvgContainer.appendChild(div);
+        positionSVG = xyz3d;
 
         const button = document.createElement('button');
         button.textContent = 'Clear';
@@ -240,7 +249,7 @@ viewer.addEventListener('trajectory-update', (e) => {
         positionSvgContainer.appendChild(button);
     }
     const positionList = e.detail;
-    positionSVG.addPosition(globalTimer.getCurrent(), positionList[0]);
+    positionSVG.addPosition(globalTimer.getCurrent(), positionList);
 });
 
 viewer.addEventListener('joint-click', (e) => {
@@ -943,6 +952,9 @@ const plotsSVGRedraw = () => {
 };
 
 const globalHeatmapRedraw = () => {
+    if (movementContainer.hasAnyMovement() === false) {
+        return;
+    }
     while (globalHeatmapSelection.firstChild) {
         globalHeatmapSelection.removeChild(globalHeatmapSelection.firstChild);
     }

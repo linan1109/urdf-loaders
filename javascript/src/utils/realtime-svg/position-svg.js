@@ -1,9 +1,9 @@
 import * as d3 from 'd3';
 import globalTimer from '../global-timer.js';
 import globalVariables from '../global-variables.js';
-import { SmallLineChartSVG } from './small-svg.js';
+import { RealTimeSVG } from './realtime-svg.js';
 
-export default class PositionSVG extends SmallLineChartSVG {
+export default class PositionSVG extends RealTimeSVG {
 
     constructor(offsetWidth) {
         super(offsetWidth);

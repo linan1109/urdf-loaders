@@ -105,7 +105,7 @@ export class AxesScene {
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(
             this.scene.children,
-            true,
+            false,
         );
         return intersects;
     }

@@ -52,7 +52,7 @@ const globalVariables = {
         .scaleSequential((t) => d3.interpolateRdBu(1 - t))
         .domain([-3.14, 3.14]),
 
-    colorForPointTrajectory: 0x0000ff,
+    colorForPointTrajectory: d3.schemeCategory10,
 
     useOffset: false,
 
