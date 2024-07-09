@@ -20,6 +20,8 @@ import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
 import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
 import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
 import GlobalHeatmapObs from './utils/global-svg/global-heatmap-obs.js';
+import GlobalHeatmapVeloRobot from './utils/global-svg/global-heatmap-velo-robot.js';
+import GlobalHeatmapVelocityObs from './utils/global-svg/global-heatmap-velo-obs.js';
 import SnapShotDiv from './utils/snapshot.js';
 
 import animationControl from './utils/animation-control.js';
@@ -757,6 +759,23 @@ const changeGlobalPlotToHeatmapRobot = (robotNum) => {
     globalHeatmapContainer.appendChild(svgNode);
 };
 
+const changeGlobalPlotToHeatmapVeloRobot = (robotNum) => {
+    while (globalHeatmapContainer.firstChild) {
+        globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
+        globalHeatmapSvg = null;
+    }
+
+    const svg = new GlobalHeatmapVeloRobot(
+        robotNum,
+        globalVariables.globalHeatMapGridNum,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
+    );
+    const svgNode = svg.svg.node();
+    globalHeatmapSvg = svg;
+    globalHeatmapContainer.appendChild(svgNode);
+};
+
 const changeGlobalPlotToLineRobot = (robotNum) => {
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
@@ -778,6 +797,22 @@ const changeGlobalPlotToHeatmapObs = (obsName) => {
         globalHeatmapSvg = null;
     }
     const svg = new GlobalHeatmapObs(
+        obsName,
+        globalVariables.globalHeatMapGridNum,
+        globalPlotPart.offsetWidth,
+        globalPlotPart.offsetHeight,
+    );
+    const svgNode = svg.svg.node();
+    globalHeatmapSvg = svg;
+    globalHeatmapContainer.appendChild(svgNode);
+};
+
+const changeGlobalPlotToHeatmapVeloObs = (obsName) => {
+    while (globalHeatmapContainer.firstChild) {
+        globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
+        globalHeatmapSvg = null;
+    }
+    const svg = new GlobalHeatmapVelocityObs(
         obsName,
         globalVariables.globalHeatMapGridNum,
         globalPlotPart.offsetWidth,
@@ -815,6 +850,10 @@ const changeGlobalPlot = (num, type = null) => {
         changeGlobalPlotToHeatmapObs(num);
     } else if (type === 'LineLink') {
         changeGlobalPlotToLineObs(num);
+    } else if (type === 'HeatMapVeloRobot') {
+        changeGlobalPlotToHeatmapVeloRobot(num);
+    } else if (type === 'HeatMapVeloLink') {
+        changeGlobalPlotToHeatmapVeloObs(num);
     }
 };
 
@@ -990,6 +1029,22 @@ const globalHeatmapRedraw = () => {
         const firstOption = globalHeatmapSelection.options[0];
         globalHeatmapSelection.value = firstOption.value;
         changeGlobalPlot(firstOption.value, 'HeatMapLink');
+    } else if (globalHeatmapGroupBySelection.value === 'HeatMapVeloRobot') {
+        for (const key in movementContainer.movementDict) {
+            addNewRobotOptionToGlobalHeatmapSelection(key);
+        }
+
+        const firstOption = globalHeatmapSelection.options[0];
+        globalHeatmapSelection.value = firstOption.value;
+        changeGlobalPlot(firstOption.value, 'HeatMapVeloRobot');
+    } else if (globalHeatmapGroupBySelection.value === 'HeatMapVeloLink') {
+        for (const key in globalVariables.nameObsMap) {
+            addNewObsOptionToGlobalHeatmapSelection(key);
+        }
+
+        const firstOption = globalHeatmapSelection.options[0];
+        globalHeatmapSelection.value = firstOption.value;
+        changeGlobalPlot(firstOption.value, 'HeatMapVeloLink');
     }
 };
 
