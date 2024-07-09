@@ -5,6 +5,7 @@ import { AxesScene } from './three-related/axes-scene.js';
 import URDFLoader from './URDFLoader.js';
 import globalVariables from './utils/global-variables.js';
 import { PointTrajectory } from './three-related/trajectory.js';
+import globalTimer from './utils/global-timer.js';
 // import { index, timeout } from 'd3';
 
 const tempVec2 = new THREE.Vector2();
@@ -719,6 +720,7 @@ export default class URDFViewer extends HTMLElement {
         this.pointTrajectory.show();
         this.redraw();
 
+        const time = globalTimer.getCurrent();
         const img = new Image();
         img.src = imgDataURL;
 
@@ -781,7 +783,10 @@ export default class URDFViewer extends HTMLElement {
                         bubbles: true,
                         cancelable: true,
                         composed: true,
-                        detail: newImg,
+                        detail: {
+                            image: newImg,
+                            timestamp: time,
+                        },
                     }),
                 );
             };

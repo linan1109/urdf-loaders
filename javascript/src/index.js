@@ -166,12 +166,14 @@ snapShotButton.addEventListener('click', () => {
 });
 
 viewer.addEventListener('snapshot', (e) => {
-    const img = e.detail;
+    const img = e.detail.image;
     if (snapShotDiv === null) {
         snapShotDiv = new SnapShotDiv(PlotsPart.offsetWidth);
         snapshotContainer.appendChild(snapShotDiv.div);
     }
-    snapShotDiv.addImage(img);
+    const time = e.detail.timestamp;
+    console.log('Snapshot taken at time: ' + time);
+    snapShotDiv.addImage(img, time);
 });
 
 globalHeatmapSelection.addEventListener('change', (e) => {
@@ -902,6 +904,9 @@ const updateAllSVG = () => {
     if (positionSVG !== null) {
         positionSVG.updatePlotOnTime();
     }
+    if (snapShotDiv !== null) {
+        snapShotDiv.updatePlotOnTime();
+    }
 };
 
 document.addEventListener('global-map-brushed', (e) => {
@@ -910,6 +915,10 @@ document.addEventListener('global-map-brushed', (e) => {
         const svg = svgList[key];
         svg.updateWindowSize(globalVariables.rightSvgWindowSize);
         svg.updatePlotOnTime();
+    }
+    if (snapShotDiv !== null) {
+        snapShotDiv.updateWindowSize(globalVariables.rightSvgWindowSize);
+        snapShotDiv.updatePlotOnTime();
     }
 });
 
