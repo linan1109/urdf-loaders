@@ -44,15 +44,13 @@ const globalVariables = {
 
     onlyMoveOneObs: null,
 
-
     globalHeatMapGridNum: 300,
     smallHeatMapGridNum: 30,
 
     HeatmapColorScale: d3
         .scaleSequential((t) => d3.interpolateRdBu(1 - t))
         .domain([-3.14, 3.14]),
-    HeatmapColorScaleVelo: d3
-        .scaleSequential((t) => d3.interpolateRdBu(1 - t)),
+    HeatmapColorScaleVelo: d3.scaleSequential((t) => d3.interpolateRdBu(1 - t)),
 
     colorForPointTrajectory: d3.schemeCategory10,
 

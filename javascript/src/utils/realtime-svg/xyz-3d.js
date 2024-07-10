@@ -7,6 +7,7 @@ import globalVariables from '../global-variables.js';
 
 const lengthAllGrids = 10;
 const numGrids = 10;
+const numberPoints = 200;
 
 export default class XYZ3D {
 
@@ -20,15 +21,7 @@ export default class XYZ3D {
         this.raycaster = new THREE.Raycaster();
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color('aliceblue');
-        // this.camera = new THREE.OrthographicCamera(
-        //     this.width / -1.5,
-        //     this.width / 1.5,
-        //     this.height / 1.5,
-        //     this.height / -1.5,
-        //     1,
-        //     1000,
-        // );
+
         this.camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 1000);
         this.camera.position.set(18, 15, 22);
         this.camera.zoom = 0.6;
@@ -36,6 +29,11 @@ export default class XYZ3D {
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(this.width, this.height);
+        this.renderer.setClearColor(0xffffff);
+        this.renderer.setClearAlpha(0);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         this.fontMaterial = new THREE.MeshPhongMaterial({
             color: 0xeea2ad,
@@ -216,7 +214,7 @@ export default class XYZ3D {
                 mesh.quaternion.copy(this.camera.quaternion);
                 mesh.visible = true;
             });
-            console.log(this.camera)
+            console.log(this.camera);
             this.render();
         });
     }
@@ -547,7 +545,7 @@ export default class XYZ3D {
                         (this.zMax * 2),
                 );
                 this.trajectory[key].push(position);
-                if (this.trajectory[key].length > 100) {
+                if (this.trajectory[key].length > numberPoints) {
                     this.trajectory[key].shift();
                 }
                 this.trajectoryLine[key].geometry.setFromPoints(

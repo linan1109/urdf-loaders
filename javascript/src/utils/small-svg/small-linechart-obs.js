@@ -260,7 +260,7 @@ export default class SmallLineChartObs extends SmallLineChartSVG {
 
             let x0 = Math.max(0, this.current - this.windowSize / 2);
             let x1 = Math.min(
-                this.movement.length,
+                globalVariables.movementMinLen - 1,
                 this.current + this.windowSize / 2,
             );
             if (globalVariables.lockBrush) {
