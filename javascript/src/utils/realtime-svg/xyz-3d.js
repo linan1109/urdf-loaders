@@ -62,16 +62,16 @@ export default class XYZ3D {
         this.addLabels();
         console.log('XYZ3D');
 
-        this.renderer.domElement.addEventListener('mousemove', (event) => {
-            this.onhover(event);
-            if (!globalTimer.isRunning) {
-                this.render();
-            }
-        });
-        this.renderer.domElement.addEventListener(
-            'click',
-            this.onClick.bind(this),
-        );
+        // this.renderer.domElement.addEventListener('mousemove', (event) => {
+        //     this.onhover(event);
+        //     if (!globalTimer.isRunning) {
+        //         this.render();
+        //     }
+        // });
+        // this.renderer.domElement.addEventListener(
+        //     'click',
+        //     this.onClick.bind(this),
+        // );
 
         this.updatePlotOnTime();
     }
@@ -140,6 +140,11 @@ export default class XYZ3D {
         this.xAxis.material.color = new THREE.Color(0xff0000);
         this.yAxis.material.color = new THREE.Color(0x00ff00);
         this.zAxis.material.color = new THREE.Color(0x0000ff);
+    }
+
+    clickOnSimulatorAxis(axis) {
+        this.hoveredAxis = axis;
+        this.onClick();
     }
 
     onClick(event) {
@@ -214,7 +219,6 @@ export default class XYZ3D {
                 mesh.quaternion.copy(this.camera.quaternion);
                 mesh.visible = true;
             });
-            console.log(this.camera);
             this.render();
         });
     }

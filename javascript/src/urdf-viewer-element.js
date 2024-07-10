@@ -339,6 +339,14 @@ export default class URDFViewer extends HTMLElement {
             if (e.detail === 'zAxis') {
                 this.changeCameraPosition(0, 0, 2);
             }
+
+            const newEvent = new CustomEvent('axis-click', {
+                bubbles: true,
+                cancelable: true,
+                composed: true,
+                detail: e.detail,
+            });
+            this.dispatchEvent(newEvent);
         });
 
         const _renderLoop = () => {

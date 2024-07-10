@@ -262,6 +262,12 @@ viewer.addEventListener('joint-click', (e) => {
     }
 });
 
+viewer.addEventListener('axis-click', (e) => {
+    if (positionSVG !== null) {
+        positionSVG.clickOnSimulatorAxis(e.detail);
+    }
+});
+
 // hiders
 svgContainerToggle.addEventListener('click', () => {
     svgContainer.classList.toggle('hidden');
