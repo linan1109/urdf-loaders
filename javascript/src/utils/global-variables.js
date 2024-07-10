@@ -53,6 +53,7 @@ const globalVariables = {
     HeatmapColorScaleVelo: d3.scaleSequential((t) => d3.interpolateRdBu(1 - t)),
 
     colorForPointTrajectory: d3.schemeCategory10,
+    colorForPointTrajectoryPoint: 'yellow',
 
     useOffset: false,
 
