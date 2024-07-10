@@ -67,7 +67,79 @@ export default class GlobalHeatmapVelocityObs extends globalHeatMapSVG {
         ]);
         return processedData;
     }
-    // functions inherite
+
+    addArcLegend() {
+        const arcLegend = d3.range(
+            this.minVelocity,
+            this.maxVelocity,
+            (this.maxVelocity - this.minVelocity) / 61,
+        );
+        const arclegentWidth = this.maxWidth / arcLegend.length;
+        for (let i = 0; i < arcLegend.length; i++) {
+            const legend = arcLegend[i];
+            const arc = d3.arc().innerRadius(5).outerRadius(10).startAngle(0);
+
+            // add background full circle
+            this.svg
+                .append('path')
+                .datum({ endAngle: 2 * Math.PI })
+                .attr('d', arc)
+                .attr(
+                    'transform',
+                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
+                )
+                .style('fill', 'lightgray');
+
+            this.svg
+                .append('path')
+                .datum({ endAngle: legend })
+                .attr('d', arc)
+                .attr(
+                    'transform',
+                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
+                )
+                .style('fill', this.colorScale(legend));
+
+            this.svg
+                .append('text')
+                .text(`${ legend.toFixed(1) }`)
+                .attr('x', i * arclegentWidth + 15)
+                .attr('y', this.height + 35)
+                .style('text-anchor', 'middle');
+        }
+    }
+
+    addRectLegend() {
+        const legends = d3.range(
+            this.minVelocity,
+            this.maxVelocity,
+            (this.maxVelocity - this.minVelocity) / 10,
+        );
+        for (let i = 0; i < legends.length; i++) {
+            legends[i] = legends[i].toFixed(2);
+        }
+        const legend = this.svg.selectAll('.legend').data(legends);
+
+        const legendEnter = legend.enter().append('g').attr('class', 'legend');
+        const legendMargin = 20;
+        const heatmapWidth = this.width;
+        legendEnter
+            .append('rect')
+            .attr('x', heatmapWidth + legendMargin) // Position legend to the right of the heatmap
+            .attr('y', (d, i) => this.gridHeight * i) // Adjust vertical position based on index
+            .attr('width', this.gridWidth * 1.5)
+            .attr('height', this.gridHeight / 2)
+            .style('fill', (d, i) => this.colorScale(legends[i]));
+
+        legendEnter
+            .append('text')
+            .attr('class', 'mono')
+            .text((d) => ` ${ d }`)
+            .attr('x', heatmapWidth + legendMargin + this.gridWidth * 2) // Adjust x to align with the rect's right side
+            .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2); // Center text vertically within the rect
+        legend.exit().remove();
+    }
+
     createHeatmap() {
         this.data = this.processData();
         const numXLables = Math.floor(this.gridNum / 10);
@@ -144,72 +216,8 @@ export default class GlobalHeatmapVelocityObs extends globalHeatMapSVG {
             d3.select(nodes[i]).node().appendChild(smallHeatmap);
         });
 
-        const arcLegend = d3.range(
-            this.minVelocity,
-            this.maxVelocity,
-            (this.maxVelocity - this.minVelocity) / 61,
-        );
-        const arclegentWidth = this.maxWidth / arcLegend.length;
-        for (let i = 0; i < arcLegend.length; i++) {
-            const legend = arcLegend[i];
-            const arc = d3.arc().innerRadius(5).outerRadius(10).startAngle(0);
-
-            // add background full circle
-            this.svg
-                .append('path')
-                .datum({ endAngle: 2 * Math.PI })
-                .attr('d', arc)
-                .attr(
-                    'transform',
-                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
-                )
-                .style('fill', 'lightgray');
-
-            this.svg
-                .append('path')
-                .datum({ endAngle: legend })
-                .attr('d', arc)
-                .attr(
-                    'transform',
-                    `translate(${ i * arclegentWidth + 15 }, ${ this.height + 15 })`,
-                )
-                .style('fill', this.colorScale(legend));
-
-            this.svg
-                .append('text')
-                .text(`${ legend.toFixed(1) }`)
-                .attr('x', i * arclegentWidth + 15)
-                .attr('y', this.height + 35)
-                .style('text-anchor', 'middle');
-        }
-        const legends = d3.range(
-            this.minVelocity,
-            this.maxVelocity,
-            (this.maxVelocity - this.minVelocity) / 10,
-        );
-        for (let i = 0; i < legends.length; i++) {
-            legends[i] = legends[i].toFixed(2);
-        }
-        const legend = this.svg.selectAll('.legend').data(legends);
-
-        const legendEnter = legend.enter().append('g').attr('class', 'legend');
-        const legendMargin = 20;
-        const heatmapWidth = this.width;
-        legendEnter
-            .append('rect')
-            .attr('x', heatmapWidth + legendMargin) // Position legend to the right of the heatmap
-            .attr('y', (d, i) => this.gridHeight * i) // Adjust vertical position based on index
-            .attr('width', this.gridWidth * 1.5)
-            .attr('height', this.gridHeight / 2)
-            .style('fill', (d, i) => this.colorScale(legends[i]));
-
-        legendEnter
-            .append('text')
-            .attr('class', 'mono')
-            .text((d) => ` ${ d }`)
-            .attr('x', heatmapWidth + legendMargin + this.gridWidth * 2) // Adjust x to align with the rect's right side
-            .attr('y', (d, i) => this.gridHeight * i + this.gridHeight / 2); // Center text vertically within the rect
-        legend.exit().remove();
+        // this.addArcLegend();
+        this.addRectLegend();
 
         // add brush
         this.brush = d3
