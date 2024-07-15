@@ -45,7 +45,7 @@ plots-part {
 }
 
 global-heatmap-part {
-    height: 20%;
+    height: 30%;
     width: 100%;
     border-top: var(--main-text-color) 1px dashed;
     position: absolute;

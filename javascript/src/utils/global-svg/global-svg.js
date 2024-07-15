@@ -11,8 +11,9 @@ class globalPlotSVG {
         this.margin = { top: 10, right: 10, bottom: 40, left: 10 };
         this.maxWidth =
             0.9 * (offsetWidth - this.margin.left - this.margin.right);
-        this.maxHeight =
-            0.8 * (offsetHeight - this.margin.top - this.margin.bottom);
+        // this.maxHeight =
+        //     0.5 * (offsetHeight - this.margin.top - this.margin.bottom);
+        this.maxHeight = 120;
 
         this.width = this.maxWidth;
         this.height = this.maxHeight;
