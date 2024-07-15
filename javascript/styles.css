@@ -633,31 +633,31 @@ global-heatmap-part > div {
     flex-direction: row;
 }
 #simulation-contorls-container > * {
-    cursor: pointer;
     margin-left: 30px;
 }
 
-#simulation-contorls-container > *:hover {
+.tooltip-container :hover {
     color:aliceblue;
 }
 
 .tooltip-container{
-    width: 20px;
+    width: 20px;    
+    cursor: pointer;
 }
 
 .tooltip-container .tooltip-text {
     visibility: hidden;
-    width: 35px;
+    width: 40px;
     background-color: #fff;
     color: black;
     text-align: center;
     padding: 5px;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 16px;
     /* Position the tooltip */
     position: absolute;
     bottom: 150%; /* Adjust based on the element height */
-    margin-left: -10px; /* Negative half of the tooltip width */
+    margin-left: -15px; /* Negative half of the tooltip width */
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -709,4 +709,12 @@ global-heatmap-part > div {
 }
 .dropdown-menu li i{
     display: none;
+}
+
+
+#simulation-contorls-step-input {
+    width: 55px;
+    margin: 0 2px;
+    padding: 0 0 0 0;
+    height: 20px;
 }

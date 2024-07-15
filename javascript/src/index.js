@@ -99,6 +99,13 @@ const positionSvgContainerToggle = document.getElementById(
 );
 const brushLockToggle = document.getElementById('brush-lock-toggle');
 
+const simulationStepInput = document.getElementById(
+    'simulation-contorls-step-input',
+);
+const simulationStepLabel = document.getElementById(
+    'simulation-contorls-step-input-label',
+);
+
 // const DEG2RAD = Math.PI / 180;
 // const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
@@ -118,6 +125,7 @@ const setColor = (color) => {
 };
 
 // Events
+
 // toggle checkbox
 // limitsToggle.addEventListener('click', () => {
 //     limitsToggle.classList.toggle('checked');
@@ -221,8 +229,30 @@ document.addEventListener('animationControl', (e) => {
         // redraw the svg
         updateAllSVG();
         // update viewer
-        cancelTrajectory();
+        if (e.detail.stop) {
+            cancelTrajectory();
+        }
         updateAnymal();
+
+        // enable the step input
+        simulationStepInput.disabled = false;
+    } else {
+        simulationStepInput.disabled = true;
+    }
+});
+
+simulationStepInput.addEventListener('change', () => {
+    if (simulationStepInput.disabled) {
+        return;
+    }
+    const step = parseFloat(simulationStepInput.value);
+    if (step >= 0 && step <= globalVariables.movementMinLen) {
+        globalTimer.setIgnoreFirst(step);
+        simulationStepInput.value = step;
+        updateAllSVG();
+        updateAnymal();
+    } else {
+        simulationStepInput.value = globalTimer.getCurrent();
     }
 });
 
@@ -354,6 +384,7 @@ function createRobotControls(robotNumber) {
             initRobotControlState(rbtnum);
         }
         addRobotButton.disabled = false;
+        updateAnymal();
         // remove the event listener
         viewer.removeEventListener('urdf-processed', handler);
     });
@@ -686,6 +717,8 @@ const loadMovementFromCSV = (robotNum) => {
             );
         }
 
+        simulationStepLabel.textContent = `/ ${ globalVariables.movementMinLen }`;
+        simulationStepInput.max = globalVariables.movementMinLen;
         if (!globalVariables.checkedRobots.includes(robotNum)) {
             globalVariables.checkedRobots.push(robotNum);
         }
@@ -719,6 +752,8 @@ const loadMovementFromCSV = (robotNum) => {
         // update the svg
         plotsSVGRedraw();
         globalHeatmapRedraw();
+
+        updateAnymal();
 
         const fileName = file.name;
         const fileNameDiv = document.getElementById(
@@ -1239,7 +1274,9 @@ onlyObsSelect.addEventListener('change', () => {
 });
 
 const getCurrentMovementTime = () => {
-    return globalTimer.getCurrent();
+    const current = globalTimer.getCurrent();
+    simulationStepInput.value = current;
+    return current;
 };
 
 function timerD3Update() {

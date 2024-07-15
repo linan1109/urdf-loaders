@@ -58,6 +58,11 @@ class GlobalTimer {
         if (this.isRunning) {
             this.stop();
         }
+        if (this.restartFrom <= 0) {
+            this.current = 0;
+            this.ignoreFirst = 0;
+            return;
+        }
         this.current = this.restartFrom;
         this.ignoreFirst = this.restartFrom;
     }

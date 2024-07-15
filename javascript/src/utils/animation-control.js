@@ -24,9 +24,8 @@ class AnimationControl {
             this.toggle();
         });
         this.stopButton.addEventListener('click', () => {
-            console.log('stop');
             globalTimer.backToStart();
-            this.uncheck();
+            this.uncheck(true);
         });
         this.speedButton.addEventListener('click', () => {
             if (menu.style.display === 'block') {
@@ -65,7 +64,7 @@ class AnimationControl {
         });
     }
 
-    sendEvent() {
+    sendEvent(stop = false) {
         if (this.playing) {
             this.showPauseButton();
         } else {
@@ -74,6 +73,7 @@ class AnimationControl {
         const event = new CustomEvent('animationControl', {
             detail: {
                 checked: this.isChecked(),
+                stop: stop,
             },
         });
         document.dispatchEvent(event);
@@ -93,10 +93,10 @@ class AnimationControl {
         playText.innerText = 'Pause';
     }
 
-    uncheck() {
+    uncheck(stop = false) {
         // this.animToggle.classList.remove('checked');
         this.playing = false;
-        this.sendEvent();
+        this.sendEvent(stop);
     }
 
     isChecked() {
