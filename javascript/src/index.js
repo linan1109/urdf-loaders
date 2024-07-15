@@ -217,7 +217,22 @@ viewer.addEventListener('joint-mouseout', (event) => {
 document.addEventListener('animationControl', (e) => {
     const checked = e.detail.checked;
     viewer.showTrajectory = checked;
+    if (!checked) {
+        // redraw the svg
+        updateAllSVG();
+        // update viewer
+        cancelTrajectory();
+        updateAnymal();
+    }
 });
+
+const cancelTrajectory = () => {
+    viewer.cancelTrajectory();
+    while (positionSvgContainer.firstChild) {
+        positionSvgContainer.removeChild(positionSvgContainer.firstChild);
+    }
+    positionSVG = null;
+};
 
 viewer.addEventListener('trajectory-update', (e) => {
     if (positionSVG === null) {
@@ -242,13 +257,7 @@ viewer.addEventListener('trajectory-update', (e) => {
         button.className = 'beautful-button';
         button.style.margin = '5px';
         button.addEventListener('click', () => {
-            viewer.cancelTrajectory();
-            while (positionSvgContainer.firstChild) {
-                positionSvgContainer.removeChild(
-                    positionSvgContainer.firstChild,
-                );
-            }
-            positionSVG = null;
+            cancelTrajectory();
         });
         positionSvgContainer.appendChild(button);
     }
@@ -547,7 +556,6 @@ const globalPlotPartOnPointMove = (e) => {
         );
         globalPlotPart.style.height = newHeightPercent + '%';
         TopPart.style.height = 100 - newHeightPercent + '%';
-        PlotsPart.style.height = 100 - newHeightPercent + '%';
     }
 };
 

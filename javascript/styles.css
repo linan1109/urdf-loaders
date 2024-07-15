@@ -33,7 +33,7 @@ urdf-viewer {
 plots-part {
     padding: 0;
     margin: 0;
-    height: 80%;
+    height: 100%;
     width: 25%;
     overflow: hidden;
     float: right;
@@ -623,4 +623,57 @@ global-heatmap-part > div {
 
 .a-part-of-right {
     border-bottom: var(--main-text-color) 1px dashed;
+}
+
+#simulation-contorls-container {
+    margin-left: 30px;
+    bottom: 15px;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+}
+#simulation-contorls-container > * {
+    cursor: pointer;
+    margin-left: 30px;
+}
+
+#simulation-contorls-container > *:hover {
+    color:aliceblue;
+}
+
+.tooltip-container{
+    width: 20px;
+}
+
+.tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 35px;
+    background-color: #fff;
+    color: black;
+    text-align: center;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 10px;
+    /* Position the tooltip */
+    position: absolute;
+    bottom: 150%; /* Adjust based on the element height */
+    margin-left: -10px; /* Negative half of the tooltip width */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip-container .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #fff transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
 }

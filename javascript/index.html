@@ -12,16 +12,23 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
         <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.4.3/webcomponents-bundle.js"></script>
+
+        <script
+            src="https://kit.fontawesome.com/715f5d4073.js"
+            crossorigin="anonymous"
+        ></script>
+
         <link
             href="https://fonts.googleapis.com/css?family=Roboto:100,300"
             rel="stylesheet"
         />
         <link href="./styles.css" type="text/css" rel="stylesheet" />
+
         <!-- <script src="./src/redirect.js"></script> -->
     </head>
 
     <body tabindex="0" style="flex-direction: row">
-        <div style="width: 100%; height: 80%" id="top-part">
+        <div style="width: 100%; height: 80%; position: relative" id="top-part">
             <div id="menu">
                 <ul id="urdf-options">
                     <li
@@ -93,7 +100,7 @@
                     <div id="wireframe-toggle" class="toggle">
                         Show Wireframe
                     </div>
-                    <div id="do-animate" class="toggle">Show Movement</div>
+                    <!-- <div id="do-animate" class="toggle">Show Movement</div> -->
                 </div>
                 <div
                     style="flex-direction: row"
@@ -143,24 +150,62 @@
                     <div id="svg-container" class="xxx-container"></div>
                 </div>
                 <div class="a-part-of-right">
-                    <div id="snapshot-svg-container-toggle" class="xxx-container-toggle">
+                    <div
+                        id="snapshot-svg-container-toggle"
+                        class="xxx-container-toggle"
+                    >
                         Hide Snapshot
                     </div>
                     <div id="snapshot-container" class="xxx-container"></div>
                 </div>
                 <div class="a-part-of-right">
-                    <div id="position-svg-container-toggle" class="xxx-container-toggle">
+                    <div
+                        id="position-svg-container-toggle"
+                        class="xxx-container-toggle"
+                    >
                         Hide Position
                     </div>
-                    <div id="position-svg-container" class="xxx-container" ></div>
+                    <div
+                        id="position-svg-container"
+                        class="xxx-container"
+                    ></div>
                 </div>
             </plots-part>
+
+            <div id="simulation-contorls-container">
+                <div
+                    class="tooltip-container"
+                    id="simulation-contorls-button-play"
+                >
+                    <i class="fa-solid fa-play fa-xl" id="simulation-contorls-button-play-i"></i>
+                    <div
+                        id="simulation-contorls-button-play-tooltip-text"
+                        class="tooltip-text"
+                    >
+                        Play
+                    </div>
+                </div>
+                <div
+                    class="tooltip-container"
+                    id="simulation-contorls-button-stop"
+                >
+                    <i class="fa-solid fa-stop fa-xl"></i>
+                    <div class="tooltip-text">Stop</div>
+                </div>
+                <div
+                    class="tooltip-container"
+                    id="simulation-contorls-button-speed"
+                >
+                    <i class="fa-solid fa-bars fa-xl"></i>
+                    <div class="tooltip-text">Speed</div>
+                </div>
+            </div>
 
             <urdf-viewer up="+Z" display-shadow tabindex="0"></urdf-viewer>
         </div>
         <global-heatmap-part id="global-heatmap-part">
             <div id="slider-global-plots-part" class="beautiful-slider"></div>
-            <div id="global-plots-controls" style="padding-top: 5px;">
+            <div id="global-plots-controls" style="padding-top: 5px">
                 <label>
                     Plots Option:&nbsp;&nbsp;
                     <select id="global-group-selection">
@@ -170,15 +215,25 @@
                         <option value="LineLink">Line Plot by Joint</option>
                         <option value="HeatMapRobot">Heat Map by Robot</option>
                         <option value="HeatMapLink">Heat Map by Joint</option>
-                        <option value="HeatMapVeloRobot">Velocity by Robot</option>
-                        <option value="HeatMapVeloLink">Velocity by Joint</option>
+                        <option value="HeatMapVeloRobot">
+                            Velocity by Robot
+                        </option>
+                        <option value="HeatMapVeloLink">
+                            Velocity by Joint
+                        </option>
                     </select>
                 </label>
                 <label for="global-heatmap-selection">
                     Select One: &nbsp;&nbsp;
                     <select id="global-heatmap-selection"></select>
                 </label>
-                <div id="brush-lock-toggle" class="toggle" style="padding-left: 25px;"> Lock Brush </div>
+                <div
+                    id="brush-lock-toggle"
+                    class="toggle"
+                    style="padding-left: 25px"
+                >
+                    Lock Brush
+                </div>
             </div>
             <div id="golbal-heatmap-container"></div>
         </global-heatmap-part>

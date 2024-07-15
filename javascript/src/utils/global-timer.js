@@ -13,7 +13,7 @@ class GlobalTimer {
         this.ignoreFirst = 0;
         this.timerD3UpdateFunc = null;
 
-        this.restartFrom = -1;
+        this.restartFrom = 0;
         this.endAt = 0;
 
         this.freq = 0.03;
@@ -42,6 +42,14 @@ class GlobalTimer {
         }
     }
 
+    backToStart() {
+        if (this.isRunning) {
+            this.stop();
+        }
+        this.current = this.restartFrom;
+        this.ignoreFirst = this.restartFrom;
+    }
+
     pause() {
         if (this.isRunning) {
             this.setIgnoreFirst(this.getCurrent());
@@ -57,18 +65,13 @@ class GlobalTimer {
         const time = Date.now() - this.startTime;
         this.current = Math.floor(time / 1000 / this.freq + this.ignoreFirst);
         const stopAt =
-            this.endAt <= 0 ? globalVariables.movementMinLen : Math.min(this.endAt, globalVariables.movementMinLen);
+            this.endAt <= 0
+                ? globalVariables.movementMinLen
+                : Math.min(this.endAt, globalVariables.movementMinLen);
         if (this.current >= stopAt) {
-            this.stop();
             // restart from the beginning
-            if (this.restartFrom >= 0) {
-                this.current = this.restartFrom;
-                this.ignoreFirst = this.restartFrom;
-                this.start();
-            } else {
-                this.current = stopAt - 1;
-                this.ignoreFirst = stopAt - 1;
-            }
+            this.backToStart(stopAt);
+            this.start();
         }
         return this.current;
     }
