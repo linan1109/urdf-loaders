@@ -151,15 +151,6 @@
                 </div>
                 <div class="a-part-of-right">
                     <div
-                        id="snapshot-svg-container-toggle"
-                        class="xxx-container-toggle"
-                    >
-                        Hide Snapshot
-                    </div>
-                    <div id="snapshot-container" class="xxx-container"></div>
-                </div>
-                <div class="a-part-of-right">
-                    <div
                         id="position-svg-container-toggle"
                         class="xxx-container-toggle"
                     >
@@ -207,7 +198,7 @@
                         <li speed="0.5" class=""><i class="fa-solid fa-check fa-2xs"></i>0.5x</li>
                     </div>
                 </div>
-                <div style="">
+                <div>
                     <input type="number" id="simulation-contorls-step-input" value="0" placeholder="0" min="0" max="0" />
                     <!-- <div id="simulation-contorls-step-whole-length">/ 0</div> -->
                      <label for="simulation-contorls-step-input" style="font-size: 16px;" id="simulation-contorls-step-input-label">/ 0</label>
@@ -248,7 +239,18 @@
                     Lock Brush
                 </div>
             </div>
+            <div id="global-xaxis-container"></div>
             <div id="golbal-heatmap-container"></div>
+            <div>
+                <!-- <div
+                    id="snapshot-svg-container-toggle"
+                    class="xxx-container-toggle"
+                >
+                    Hide Snapshot
+                </div> -->
+                <div id="snapshot-container" class="xxx-container"></div>
+            </div>
+
         </global-heatmap-part>
         <script src="./src/index.js"></script>
     </body>

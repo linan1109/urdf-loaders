@@ -37,6 +37,7 @@ export default class GlobalHeatmapRobot extends globalHeatMapSVG {
         });
 
         this.yLabelOrder = yLabelOrder;
+        this.sendChangeEvent();
         return processedData;
     }
 

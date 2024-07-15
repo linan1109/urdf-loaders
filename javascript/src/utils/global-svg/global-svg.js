@@ -8,11 +8,11 @@ class globalPlotSVG {
     constructor(offsetWidth, offsetHeight) {
         this.offsetWidth = offsetWidth;
         this.offsetHeight = offsetHeight;
-        this.margin = { top: 20, right: 10, bottom: 40, left: 10 };
+        this.margin = { top: 10, right: 10, bottom: 40, left: 10 };
         this.maxWidth =
             0.9 * (offsetWidth - this.margin.left - this.margin.right);
         this.maxHeight =
-            0.85 * (offsetHeight - this.margin.top - this.margin.bottom);
+            0.8 * (offsetHeight - this.margin.top - this.margin.bottom);
 
         this.width = this.maxWidth;
         this.height = this.maxHeight;
@@ -24,6 +24,16 @@ class globalPlotSVG {
     }
 
     // functions inherite
+    sendChangeEvent() {
+        const event = new CustomEvent('global-map-changed', {
+            detail: {
+                width: this.width,
+                dataLength: this.dataLength,
+            },
+        });
+        document.dispatchEvent(event);
+    }
+
     initSvg() {
         this.svg = d3
             .create('svg')
@@ -235,23 +245,23 @@ class globalHeatMapSVG extends globalPlotSVG {
     // functions inherite
     createHeatmap() {
         this.data = this.processData();
-        const numXLables = Math.floor(this.gridNum / 10);
+        // const numXLables = Math.floor(this.gridNum / 10);
 
-        const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
-            (d) => Math.floor((d * this.dataLength) / numXLables),
-        );
+        // const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
+        //     (d) => Math.floor((d * this.dataLength) / numXLables),
+        // );
 
-        this.svg
-            .selectAll('.xLabel')
-            .data(xLabels)
-            .enter()
-            .append('text')
-            .text((d) => d)
-            .attr('x', (d, i) => i * this.gridWidth * 10)
-            .attr('y', 0)
-            .style('text-anchor', 'middle')
-            .attr('transform', `translate(${ this.gridWidth / 2 }, -6)`)
-            .attr('class', 'xLabel mono axis');
+        // this.svg
+        //     .selectAll('.xLabel')
+        //     .data(xLabels)
+        //     .enter()
+        //     .append('text')
+        //     .text((d) => d)
+        //     .attr('x', (d, i) => i * this.gridWidth * 10)
+        //     .attr('y', 0)
+        //     .style('text-anchor', 'middle')
+        //     .attr('transform', `translate(${ this.gridWidth / 2 }, -6)`)
+        //     .attr('class', 'xLabel mono axis');
 
         this.labelContainer = this.svg
             .append('g')
@@ -435,4 +445,4 @@ class GlobalLineChartSVG extends globalPlotSVG {
 
 }
 
-export { globalHeatMapSVG, GlobalLineChartSVG };
+export { globalHeatMapSVG, GlobalLineChartSVG, globalPlotSVG };

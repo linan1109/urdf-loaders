@@ -47,6 +47,7 @@ export default class GlobalHeatmapVeloRobot extends globalHeatMapSVG {
         this.maxVelocity = maxVelocity;
         this.minVelocity = minVelocity;
         this.colorScale = globalVariables.HeatmapColorScaleVelo.domain([ minVelocity, maxVelocity ]);
+        this.sendChangeEvent();
         return processedData;
     }
 
@@ -126,23 +127,23 @@ export default class GlobalHeatmapVeloRobot extends globalHeatMapSVG {
     // functions inherite
     createHeatmap() {
         this.data = this.processData();
-        const numXLables = Math.floor(this.gridNum / 10);
+        // const numXLables = Math.floor(this.gridNum / 10);
 
-        const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
-            (d) => Math.floor((d * this.dataLength) / numXLables),
-        );
+        // const xLabels = Array.from({ length: numXLables }, (_, i) => i).map(
+        //     (d) => Math.floor((d * this.dataLength) / numXLables),
+        // );
 
-        this.svg
-            .selectAll('.xLabel')
-            .data(xLabels)
-            .enter()
-            .append('text')
-            .text((d) => d)
-            .attr('x', (d, i) => i * this.gridWidth * 10)
-            .attr('y', 0)
-            .style('text-anchor', 'middle')
-            .attr('transform', `translate(${ this.gridWidth / 2 }, -6)`)
-            .attr('class', 'xLabel mono axis');
+        // this.svg
+        //     .selectAll('.xLabel')
+        //     .data(xLabels)
+        //     .enter()
+        //     .append('text')
+        //     .text((d) => d)
+        //     .attr('x', (d, i) => i * this.gridWidth * 10)
+        //     .attr('y', 0)
+        //     .style('text-anchor', 'middle')
+        //     .attr('transform', `translate(${ this.gridWidth / 2 }, -6)`)
+        //     .attr('class', 'xLabel mono axis');
 
         this.labelContainer = this.svg
             .append('g')

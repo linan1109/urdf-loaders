@@ -492,10 +492,24 @@ input:focus {
     justify-content: left;
     align-items: left;
     padding-left: 50px;
-    padding-top: 20px;
+    padding-top: 10px;
 }
 
 #golbal-heatmap-container > svg {
+    margin-left: 2.5%;
+    background-color: var(--plot-background-color);
+}
+
+#global-xaxis-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: left;
+    padding-left: 50px;
+    padding-top: 10px;
+}
+
+#global-xaxis-container > svg {
     margin-left: 2.5%;
     background-color: var(--plot-background-color);
 }

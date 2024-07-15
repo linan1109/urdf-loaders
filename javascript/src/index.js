@@ -22,6 +22,7 @@ import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
 import GlobalHeatmapObs from './utils/global-svg/global-heatmap-obs.js';
 import GlobalHeatmapVeloRobot from './utils/global-svg/global-heatmap-velo-robot.js';
 import GlobalHeatmapVelocityObs from './utils/global-svg/global-heatmap-velo-obs.js';
+import GlobalXAxis from './utils/global-svg/global-x-axis.js';
 import SnapShotDiv from './utils/snapshot.js';
 
 import animationControl from './utils/animation-control.js';
@@ -72,6 +73,7 @@ const addRobotButton = document.getElementById('add-robot-button');
 const globalHeatmapContainer = document.getElementById(
     'golbal-heatmap-container',
 );
+const globalXaxisContainer = document.getElementById('global-xaxis-container');
 const globalHeatmapSelection = document.getElementById(
     'global-heatmap-selection',
 );
@@ -91,9 +93,9 @@ const plotsControlsContainer = document.getElementById(
 );
 const svgContainerToggle = document.getElementById('svg-container-toggle');
 
-const snapshotSvgContainerToggle = document.getElementById(
-    'snapshot-svg-container-toggle',
-);
+// const snapshotSvgContainerToggle = document.getElementById(
+//     'snapshot-svg-container-toggle',
+// );
 const positionSvgContainerToggle = document.getElementById(
     'position-svg-container-toggle',
 );
@@ -113,6 +115,7 @@ const svgList = {};
 let globalHeatmapSvg = null;
 let snapShotDiv = null;
 let positionSVG = null;
+let globalXAxis = null;
 
 // Global Functions
 const setColor = (color) => {
@@ -307,6 +310,22 @@ viewer.addEventListener('axis-click', (e) => {
     }
 });
 
+document.addEventListener('global-map-changed', (e) => {
+    updateGlobalXAxis(e.detail.width, e.detail.dataLength);
+});
+
+const updateGlobalXAxis = (
+    width = globalHeatmapSvg.width,
+    length = globalHeatmapSvg.dataLength,
+) => {
+    if (globalXAxis === null) {
+        globalXAxis = new GlobalXAxis(globalXaxisContainer.offsetWidth, 20);
+        const svgNode = globalXAxis.svg.node();
+        globalXaxisContainer.appendChild(svgNode);
+    }
+    globalXAxis.updateSetup(width, length);
+};
+
 // hiders
 svgContainerToggle.addEventListener('click', () => {
     svgContainer.classList.toggle('hidden');
@@ -319,14 +338,14 @@ svgContainerToggle.addEventListener('click', () => {
     }
 });
 
-snapshotSvgContainerToggle.addEventListener('click', () => {
-    snapshotContainer.classList.toggle('hidden');
-    if (snapshotContainer.classList.contains('hidden')) {
-        snapshotSvgContainerToggle.textContent = 'Show Snapshots';
-    } else {
-        snapshotSvgContainerToggle.textContent = 'Hide Snapshots';
-    }
-});
+// snapshotSvgContainerToggle.addEventListener('click', () => {
+//     snapshotContainer.classList.toggle('hidden');
+//     if (snapshotContainer.classList.contains('hidden')) {
+//         snapshotSvgContainerToggle.textContent = 'Show Snapshots';
+//     } else {
+//         snapshotSvgContainerToggle.textContent = 'Hide Snapshots';
+//     }
+// });
 
 positionSvgContainerToggle.addEventListener('click', () => {
     positionSvgContainer.classList.toggle('hidden');
@@ -716,7 +735,6 @@ const loadMovementFromCSV = (robotNum) => {
                 movementContainer.movementDict[key].length,
             );
         }
-
         simulationStepLabel.textContent = `/ ${ globalVariables.movementMinLen }`;
         simulationStepInput.max = globalVariables.movementMinLen;
         if (!globalVariables.checkedRobots.includes(robotNum)) {

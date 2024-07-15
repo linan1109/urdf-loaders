@@ -50,6 +50,7 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
                 ]),
             );
         }
+        this.sendChangeEvent();
     }
 
     setup() {
@@ -61,29 +62,29 @@ export default class GlobalLineChartRobot extends GlobalLineChartSVG {
         this.dot.append('text').attr('text-anchor', 'middle').attr('y', -8);
 
         // add x axis
-        this.svg
-            .append('g')
-            .attr('transform', `translate(0,${ this.height })`)
-            .attr('class', 'xaxis')
-            .call(
-                d3
-                    .axisTop(this.xScale)
-                    .ticks(this.width / 80)
-                    .tickSizeOuter(0),
-            )
-            .call((g) =>
-                g
-                    .selectAll('.tick line')
-                    .attr('stroke', 'black')
-                    .attr('stroke-width', 0.5),
-            )
-            .call((g) =>
-                g
-                    .select('.domain')
-                    .attr('stroke', 'black')
-                    .attr('stroke-width', 0.5),
-            )
-            .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
+        // this.svg
+        //     .append('g')
+        //     .attr('transform', `translate(0,${ this.height })`)
+        //     .attr('class', 'xaxis')
+        //     .call(
+        //         d3
+        //             .axisTop(this.xScale)
+        //             .ticks(this.width / 80)
+        //             .tickSizeOuter(0),
+        //     )
+        //     .call((g) =>
+        //         g
+        //             .selectAll('.tick line')
+        //             .attr('stroke', 'black')
+        //             .attr('stroke-width', 0.5),
+        //     )
+        //     .call((g) =>
+        //         g
+        //             .select('.domain')
+        //             .attr('stroke', 'black')
+        //             .attr('stroke-width', 0.5),
+        //     )
+        //     .call((g) => g.selectAll('.tick text').attr('fill', 'black'));
 
         this.groups = d3.rollup(
             this.points,

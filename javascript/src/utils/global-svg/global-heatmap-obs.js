@@ -49,6 +49,7 @@ export default class GlobalHeatmapObs extends globalHeatMapSVG {
             (_, i) => i * eachGridDataLength,
         );
         this.yLabelOrder = yLabelOrder;
+        this.sendChangeEvent();
         return processedData;
     }
 
