@@ -9,6 +9,7 @@ class AnimationControl {
         speedButton,
         playText,
         playIcon,
+        menu,
     ) {
         this.playButton = playButton;
         // this.pauseButton = pauseButton;
@@ -28,7 +29,39 @@ class AnimationControl {
             this.uncheck();
         });
         this.speedButton.addEventListener('click', () => {
-            console.log('speed');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+            }
+        });
+        this.speedButton.addEventListener('mouseover', () => {
+            menu.style.display = 'block';
+        });
+
+        speedButton.addEventListener('mouseleave', (event) => {
+            if (!menu.contains(event.relatedTarget)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        menu.addEventListener('mouseleave', (event) => {
+            if (!speedButton.contains(event.relatedTarget)) {
+                menu.style.display = 'none';
+            }
+        });
+        this.menu = menu;
+        this.menu.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.tagName === 'LI') {
+                const speed = parseFloat(target.getAttribute('speed'));
+                globalTimer.changeSpeed(speed);
+                this.menu.style.display = 'none';
+                for (const li of this.menu.children) {
+                    li.classList.remove('selected');
+                }
+                target.classList.add('selected');
+            }
         });
     }
 
@@ -93,6 +126,7 @@ const playIcon = document.getElementById('simulation-contorls-button-play-i');
 const playText = document.getElementById(
     'simulation-contorls-button-play-tooltip-text',
 );
+const menu = document.getElementById('dropdownMenu');
 const animationControl = new AnimationControl(
     playButton,
     // pauseButton,
@@ -100,5 +134,6 @@ const animationControl = new AnimationControl(
     speedButton,
     playText,
     playIcon,
+    menu,
 );
 export default animationControl;

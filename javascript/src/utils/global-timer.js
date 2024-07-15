@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import globalVariables from './global-variables.js';
 
 const interval = 30;
+const OriginalFreq = 1 / interval;
 
 class GlobalTimer {
 
@@ -16,11 +17,22 @@ class GlobalTimer {
         this.restartFrom = 0;
         this.endAt = 0;
 
-        this.freq = 0.03;
+        this.freq = OriginalFreq;
+        this.interval = interval;
     }
 
     setTimerD3UpdateFunc(timerD3UpdateFunc) {
         this.timerD3UpdateFunc = timerD3UpdateFunc;
+    }
+
+    changeSpeed(speedRatio) {
+        this.ignoreFirst = this.getCurrent();
+        this.interval = interval / speedRatio;
+        this.freq = OriginalFreq / speedRatio;
+        if (this.isRunning) {
+            this.stop();
+            this.start();
+        }
     }
 
     start() {
@@ -30,7 +42,7 @@ class GlobalTimer {
         this.isRunning = true;
         if (this.startTime === null) {
             this.startTime = Date.now();
-            this.timerD3 = d3.interval(this.timerD3UpdateFunc, interval);
+            this.timerD3 = d3.interval(this.timerD3UpdateFunc, this.interval);
         }
     }
 

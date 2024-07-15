@@ -677,3 +677,36 @@ global-heatmap-part > div {
     visibility: visible;
     opacity: 1;
 }
+
+
+.dropdown-menu {
+    margin-top: 3px;
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    font-family: var(--main-font-family);
+    border: none;
+    color: var(--main-text-color);
+    font-size: 16px;
+    font-weight: 300;
+    outline: none;
+    float: right;
+    border-radius: 5px;
+}
+.dropdown-menu li {
+    color: black;
+    padding: 2px 6px;
+    text-decoration: none;
+    display: block;
+}
+.dropdown-menu li:hover {
+    background-color: #bdbbbb;
+}
+.dropdown-menu li.selected i{
+    display: inline;
+}
+.dropdown-menu li i{
+    display: none;
+}
