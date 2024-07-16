@@ -608,6 +608,9 @@ const globalPlotPartOnPointMove = (e) => {
         );
         globalPlotPart.style.height = newHeightPercent + '%';
         TopPart.style.height = 100 - newHeightPercent + '%';
+        if (snapShotDiv) {
+            snapShotDiv.resize(globalPlotPart.offsetWidth, newHeight);
+        }
     }
 };
 
