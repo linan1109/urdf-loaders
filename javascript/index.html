@@ -47,9 +47,9 @@
                     <button id="add-robot-button" class="beautful-button">
                         Add a robot
                     </button>
-                    <button id="snap-shot-button" class="beautful-button">
+                    <!-- <button id="snap-shot-button" class="beautful-button">
                         Snapshot
-                    </button>
+                    </button> -->
                     <label>
                         Up Axis:&nbsp;
                         <select id="up-select">
@@ -166,6 +166,13 @@
             <div id="simulation-contorls-container">
                 <div
                     class="tooltip-container"
+                    id="snap-shot-button"
+                >
+                    <i class="fa-solid fa-camera fa-xl"></i>
+                    <div class="tooltip-text" style="width: 65px; margin-left: -25px;">Snapshot</div>
+                </div>
+                <div
+                    class="tooltip-container"
                     id="simulation-contorls-button-play"
                 >
                     <i class="fa-solid fa-play fa-xl" id="simulation-contorls-button-play-i"></i>
@@ -241,15 +248,8 @@
             </div>
             <div id="global-xaxis-container"></div>
             <div id="golbal-heatmap-container"></div>
-            <div>
-                <!-- <div
-                    id="snapshot-svg-container-toggle"
-                    class="xxx-container-toggle"
-                >
-                    Hide Snapshot
-                </div> -->
-                <div id="snapshot-container" class="xxx-container"></div>
-            </div>
+
+            <div id="snapshot-container"></div>
 
         </global-heatmap-part>
         <script src="./src/index.js"></script>

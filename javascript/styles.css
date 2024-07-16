@@ -602,10 +602,6 @@ global-heatmap-part > div {
     height: 2px;
     top: 0;
 }
-.snapshot-div{
-    padding: 5px;
-    flex-direction: row;
-}
 
 #position-svg-container {
     padding: 5px 0;
@@ -655,8 +651,9 @@ global-heatmap-part > div {
 }
 
 .tooltip-container{
-    width: 20px;    
+    width: 26px;
     cursor: pointer;
+    text-align: right;
 }
 
 .tooltip-container .tooltip-text {
@@ -731,4 +728,66 @@ global-heatmap-part > div {
     margin: 0 2px;
     padding: 0 0 0 0;
     height: 20px;
+}
+
+
+
+
+
+
+.snapshot-div{
+    /* padding: 5px;
+    flex-direction: row; */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.small-image-div {
+    position: relative;
+    display: inline-block;
+    margin: 10px;
+}
+
+.small-image-image-div {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.small-image-image-div > img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.title-label {
+    position: absolute;
+    top: 1px;
+    left: 5px;
+    padding: 2px 5px;
+    font-size: 14px;
+    color: var(--main-text-color);
+    display: none;
+    background-color: transparent; /* Transparent background */
+}
+
+.close-button {
+    position: absolute;
+    top: 1px;
+    right: 5px;
+    display: none;
+    background-color: transparent; /* Transparent background */
+    color: var(--main-text-color);
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.small-image-image-div:hover .close-button,
+.small-image-image-div:hover .title-label {
+    
 }

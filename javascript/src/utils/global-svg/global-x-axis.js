@@ -82,4 +82,49 @@ export default class GlobalXAxis {
         );
     }
 
+    addOneSnapshot(timestamp) {
+        const xPosition = this.xScale(timestamp);
+        const triangle = d3.symbol().type(d3.symbolTriangle).size(64);
+
+        this.svg
+            .append('path')
+            .attr('d', triangle)
+            .attr(
+                'transform',
+                `translate(${ xPosition },${ this.height - 5 }) rotate(180)`,
+            )
+            .attr('fill', 'black')
+            .attr('class', `snapshot-${ timestamp }`)
+            .on('mouseover', function() {
+                d3.select(this).attr('fill', 'white');
+                const event = new CustomEvent('snapshot-triangle-hover', {
+                    detail: {
+                        timestamp: timestamp,
+                    },
+                });
+                document.dispatchEvent(event);
+            })
+            .on('mouseout', function() {
+                d3.select(this).attr('fill', 'black');
+                const event = new CustomEvent('snapshot-triangle-out', {
+                    detail: {
+                        timestamp: timestamp,
+                    },
+                });
+                document.dispatchEvent(event);
+            });
+    }
+
+    removeOneSnapshot(timestamp) {
+        this.svg.select(`.snapshot-${ timestamp }`).remove();
+    }
+
+    highlightOneSnapshot(timestamp) {
+        this.svg.select(`.snapshot-${ timestamp }`).attr('fill', 'white');
+    }
+
+    unhighlightOneSnapshot(timestamp) {
+        this.svg.select(`.snapshot-${ timestamp }`).attr('fill', 'black');
+    }
+
 }

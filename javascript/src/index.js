@@ -179,12 +179,17 @@ snapShotButton.addEventListener('click', () => {
 viewer.addEventListener('snapshot', (e) => {
     const img = e.detail.image;
     if (snapShotDiv === null) {
-        snapShotDiv = new SnapShotDiv(PlotsPart.offsetWidth);
+        snapShotDiv = new SnapShotDiv(
+            globalPlotPart.offsetWidth,
+            globalPlotPart.offsetHeight,
+        );
         snapshotContainer.appendChild(snapShotDiv.div);
     }
     const time = e.detail.timestamp;
-    console.log('Snapshot taken at time: ' + time);
-    snapShotDiv.addImage(img, time);
+    if (globalXAxis) {
+        snapShotDiv.addImage(img, time);
+        globalXAxis.addOneSnapshot(time);
+    }
 });
 
 globalHeatmapSelection.addEventListener('change', (e) => {
@@ -587,9 +592,6 @@ sliderPlotsPart.addEventListener('pointerdown', (e) => {
 sliderPlotsPart.addEventListener('pointerup', (e) => {
     window.removeEventListener('pointermove', plotsPartOnPointMove);
     plotsSVGRedraw();
-    if (snapShotDiv !== null) {
-        snapShotDiv.resize(PlotsPart.offsetWidth, PlotsPart.offsetHeight);
-    }
     // resize the position svg
     if (positionSVG !== null) {
         positionSVG.resize(PlotsPart.offsetWidth);
@@ -971,9 +973,9 @@ const updateAllSVG = () => {
     if (positionSVG !== null) {
         positionSVG.updatePlotOnTime();
     }
-    if (snapShotDiv !== null) {
-        snapShotDiv.updatePlotOnTime();
-    }
+    // if (snapShotDiv !== null) {
+    //     snapShotDiv.updatePlotOnTime();
+    // }
 };
 
 document.addEventListener('global-map-brushed', (e) => {
@@ -983,10 +985,10 @@ document.addEventListener('global-map-brushed', (e) => {
         svg.updateWindowSize(globalVariables.rightSvgWindowSize);
         svg.updatePlotOnTime();
     }
-    if (snapShotDiv !== null) {
-        snapShotDiv.updateWindowSize(globalVariables.rightSvgWindowSize);
-        snapShotDiv.updatePlotOnTime();
-    }
+    // if (snapShotDiv !== null) {
+    //     snapShotDiv.updateWindowSize(globalVariables.rightSvgWindowSize);
+    //     snapShotDiv.updatePlotOnTime();
+    // }
 });
 
 upSelect.addEventListener('change', () => (viewer.up = upSelect.value));
@@ -1168,6 +1170,32 @@ viewer.addEventListener('manipulate-start', (e) => {
 
 viewer.addEventListener('manipulate-end', (e) => {
     viewer.noAutoRecenter = originalNoAutoRecenter;
+});
+
+document.addEventListener('a-snapshot-closed', (e) => {
+    const timestamp = e.detail.timestamp;
+    snapShotDiv.removeOne(timestamp);
+    globalXAxis.removeOneSnapshot(timestamp);
+});
+
+document.addEventListener('a-snapshot-hover', (e) => {
+    const timestamp = e.detail.timestamp;
+    globalXAxis.highlightOneSnapshot(timestamp);
+});
+
+document.addEventListener('a-snapshot-out', (e) => {
+    const timestamp = e.detail.timestamp;
+    globalXAxis.unhighlightOneSnapshot(timestamp);
+});
+
+document.addEventListener('snapshot-triangle-hover', (e) => {
+    const timestamp = e.detail.timestamp;
+    snapShotDiv.hoverOnImage(timestamp);
+});
+
+document.addEventListener('snapshot-triangle-out', (e) => {
+    const timestamp = e.detail.timestamp;
+    snapShotDiv.hoverOutImage(timestamp);
 });
 
 document.addEventListener('WebComponentsReady', () => {

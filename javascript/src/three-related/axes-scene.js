@@ -156,5 +156,6 @@ export class AxesScene {
             this.renderer.domElement.dispatchEvent(event);
         }
     }
+    
 
 }
