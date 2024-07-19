@@ -96,8 +96,12 @@ const svgContainerToggle = document.getElementById('svg-container-toggle');
 // const snapshotSvgContainerToggle = document.getElementById(
 //     'snapshot-svg-container-toggle',
 // );
+const svgContainerToggleIcon = document.getElementById('svg-container-toggle-icon');
 const positionSvgContainerToggle = document.getElementById(
     'position-svg-container-toggle',
+);
+const positionSvgContainerToggleIcon = document.getElementById(
+    'position-svg-container-toggle-icon',
 );
 const brushLockToggle = document.getElementById('brush-lock-toggle');
 
@@ -337,9 +341,11 @@ svgContainerToggle.addEventListener('click', () => {
     plotsControlsContainer.classList.toggle('hidden');
 
     if (svgContainer.classList.contains('hidden')) {
-        svgContainerToggle.textContent = 'Show Plots';
+        svgContainerToggleIcon.classList.remove('fa-minus');
+        svgContainerToggleIcon.classList.add('fa-plus');
     } else {
-        svgContainerToggle.textContent = 'Hide Plots';
+        svgContainerToggleIcon.classList.remove('fa-plus');
+        svgContainerToggleIcon.classList.add('fa-minus');
     }
 });
 
@@ -355,9 +361,11 @@ svgContainerToggle.addEventListener('click', () => {
 positionSvgContainerToggle.addEventListener('click', () => {
     positionSvgContainer.classList.toggle('hidden');
     if (positionSvgContainer.classList.contains('hidden')) {
-        positionSvgContainerToggle.textContent = 'Show Position';
+        positionSvgContainerToggleIcon.classList.remove('fa-minus');
+        positionSvgContainerToggleIcon.classList.add('fa-plus');
     } else {
-        positionSvgContainerToggle.textContent = 'Hide Position';
+        positionSvgContainerToggleIcon.classList.remove('fa-plus');
+        positionSvgContainerToggleIcon.classList.add('fa-minus');
     }
 });
 // end of hiders

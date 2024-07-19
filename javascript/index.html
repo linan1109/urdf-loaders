@@ -110,10 +110,36 @@
 
             <plots-part id="plots-part">
                 <div id="slider-plots-part" class="beautiful-slider"></div>
-
                 <div class="a-part-of-right">
-                    <div id="svg-container-toggle" class="xxx-container-toggle">
-                        Hide Plots
+                    <div class="a-part-of-right-top">
+                        <div class="plots-part-title">Trajectory</div>
+                        <div
+                            id="position-svg-container-toggle"
+                            class="xxx-container-toggle"
+                        >
+                            <i
+                                id="position-svg-container-toggle-icon"
+                                class="fa-solid fa-minus"
+                            ></i>
+                        </div>
+                    </div>
+                    <div
+                        id="position-svg-container"
+                        class="xxx-container"
+                    ></div>
+                </div>
+                <div class="a-part-of-right">
+                    <div class="a-part-of-right-top">
+                        <div class="plots-part-title">Current Brush</div>
+                        <div
+                            id="svg-container-toggle"
+                            class="xxx-container-toggle"
+                        >
+                            <i
+                                id="svg-container-toggle-icon"
+                                class="fa-solid fa-minus"
+                            ></i>
+                        </div>
                     </div>
                     <div id="plots-controls-container" class="xxx-container">
                         <div id="plots-controls" class="hidden">
@@ -149,33 +175,26 @@
                     </div>
                     <div id="svg-container" class="xxx-container"></div>
                 </div>
-                <div class="a-part-of-right">
-                    <div
-                        id="position-svg-container-toggle"
-                        class="xxx-container-toggle"
-                    >
-                        Hide Position
-                    </div>
-                    <div
-                        id="position-svg-container"
-                        class="xxx-container"
-                    ></div>
-                </div>
             </plots-part>
 
             <div id="simulation-contorls-container">
-                <div
-                    class="tooltip-container"
-                    id="snap-shot-button"
-                >
+                <div class="tooltip-container" id="snap-shot-button">
                     <i class="fa-solid fa-camera fa-xl"></i>
-                    <div class="tooltip-text" style="width: 65px; margin-left: -25px;">Snapshot</div>
+                    <div
+                        class="tooltip-text"
+                        style="width: 65px; margin-left: -25px"
+                    >
+                        Snapshot
+                    </div>
                 </div>
                 <div
                     class="tooltip-container"
                     id="simulation-contorls-button-play"
                 >
-                    <i class="fa-solid fa-play fa-xl" id="simulation-contorls-button-play-i"></i>
+                    <i
+                        class="fa-solid fa-play fa-xl"
+                        id="simulation-contorls-button-play-i"
+                    ></i>
                     <div
                         id="simulation-contorls-button-play-tooltip-text"
                         class="tooltip-text"
@@ -197,18 +216,42 @@
                     <i class="fa-solid fa-bars fa-xl"></i>
                     <div class="tooltip-text">Speed</div>
                     <div id="dropdownMenu" class="dropdown-menu">
-                        <li speed="2" class=""><i class="fa-solid fa-check fa-2xs"></i>2.0x</li>
-                        <li speed="1.5" class=""><i class="fa-solid fa-check fa-2xs"></i>1.5x</li>
-                        <li speed="1.25" class=""><i class="fa-solid fa-check fa-2xs"></i>1.25x</li>
-                        <li speed="1.0" class="selected"><i class="fa-solid fa-check fa-2xs"></i>1.0x</li>
-                        <li speed="0.75" class=""><i class="fa-solid fa-check fa-2xs"></i>0.75x</li>
-                        <li speed="0.5" class=""><i class="fa-solid fa-check fa-2xs"></i>0.5x</li>
+                        <li speed="2" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>2.0x
+                        </li>
+                        <li speed="1.5" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.5x
+                        </li>
+                        <li speed="1.25" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.25x
+                        </li>
+                        <li speed="1.0" class="selected">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.0x
+                        </li>
+                        <li speed="0.75" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>0.75x
+                        </li>
+                        <li speed="0.5" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>0.5x
+                        </li>
                     </div>
                 </div>
                 <div>
-                    <input type="number" id="simulation-contorls-step-input" value="0" placeholder="0" min="0" max="0" />
+                    <input
+                        type="number"
+                        id="simulation-contorls-step-input"
+                        value="0"
+                        placeholder="0"
+                        min="0"
+                        max="0"
+                    />
                     <!-- <div id="simulation-contorls-step-whole-length">/ 0</div> -->
-                     <label for="simulation-contorls-step-input" style="font-size: 16px;" id="simulation-contorls-step-input-label">/ 0</label>
+                    <label
+                        for="simulation-contorls-step-input"
+                        style="font-size: 16px"
+                        id="simulation-contorls-step-input-label"
+                        >/ 0</label
+                    >
                 </div>
             </div>
 
@@ -250,7 +293,6 @@
             <div id="golbal-heatmap-container"></div>
 
             <div id="snapshot-container"></div>
-
         </global-heatmap-part>
         <script src="./src/index.js"></script>
     </body>

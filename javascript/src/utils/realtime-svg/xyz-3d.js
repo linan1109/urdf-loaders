@@ -7,7 +7,7 @@ import globalVariables from '../global-variables.js';
 
 const lengthAllGrids = 10;
 const numGrids = 10;
-const numberPoints = 200;
+const numberPoints = 100;
 
 export default class XYZ3D {
 

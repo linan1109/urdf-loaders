@@ -114,6 +114,12 @@ class SmallHeatMapSVG extends smallSVG {
                 'style',
                 'max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif; margin-left: 50px; margin-bottom:25px; margin-top: 20px;',
             );
+        // set the backgroud of the svg to aliceblue
+        this.svg
+            .append('rect')
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .attr('fill', 'aliceblue');
 
         const yLabels = this.yLabels;
 

@@ -182,6 +182,12 @@ class globalHeatMapSVG extends globalPlotSVG {
         this.colorScale = globalVariables.HeatmapColorScale;
 
         this.initSvg();
+        // set the backgroud of the svg to aliceblue
+        this.svg
+            .append('rect')
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .attr('fill', 'aliceblue');
     }
 
     addArcLegend() {
@@ -374,7 +380,7 @@ class globalHeatMapSVG extends globalPlotSVG {
             .append('rect')
             .attr('x', (d) => d.x * this.gridWidth)
             .attr('y', 0)
-            .attr('class', 'card bordered')
+            .attr('class', 'card')
             .attr('width', this.gridWidth)
             .attr('height', this.gridHeight)
             .style('fill', (d) => this.colorScale(d.value));

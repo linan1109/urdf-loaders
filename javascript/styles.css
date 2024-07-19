@@ -241,14 +241,14 @@ input:focus {
 }
 
 #plots-controls #toggle-plots-controls:before {
-    content: "hide plot options";
+    content: "Hide Options";
     /* font-size: 12px; */
     font-weight: normal;
 }
 
 /* hidden state */
 #plots-controls.hidden #toggle-plots-controls:before {
-    content: "show plot options";
+    content: "Options";
 }
 
 
@@ -621,20 +621,26 @@ global-heatmap-part > div {
 
 .xxx-container-toggle {
     cursor: pointer;
-    text-align: left;
+    text-align: right;
     color: var(--main-text-color);
-    margin: 5px;
+    margin-right: 10px;
     font-family: var(--main-font-family);
+    width: 45%;
 }
 
-.xxx-container-toggle:hover {
+/* .xxx-container-toggle:hover {
     text-decoration: underline;
-}
+} */
 
 .a-part-of-right {
     border-bottom: var(--main-text-color) 1px dashed;
 }
-
+.a-part-of-right-top
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 #simulation-contorls-container {
     margin-left: 30px;
     bottom: 15px;
@@ -787,7 +793,9 @@ global-heatmap-part > div {
     font-size: 14px;
 }
 
-.small-image-image-div:hover .close-button,
-.small-image-image-div:hover .title-label {
-    
+.plots-part-title {
+    margin-left: 5px;
+    margin-top: 5px;
+    width: 50%;
+
 }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import globalVariables from '../utils/global-variables.js';
+import globalTimer from '../utils/global-timer.js';
 export class PointTrajectory {
 
     constructor(scene, camera) {
@@ -15,6 +16,7 @@ export class PointTrajectory {
         this.trajectoryLine = {};
 
         this.points = {};
+        this.pointsShown = false;
     }
 
     clearTrajectory() {
@@ -54,7 +56,12 @@ export class PointTrajectory {
             pointWorldPosList[key] = pointWorldPos;
             this.points[key].position.copy(pointWorldPos);
         }
-
+        if (globalTimer.isRunning === this.pointsShown) {
+            this.pointsShown = !this.pointsShown;
+            for (const key in this.points) {
+                this.points[key].visible = this.pointsShown;
+            }
+        }
         return pointWorldPosList;
     }
 
@@ -106,6 +113,7 @@ export class PointTrajectory {
     }
 
     hide() {
+        this.pointsShown = false;
         for (const key in this.trajectory) {
             this.trajectoryLine[key].visible = false;
             this.points[key].visible = false;
@@ -113,6 +121,7 @@ export class PointTrajectory {
     }
 
     show() {
+        this.pointsShown = true;
         for (const key in this.trajectory) {
             this.trajectoryLine[key].visible = true;
             this.points[key].visible = true;
