@@ -1,33 +1,52 @@
+import globalVariables from './global-variables';
+
 class MovementContainer {
 
     constructor() {
         this.robotNums = [];
         this.movementDict = {};
         this.velocity = {};
+        this.jointForce = {};
+        this.update_steps = {};
     }
 
-    fromMovementToVelocity(movement) {
+    splitMovement(input) {
         const velocity = [];
-        let lastMov = movement[0];
-        for (const key in movement) {
-            const oneMov = movement[key];
+        const movement = [];
+        const force = [];
+        const updates = [];
+        for (const key in input) {
+            const oneMov = {};
             const oneVel = {};
-            for (const joint in oneMov) {
-                oneVel[joint] = (oneMov[joint] - lastMov[joint]);
+            const oneForce = {};
+            const oneStep = {
+                step: input[key].step,
+                update: input[key].update,
+            };
+            for (const joint in globalVariables.nameObsMap) {
+                oneMov[joint] = input[key][joint];
+                oneVel[joint] = input[key][joint + '_angVel'];
+                oneForce[joint] = input[key][joint + '_force'];
             }
-            oneVel.update = oneMov.update;
-            oneVel.step = oneMov.step;
+            movement.push(oneMov);
             velocity.push(oneVel);
-            lastMov = oneMov;
+            force.push(oneForce);
+            updates.push(oneStep);
         }
-        return velocity;
+        console.log('movement', movement);
+        console.log('velocity', velocity);
+        console.log('force', force);
+        return { movement, velocity, force, updates };
     }
 
-    addMovement(robotNum, movement) {
+    addMovement(robotNum, input) {
         robotNum = parseInt(robotNum);
         this.robotNums.push(robotNum);
+        const { movement, velocity, force, updates } = this.splitMovement(input);
         this.movementDict[robotNum] = movement;
-        this.velocity[robotNum] = this.fromMovementToVelocity(movement);
+        this.velocity[robotNum] = velocity;
+        this.jointForce[robotNum] = force;
+        this.update_steps[robotNum] = updates;
     }
 
     getMovement(robotNum) {
@@ -46,6 +65,15 @@ class MovementContainer {
             return null;
         }
         return this.velocity[robotNum];
+    }
+
+    getJointForce(robotNum) {
+        robotNum = parseInt(robotNum);
+        if (!this.hasMovement(robotNum)) {
+            console.error('No movement found for robotNum', robotNum);
+            return null;
+        }
+        return this.jointForce[robotNum];
     }
 
     hasMovement(robotNum) {

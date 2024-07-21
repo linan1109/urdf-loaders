@@ -11,7 +11,7 @@ export default class GlobalHeatmapVeloRobot extends globalHeatMapSVG {
         this.dataLength = this.data.length;
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
-        this.id = 'global-heatmap-robot' + robotNum;
+        this.id = 'global-heatmap-velo-robot' + robotNum;
         this.createHeatmap();
     }
 

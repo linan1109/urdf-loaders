@@ -3,7 +3,7 @@ import movementContainer from '../movement-container.js';
 import globalVariables from '../global-variables.js';
 import * as d3 from 'd3';
 
-export default class GlobalHeatmapVelocityObs extends globalHeatMapSVG {
+export default class GlobalHeatmapForceObs extends globalHeatMapSVG {
 
     constructor(obsName, gridNum, offsetWidth, offsetHeight) {
         super(gridNum, offsetWidth, offsetHeight);
@@ -21,7 +21,7 @@ export default class GlobalHeatmapVelocityObs extends globalHeatMapSVG {
         this.initSvg();
         // use max value of data[update] as gridNum
         // this.gridNum = Math.max(...this.data.map((d) => d.update));
-        this.id = 'global-heatmap-velo-obs' + obsName;
+        this.id = 'global-heatmap-force-obs' + obsName;
         this.createHeatmap();
     }
 
@@ -34,7 +34,7 @@ export default class GlobalHeatmapVelocityObs extends globalHeatMapSVG {
 
         for (let i = 0; i < this.yLabels.length; i++) {
             const robotNum = parseInt(this.yLabels[i].split(' ')[1]);
-            const data = movementContainer.getVelocity(robotNum);
+            const data = movementContainer.getJointForce(robotNum);
             for (let j = 0; j < this.gridNum; j++) {
                 let sum = 0;
                 for (let k = 0; k < eachGridDataLength; k++) {
