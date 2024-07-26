@@ -2,11 +2,9 @@
 
 This project is built based on [urdf-loaders](https://github.com/gkjohnson/urdf-loaders).
 
-[Demo Here!](https://linan1109.github.io/urdf-loaders/js)
+[**Demo Here!**](https://linan1109.github.io/urdf-loaders/js)
 
-[Demo Data1 Here](https://polybox.ethz.ch/index.php/s/LZaSry4Z7yLYWpc)
-
-[Demo Data2 Here](https://polybox.ethz.ch/index.php/s/jeE5H1rLo4AjU2B)
+[Demo Data Here](https://polybox.ethz.ch/index.php/s/796UiHRdHyj3wOV)
 
 
 
