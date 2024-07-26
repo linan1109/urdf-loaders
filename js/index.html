@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta charset="utf-8">
+
+        <title>URDF Viewer Example</title>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+        <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.4.3/webcomponents-bundle.js"></script>
+
+        <script src="https://kit.fontawesome.com/715f5d4073.js" crossorigin="anonymous"></script>
+
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300" rel="stylesheet">
+        <link href="styles.8986bff4.css" type="text/css" rel="stylesheet">
+
+        <!-- <script src="./src/redirect.js"></script> -->
+    </head>
+
+    <body tabindex="0" style="flex-direction: row">
+        <div style="width: 100%; height: 70%; position: relative" id="top-part">
+            <div id="menu">
+                <ul id="urdf-options">
+                    <li urdf="../urdf/anymal/urdf/anymal.urdf" color="#00968796"></li>
+                    <!-- color="#009688" -->
+                    <!-- <li urdf="../../../urdf/T12/urdf/T12_flipped.URDF" color="#E91E63">ATHLETE</li>
+                <li urdf="../../../urdf/TriATHLETE/urdf/TriATHLETE_flipped.URDF" color="#009688">TriATHLETE</li>
+                <li urdf="../../../urdf/TriATHLETE_Climbing/urdf/TriATHLETE_flipped.URDF" color="#FFB300">TriATHLETE Climbing</li> -->
+                </ul>
+                <div id="controls" class="hidden">
+                    &nbsp;ANYmal&nbsp;&nbsp;
+                    <div id="toggle-controls"></div>
+
+                    <button id="add-robot-button" class="beautful-button">
+                        Add a robot
+                    </button>
+                    <!-- <button id="snap-shot-button" class="beautful-button">
+                        Snapshot
+                    </button> -->
+                    <label>
+                        Up Axis:&nbsp;
+                        <select id="up-select">
+                            <option value="+X">+X</option>
+                            <option value="-X">-X</option>
+                            <option value="+Y">+Y</option>
+                            <option value="-Y">-Y</option>
+                            <option value="+Z" selected="">+Z</option>
+                            <option value="-Z">-Z</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Move Only:&nbsp;
+                        <select id="only-obs-select">
+                            <option value="all" selected="">All</option>
+                            <option value="LF_HAA">LF_HAA</option>
+                            <option value="LF_HFE">LF_HFE</option>
+                            <option value="LF_KFE">LF_KFE</option>
+                            <option value="RF_HAA">RF_HAA</option>
+                            <option value="RF_HFE">RF_HFE</option>
+                            <option value="RF_KFE">RF_KFE</option>
+                            <option value="LH_HAA">LH_HAA</option>
+                            <option value="LH_HFE">LH_HFE</option>
+                            <option value="LH_KFE">LH_KFE</option>
+                            <option value="RH_HAA">RH_HAA</option>
+                            <option value="RH_HFE">RH_HFE</option>
+                            <option value="RH_KFE">RH_KFE</option>
+                        </select>
+                    </label>
+
+                    <!-- <div>Drag and drop URDF files or folders! <br /> (Chrome Only)</div> -->
+                    <!-- <div id="ignore-joint-limits" class="toggle">
+                        Ignore Joint Limits
+                    </div> -->
+                    <!-- <div id="radians-toggle" class="toggle checked">
+                        Use Radians
+                    </div> -->
+                    <!-- <div id="autocenter-toggle" class="toggle checked">
+                        Autocenter
+                    </div> -->
+                    <div id="show-grid-texture-toggle" class="toggle">
+                        Show Grid
+                    </div>
+                    <div id="collision-toggle" class="toggle">
+                        Show Collision
+                    </div>
+                    <div id="wireframe-toggle" class="toggle">
+                        Show Wireframe
+                    </div>
+                    <!-- <div id="do-animate" class="toggle">Show Movement</div> -->
+                </div>
+                <div style="flex-direction: row" id="robot-control-container"></div>
+            </div>
+
+            <plots-part id="plots-part">
+                <div id="slider-plots-part" class="beautiful-slider"></div>
+                <div class="a-part-of-right">
+                    <div class="a-part-of-right-top">
+                        <div class="plots-part-title">Trajectory</div>
+                        <div id="position-svg-container-toggle" class="xxx-container-toggle">
+                            <i id="position-svg-container-toggle-icon" class="fa-solid fa-minus"></i>
+                        </div>
+                    </div>
+                    <div id="position-svg-container" class="xxx-container"></div>
+                </div>
+                <div class="a-part-of-right">
+                    <div class="a-part-of-right-top">
+                        <div class="plots-part-title">Current Brush</div>
+                        <div id="svg-container-toggle" class="xxx-container-toggle">
+                            <i id="svg-container-toggle-icon" class="fa-solid fa-minus"></i>
+                        </div>
+                    </div>
+                    <div id="plots-controls-container" class="xxx-container">
+                        <div id="plots-controls" class="hidden">
+                            <div id="toggle-plots-controls"></div>
+                            <label>
+                                Plots Option:
+                                <select id="plots-group-selection">
+                                    <option value="LineRobot" selected="">
+                                        Line Plot by Robot
+                                    </option>
+                                    <option value="LineLink">
+                                        Line Plot by Joint
+                                    </option>
+                                    <option value="HeatMapRobot">
+                                        Heatmap by Robot
+                                    </option>
+                                    <option value="HeatMapLink">
+                                        Heatmap by Joint
+                                    </option>
+                                    <option value="HeatMapVeloRobot">
+                                        Velocity by Robot
+                                    </option>
+                                    <option value="HeatMapVeloLink">
+                                        Velocity by Joint
+                                    </option>
+                                    <option value="HeatMapForceRobot">
+                                        Torque by Robot
+                                    </option>
+                                    <option value="HeatMapForceLink">
+                                        Torque by Joint
+                                    </option>
+                                </select>
+                            </label>
+                            <div id="plots-link-option-name"></div>
+                            <div id="plots-link-controls-container" class="plots-controls-container"></div>
+                            <div id="plots-robot-option-name"></div>
+                            <div id="plots-robot-controls-container" class="plots-controls-container"></div>
+                        </div>
+                    </div>
+                    <div id="svg-container" class="xxx-container"></div>
+                </div>
+            </plots-part>
+
+            <div id="simulation-contorls-container">
+                <div class="tooltip-container" id="snap-shot-button">
+                    <i class="fa-solid fa-camera fa-xl"></i>
+                    <div class="tooltip-text" style="width: 65px; margin-left: -25px">
+                        Snapshot
+                    </div>
+                </div>
+                <div class="tooltip-container" id="simulation-contorls-button-play">
+                    <i class="fa-solid fa-play fa-xl" id="simulation-contorls-button-play-i"></i>
+                    <div id="simulation-contorls-button-play-tooltip-text" class="tooltip-text">
+                        Play
+                    </div>
+                </div>
+                <div class="tooltip-container" id="simulation-contorls-button-stop">
+                    <i class="fa-solid fa-stop fa-xl"></i>
+                    <div class="tooltip-text">Stop</div>
+                </div>
+                <div class="tooltip-container" id="simulation-contorls-button-speed">
+                    <i class="fa-solid fa-bars fa-xl"></i>
+                    <div class="tooltip-text">Speed</div>
+                    <div id="dropdownMenu" class="dropdown-menu">
+                        <li speed="2" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>2.0x
+                        </li>
+                        <li speed="1.5" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.5x
+                        </li>
+                        <li speed="1.25" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.25x
+                        </li>
+                        <li speed="1.0" class="selected">
+                            <i class="fa-solid fa-check fa-2xs"></i>1.0x
+                        </li>
+                        <li speed="0.75" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>0.75x
+                        </li>
+                        <li speed="0.5" class="">
+                            <i class="fa-solid fa-check fa-2xs"></i>0.5x
+                        </li>
+                    </div>
+                </div>
+                <div>
+                    <input type="number" id="simulation-contorls-step-input" value="0" placeholder="0" min="0" max="0">
+                    <!-- <div id="simulation-contorls-step-whole-length">/ 0</div> -->
+                    <label for="simulation-contorls-step-input" style="font-size: 16px" id="simulation-contorls-step-input-label">/ 0</label>
+                </div>
+            </div>
+
+            <urdf-viewer up="+Z" display-shadow="" tabindex="0"></urdf-viewer>
+        </div>
+        <global-heatmap-part id="global-heatmap-part">
+            <div id="slider-global-plots-part" class="beautiful-slider"></div>
+            <div id="global-plots-controls" style="padding-top: 5px">
+                <label>
+                    Plots Option:&nbsp;&nbsp;
+                    <select id="global-group-selection">
+                        <option value="LineRobot" selected="">
+                            Line Plot by Robot
+                        </option>
+                        <option value="LineLink">Line Plot by Joint</option>
+                        <option value="HeatMapRobot">Heat Map by Robot</option>
+                        <option value="HeatMapLink">Heat Map by Joint</option>
+                        <option value="HeatMapVeloRobot">
+                            Velocity by Robot
+                        </option>
+                        <option value="HeatMapVeloLink">
+                            Velocity by Joint
+                        </option>
+                        <option value="HeatMapForceRobot">
+                            Torque by Robot
+                        </option>
+                        <option value="HeatMapForceLink">
+                            Torque by Joint
+                        </option>
+                        
+                    </select>
+                </label>
+                <label for="global-heatmap-selection">
+                    Select One: &nbsp;&nbsp;
+                    <select id="global-heatmap-selection"></select>
+                </label>
+                <div id="brush-lock-toggle" class="toggle" style="padding-left: 25px">
+                    Lock Brush
+                </div>
+            </div>
+            <div id="global-xaxis-container"></div>
+            <div id="golbal-heatmap-container"></div>
+
+            <div id="snapshot-container"></div>
+        </global-heatmap-part>
+        <script src="src.a2b27638.js"></script>
+    </body>
+</html>
