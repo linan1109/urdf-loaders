@@ -1,30 +1,27 @@
 import { SmallHeatMapSVG } from './small-svg.js';
 import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
+import globalVariables from '../global-variables.js';
 import * as d3 from 'd3';
 
-export default class SmallHeatmapObs extends SmallHeatMapSVG {
+export default class SmallHeatmapRobotVelo extends SmallHeatMapSVG {
 
-    constructor(obsName, gridNum, offsetWidth) {
+    constructor(robotNum, gridNum, offsetWidth) {
         super(gridNum, offsetWidth);
-
-        // this.data = movementContainer.getMovement(robotNum);
-        // this.dataLength = this.data.length;
-        this.id = 'small-heatmap-obs' + obsName;
-        this.yLabels = movementContainer.robotNums;
-        this.obsName = obsName;
+        this.robotNum = robotNum;
+        this.originalData = movementContainer.getVelocity(robotNum);
+        this.dataLength = this.originalData.length;
+        this.id = 'small-heatmap-robot' + robotNum;
 
         this.setup();
     }
 
     setup() {
+        this.yLabels = Object.values(globalVariables.nameObsMap);
         this.gridHeight = this.height / this.yLabels.length;
-        if (this.gridHeight > 2 * this.gridWidth) {
-            this.gridHeight = this.gridWidth;
-            this.height = this.gridHeight * this.yLabels.length;
-        }
 
         this.createHeatmap();
+
         this.svg.call((g) =>
             g
                 .append('text')
@@ -32,7 +29,7 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
                 .attr('y', -10)
                 .attr('text-anchor', 'middle')
                 .attr('font-size', 12)
-                .text(this.obsName),
+                .text('Robot ' + this.robotNum),
         );
     }
 
@@ -40,25 +37,36 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
         const eachGridDataLength = Math.floor(this.windowSize / this.gridNum);
         const processedData = [];
         start = Math.floor(start);
+        let maxVelocity = 0;
+        let minVelocity = 0;
 
-        for (let i = 0; i < this.yLabels.length; i++) {
-            const robotNum = this.yLabels[i];
-            const data = movementContainer.getJointForce(robotNum);
+        this.yLabels.forEach((measurement, i) => {
             for (let j = 0; j < this.gridNum; j++) {
                 let sum = 0;
                 for (let k = 0; k < eachGridDataLength; k++) {
                     sum += parseFloat(
-                        data[start + j * eachGridDataLength + k][this.obsName],
+                        this.originalData[start + j * eachGridDataLength + k][
+                            measurement
+                        ],
                     );
                 }
+                const value = sum / eachGridDataLength;
                 processedData.push({
                     x: j,
                     y: i,
-                    value: sum / eachGridDataLength,
+                    value: value,
                 });
+                maxVelocity = Math.max(maxVelocity, value);
+                minVelocity = Math.min(minVelocity, value);
             }
-        }
+        });
 
+        this.maxVelocity = maxVelocity;
+        this.minVelocity = minVelocity;
+        this.colorScale = globalVariables.HeatmapColorScaleVelo.domain([
+            minVelocity,
+            maxVelocity,
+        ]);
         this.all_xLabels = Array.from(
             { length: this.gridNum },
             (_, i) => i * eachGridDataLength,

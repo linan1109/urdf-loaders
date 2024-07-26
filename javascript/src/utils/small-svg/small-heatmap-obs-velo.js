@@ -2,8 +2,9 @@ import { SmallHeatMapSVG } from './small-svg.js';
 import movementContainer from '../movement-container.js';
 import globalTimer from '../global-timer.js';
 import * as d3 from 'd3';
+import globalVariables from '../global-variables.js';
 
-export default class SmallHeatmapObs extends SmallHeatMapSVG {
+export default class SmallHeatmapObsVelo extends SmallHeatMapSVG {
 
     constructor(obsName, gridNum, offsetWidth) {
         super(gridNum, offsetWidth);
@@ -40,10 +41,12 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
         const eachGridDataLength = Math.floor(this.windowSize / this.gridNum);
         const processedData = [];
         start = Math.floor(start);
+        let maxVelocity = 0;
+        let minVelocity = 0;
 
         for (let i = 0; i < this.yLabels.length; i++) {
             const robotNum = this.yLabels[i];
-            const data = movementContainer.getJointForce(robotNum);
+            const data = movementContainer.getVelocity(robotNum);
             for (let j = 0; j < this.gridNum; j++) {
                 let sum = 0;
                 for (let k = 0; k < eachGridDataLength; k++) {
@@ -51,14 +54,23 @@ export default class SmallHeatmapObs extends SmallHeatMapSVG {
                         data[start + j * eachGridDataLength + k][this.obsName],
                     );
                 }
+                const value = sum / eachGridDataLength;
                 processedData.push({
                     x: j,
                     y: i,
-                    value: sum / eachGridDataLength,
+                    value: value,
                 });
+                maxVelocity = Math.max(maxVelocity, value);
+                minVelocity = Math.min(minVelocity, value);
             }
         }
 
+        this.maxVelocity = maxVelocity;
+        this.minVelocity = minVelocity;
+        this.colorScale = globalVariables.HeatmapColorScaleVelo.domain([
+            minVelocity,
+            maxVelocity,
+        ]);
         this.all_xLabels = Array.from(
             { length: this.gridNum },
             (_, i) => i * eachGridDataLength,

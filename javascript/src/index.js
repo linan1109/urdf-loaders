@@ -10,21 +10,29 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import URDFManipulator from './urdf-manipulator-element.js';
 import globalTimer from './utils/global-timer.js';
 import movementContainer from './utils/movement-container.js';
-import SmallLineChartObs from './utils/small-svg/small-linechart-obs.js';
-import SmallLineChartRobot from './utils/small-svg/small-linechart-robot.js';
-import SmallHeatmapRobot from './utils/small-svg/small-heatmap-robot.js';
-import SmallHeatMapObs from './utils/small-svg/small-heatmap-obs.js';
-import PositionSVG from './utils/realtime-svg/position-svg.js';
+import {
+    SmallHeatmapObs,
+    SmallHeatmapObsForce,
+    SmallHeatmapObsVelo,
+    SmallHeatmapRobot,
+    SmallHeatmapRobotForce,
+    SmallHeatmapRobotVelo,
+    SmallLineChartObs,
+    SmallLineChartRobot,
+} from './utils/small-svg/small-svg-index.js';
+// import PositionSVG from './utils/realtime-svg/position-svg.js';
 import XYZ3D from './utils/realtime-svg/xyz-3d.js';
-import GlobalHeatmapRobot from './utils/global-svg/global-heatmap-robot.js';
-import GlobalLineChartRobot from './utils/global-svg/global-linechart-robot.js';
-import GlobalLineChartObs from './utils/global-svg/global-linechart-obs.js';
-import GlobalHeatmapObs from './utils/global-svg/global-heatmap-obs.js';
-import GlobalHeatmapVeloRobot from './utils/global-svg/global-heatmap-velo-robot.js';
-import GlobalHeatmapVelocityObs from './utils/global-svg/global-heatmap-velo-obs.js';
-import GlobalHeatmapForceObs from './utils/global-svg/global-heatmap-force-obs.js';
-import GlobalHeatmapForceRobot from './utils/global-svg/global-heatmap-force-robot.js';
-import GlobalXAxis from './utils/global-svg/global-x-axis.js';
+import {
+    GlobalHeatmapForceObs,
+    GlobalHeatmapForceRobot,
+    GlobalHeatmapObs,
+    GlobalHeatmapRobot,
+    GlobalHeatmapVeloRobot,
+    GlobalHeatmapVelocityObs,
+    GlobalLineChartObs,
+    GlobalLineChartRobot,
+    GlobalXAxis,
+} from './utils/global-svg/global-svg-index.js';
 import SnapShotDiv from './utils/snapshot.js';
 
 import animationControl from './utils/animation-control.js';
@@ -827,7 +835,36 @@ const addHeatMapRobotSVG = (robotNum) => {
     svgList[robotNum] = svg;
     svg.updatePlotOnTime();
 };
-
+const addHeatMapRobotVeloSVG = (robotNum) => {
+    if (svgList[robotNum] !== undefined) {
+        svgList[robotNum].svg.remove();
+    }
+    const svg = new SmallHeatmapRobotVelo(
+        robotNum,
+        globalVariables.smallHeatMapGridNum,
+        PlotsPart.offsetWidth,
+    );
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + robotNum;
+    svgContainer.appendChild(svgNode);
+    svgList[robotNum] = svg;
+    svg.updatePlotOnTime();
+};
+const addHeatMapRobotForceSVG = (robotNum) => {
+    if (svgList[robotNum] !== undefined) {
+        svgList[robotNum].svg.remove();
+    }
+    const svg = new SmallHeatmapRobotForce(
+        robotNum,
+        globalVariables.smallHeatMapGridNum,
+        PlotsPart.offsetWidth,
+    );
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + robotNum;
+    svgContainer.appendChild(svgNode);
+    svgList[robotNum] = svg;
+    svg.updatePlotOnTime();
+};
 const changeGlobalPlotToHeatmapRobot = (robotNum) => {
     while (globalHeatmapContainer.firstChild) {
         globalHeatmapContainer.removeChild(globalHeatmapContainer.firstChild);
@@ -995,7 +1032,7 @@ const addHeatMapObsSVG = (obsName) => {
     if (svgList[obsName] !== undefined) {
         svgList[obsName].svg.remove();
     }
-    const svg = new SmallHeatMapObs(
+    const svg = new SmallHeatmapObs(
         obsName,
         globalVariables.smallHeatMapGridNum,
         PlotsPart.offsetWidth,
@@ -1006,6 +1043,39 @@ const addHeatMapObsSVG = (obsName) => {
     svgList[obsName] = svg;
     svg.updatePlotOnTime();
 };
+
+const addHeatMapVeloObsSVG = (obsName) => {
+    if (svgList[obsName] !== undefined) {
+        svgList[obsName].svg.remove();
+    }
+    const svg = new SmallHeatmapObsVelo(
+        obsName,
+        globalVariables.smallHeatMapGridNum,
+        PlotsPart.offsetWidth,
+    );
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + obsName;
+    svgContainer.appendChild(svgNode);
+    svgList[obsName] = svg;
+    svg.updatePlotOnTime();
+};
+
+const addHeatMapObsForceSVG = (obsName) => {
+    if (svgList[obsName] !== undefined) {
+        svgList[obsName].svg.remove();
+    }
+    const svg = new SmallHeatmapObsForce(
+        obsName,
+        globalVariables.smallHeatMapGridNum,
+        PlotsPart.offsetWidth,
+    );
+    const svgNode = svg.svg.node();
+    svgNode.id = 'heatmap-' + obsName;
+    svgContainer.appendChild(svgNode);
+    svgList[obsName] = svg;
+    svg.updatePlotOnTime();
+};
+
 
 const updateAllSVG = () => {
     for (const key in svgList) {
@@ -1115,6 +1185,70 @@ const plotsSVGRedraw = () => {
         }
         for (const key in globalVariables.checkedObs) {
             addHeatMapObsSVG(globalVariables.checkedObs[key]);
+        }
+    } else if (plotsGroupSelection.value === 'HeatMapVeloRobot') {
+        plotsRobotOptionName.textContent = 'Plot Robots:';
+        plotsLinkOptionName.hidden = true;
+        plotsRobotOptionName.hidden = false;
+        plotsRobotControlsContainer.hidden = false;
+        plotsLinkControlsContainer.hidden = true;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = true;
+        }
+        globalVariables.groupByRobot = true;
+        for (const key in globalVariables.checkedRobots) {
+            addHeatMapRobotVeloSVG(globalVariables.checkedRobots[key]);
+        }
+    } else if (plotsGroupSelection.value === 'HeatMapVeloLink') {
+        plotsLinkOptionName.textContent = 'Plot Joints:';
+        globalVariables.groupByRobot = false;
+        plotsLinkOptionName.hidden = false;
+        plotsRobotOptionName.hidden = true;
+        plotsRobotControlsContainer.hidden = true;
+        plotsLinkControlsContainer.hidden = false;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = true;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const key in globalVariables.checkedObs) {
+            addHeatMapVeloObsSVG(globalVariables.checkedObs[key]);
+        }
+    } else if (plotsGroupSelection.value === 'HeatMapForceRobot') {
+        plotsRobotOptionName.textContent = 'Plot Robots:';
+        plotsLinkOptionName.hidden = true;
+        plotsRobotOptionName.hidden = false;
+        plotsRobotControlsContainer.hidden = false;
+        plotsLinkControlsContainer.hidden = true;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = true;
+        }
+        globalVariables.groupByRobot = true;
+        for (const key in globalVariables.checkedRobots) {
+            addHeatMapRobotForceSVG(globalVariables.checkedRobots[key]);
+        }
+    } else if (plotsGroupSelection.value === 'HeatMapForceLink') {
+        plotsLinkOptionName.textContent = 'Plot Joints:';
+        globalVariables.groupByRobot = false;
+        plotsLinkOptionName.hidden = false;
+        plotsRobotOptionName.hidden = true;
+        plotsRobotControlsContainer.hidden = true;
+        plotsLinkControlsContainer.hidden = false;
+        for (const child of plotsRobotControlsContainer.children) {
+            child.hidden = true;
+        }
+        for (const child of plotsLinkControlsContainer.children) {
+            child.hidden = false;
+        }
+        for (const key in globalVariables.checkedObs) {
+            addHeatMapObsForceSVG(globalVariables.checkedObs[key]);
         }
     }
 };
