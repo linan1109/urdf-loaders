@@ -6,7 +6,7 @@
 
 MRISA provides a browser-based environment for visualizing and interacting with multiple robot simulations. You can try out the platform using our GitHub Page and sample data:
 
-👉 [**Launch MRISA Online**](https://linan1109.github.io/MIRSA/js)
+👉 [**Launch MRISA Online**](https://linan1109.github.io/MRISA/js)
 
 **Demo Data**
 
@@ -27,8 +27,8 @@ To see the video of the introduction and usage cases, you can visit:
 If you'd like to install and run MRISA locally (recommended for faster loading and custom robot support), follow these steps:
 
 ```bash
-git clone https://github.com/linan1109/MIRSA.git
-cd MIRSA/javascript/
+git clone https://github.com/linan1109/MRISA.git
+cd MRISA/javascript/
 npm install
 npm run start
 ```
